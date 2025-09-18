@@ -35,18 +35,18 @@ const Login = () => {
               <input
                 type="email"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
-                placeholder="nama@student.unand.ac.id"
+                placeholder="Masukkan email unand Anda"
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
-                Password
+                Kata Sandi
               </label>
               <input
                 type="password"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
-                placeholder="Password"
+                placeholder="******"
                 required
               />
             </div>
@@ -75,7 +75,7 @@ const Login = () => {
             <button
               type="button"
               className="text-[#2D60FF] font-semibold hover:cursor-pointer"
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/register")}
             >
               Buat akun disini
             </button>

@@ -1,7 +1,7 @@
 import React from "react";
 
 const Card = ({ image, title, subtitle, description, children }) => (
-  <div className="bg-white border border-gray-100 rounded-2xl shadow-lg hover:shadow-xl transition p-0 flex flex-col overflow-hidden">
+  <div className="bg-white border border-[#DFEAF2] rounded-2xl transition p-0 flex flex-col overflow-hidden">
     {image && (
       <img src={image} alt={title} className="w-full h-40 object-cover" />
     )}
@@ -10,9 +10,11 @@ const Card = ({ image, title, subtitle, description, children }) => (
         <span className="text-xs text-gray-400 mb-2">{subtitle}</span>
       )}
       {title && (
-        <h3 className="text-lg font-semibold mb-2 text-[#2D60FF]">{title}</h3>
+        <h3 className="text-lg font-semibold mb-2 text-gray-700">{title}</h3>
       )}
-      {description && <p className="text-gray-600 flex-1">{description}</p>}
+      {description && (
+        <p className="text-gray-600 flex-1 text-sm">{description}</p>
+      )}
       {children}
     </div>
   </div>

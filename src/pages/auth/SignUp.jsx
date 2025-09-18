@@ -46,7 +46,7 @@ const SignUp = () => {
               <input
                 type="email"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
-                placeholder="nama@student.unand.ac.id"
+                placeholder="Masukkan email unand Anda"
                 required
               />
             </div>

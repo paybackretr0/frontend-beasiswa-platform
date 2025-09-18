@@ -58,7 +58,7 @@ const Navbar = () => (
           Login
         </NavLink>
         <NavLink
-          to="/signup"
+          to="/register"
           className={({ isActive }) =>
             isActive
               ? "bg-blue-700 text-white px-4 py-2 rounded"
