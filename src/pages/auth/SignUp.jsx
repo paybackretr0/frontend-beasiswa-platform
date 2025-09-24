@@ -1,14 +1,45 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthImg from "../../assets/auth.png";
 import Button from "../../components/Button";
+import { register } from "../../services/authService";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     document.title = "Registrasi Akun - Beasiswa";
   }, []);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await register(form);
+      if (res.success) {
+        alert("Registrasi berhasil! Silakan cek email untuk verifikasi.");
+        navigate("/login");
+      } else {
+        setError(res.message || "Registrasi gagal");
+      }
+    } catch (err) {
+      setError("Terjadi kesalahan server");
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -27,13 +58,16 @@ const SignUp = () => {
           <h2 className="text-2xl font-bold text-gray-600 mb-6 text-center">
             Buat Akun Baru
           </h2>
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
                 Nama Lengkap
               </label>
               <input
                 type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
                 placeholder="Masukkan Nama Lengkap"
                 required
@@ -45,6 +79,9 @@ const SignUp = () => {
               </label>
               <input
                 type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
                 placeholder="Masukkan email unand Anda"
                 required
@@ -56,6 +93,9 @@ const SignUp = () => {
               </label>
               <input
                 type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
                 placeholder="******"
                 required
@@ -67,13 +107,19 @@ const SignUp = () => {
               </label>
               <input
                 type="password"
+                name="password_confirmation"
+                value={form.password_confirmation}
+                onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
                 placeholder="******"
                 required
               />
             </div>
-            <Button type="submit" className="w-full">
-              Daftar
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Memproses..." : "Daftar"}
             </Button>
           </form>
           <div className="mt-6 text-center text-sm">

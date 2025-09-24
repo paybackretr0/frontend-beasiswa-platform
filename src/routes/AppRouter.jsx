@@ -20,6 +20,9 @@ import Fakultas from "../pages/admin/references/Fakultas";
 import Departemen from "../pages/admin/references/Departemen";
 import BackupAdmin from "../pages/admin/extras/BackupAdmin";
 import LogAdmin from "../pages/admin/extras/LogAdmin";
+import Profile from "../pages/user/Profile";
+import History from "../pages/user/History";
+import ProtectedRoute from "./ProtectedRoute";
 
 const AppRouter = () => (
   <Router>
@@ -29,6 +32,22 @@ const AppRouter = () => (
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<SignUp />} />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <History />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/admin/*" element={<AdminLayout />}>
         <Route path="dashboard" element={<AdminDashboard />} />
