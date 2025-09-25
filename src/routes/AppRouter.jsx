@@ -24,16 +24,20 @@ import Profile from "../pages/user/Profile";
 import History from "../pages/user/History";
 import ProtectedRoute from "./ProtectedRoute";
 import ForgotPassword from "../pages/auth/ForgotPassword";
+import ChangePassword from "../pages/admin/ChangePassword";
 
 const AppRouter = () => (
   <Router>
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/scholarship" element={<Scholarship />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+
+      {/* Protected Routes */}
       <Route
         path="/profile"
         element={
@@ -51,7 +55,15 @@ const AppRouter = () => (
         }
       />
 
-      <Route path="/admin/*" element={<AdminLayout />}>
+      {/* Admin Protected Routes */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="accounts/pimpinan-dir" element={<PimpinanDitmawa />} />
         <Route path="accounts/pimpinan-fak" element={<PimpinanFakultas />} />
@@ -67,6 +79,14 @@ const AppRouter = () => (
         <Route path="extra/backup-data" element={<BackupAdmin />} />
         <Route path="extra/log-aktivitas" element={<LogAdmin />} />
       </Route>
+      <Route
+        path="/admin/change-password"
+        element={
+          <ProtectedRoute>
+            <ChangePassword />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   </Router>
 );
