@@ -7,7 +7,7 @@ import { login } from "../../services/authService";
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -91,7 +91,7 @@ const Login = () => {
               <button
                 type="button"
                 className="text-[#2D60FF] hover:cursor-pointer"
-                onClick={() => alert("Fitur lupa password belum tersedia.")}
+                onClick={() => navigate("/forgot-password")}
               >
                 Lupa Password?
               </button>

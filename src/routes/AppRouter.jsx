@@ -23,6 +23,7 @@ import LogAdmin from "../pages/admin/extras/LogAdmin";
 import Profile from "../pages/user/Profile";
 import History from "../pages/user/History";
 import ProtectedRoute from "./ProtectedRoute";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 
 const AppRouter = () => (
   <Router>
@@ -32,6 +33,7 @@ const AppRouter = () => (
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<SignUp />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route
         path="/profile"
         element={

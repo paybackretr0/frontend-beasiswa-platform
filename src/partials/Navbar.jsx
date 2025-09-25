@@ -180,14 +180,14 @@ const Navbar = () => {
                           navigate("/profile");
                           setDropdownOpen(false);
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
                       >
                         <MdPerson className="text-gray-500" />
                         <span>Profil Saya</span>
                       </button>
                       <button
                         onClick={logout}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                       >
                         <MdLogout className="text-red-500" />
                         <span>Logout</span>
