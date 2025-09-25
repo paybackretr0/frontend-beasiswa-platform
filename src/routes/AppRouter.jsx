@@ -20,17 +20,50 @@ import Fakultas from "../pages/admin/references/Fakultas";
 import Departemen from "../pages/admin/references/Departemen";
 import BackupAdmin from "../pages/admin/extras/BackupAdmin";
 import LogAdmin from "../pages/admin/extras/LogAdmin";
+import Profile from "../pages/user/Profile";
+import History from "../pages/user/History";
+import ProtectedRoute from "./ProtectedRoute";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ChangePassword from "../pages/admin/ChangePassword";
 
 const AppRouter = () => (
   <Router>
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/scholarship" element={<Scholarship />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<SignUp />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      <Route path="/admin/*" element={<AdminLayout />}>
+      {/* Protected Routes */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <History />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin Protected Routes */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="accounts/pimpinan-dir" element={<PimpinanDitmawa />} />
         <Route path="accounts/pimpinan-fak" element={<PimpinanFakultas />} />
@@ -46,6 +79,14 @@ const AppRouter = () => (
         <Route path="extra/backup-data" element={<BackupAdmin />} />
         <Route path="extra/log-aktivitas" element={<LogAdmin />} />
       </Route>
+      <Route
+        path="/admin/change-password"
+        element={
+          <ProtectedRoute>
+            <ChangePassword />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   </Router>
 );

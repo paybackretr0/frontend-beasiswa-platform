@@ -1,7 +1,19 @@
 import React from "react";
 
-const Card = ({ image, title, subtitle, description, children }) => (
-  <div className="bg-white border border-[#DFEAF2] rounded-2xl transition p-0 flex flex-col overflow-hidden">
+const Card = ({
+  image,
+  title,
+  subtitle,
+  description,
+  children,
+  className = "",
+}) => (
+  <div
+    className={`
+      bg-white border border-[#DFEAF2] rounded-2xl transition p-0 flex flex-col overflow-hidden
+      w-full max-w-full ${className}
+    `}
+  >
     {image && (
       <img src={image} alt={title} className="w-full h-40 object-cover" />
     )}
