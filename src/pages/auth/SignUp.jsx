@@ -7,7 +7,7 @@ import { register } from "../../services/authService";
 const SignUp = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: "",
+    full_name: "",
     email: "",
     password: "",
     password_confirmation: "",
@@ -65,8 +65,8 @@ const SignUp = () => {
               </label>
               <input
                 type="text"
-                name="name"
-                value={form.name}
+                name="full_name"
+                value={form.full_name}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
                 placeholder="Masukkan Nama Lengkap"
