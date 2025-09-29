@@ -1,76 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, Tag, Button, Input, Space, Dropdown } from "antd";
 import { SearchOutlined, PlusOutlined, MoreOutlined } from "@ant-design/icons";
 
 const { Search } = Input;
-
-export const mahasiswaData = [
-  {
-    key: 1,
-    nama: "Andi Pratama",
-    email: "andi@student.unand.ac.id",
-    loginTerakhir: "2025-01-15 14:30",
-    status: "Aktif",
-  },
-  {
-    key: 2,
-    nama: "Siti Nurhaliza",
-    email: "siti@student.unand.ac.id",
-    loginTerakhir: "2025-01-14 09:15",
-    status: "Aktif",
-  },
-  {
-    key: 3,
-    nama: "Budi Santoso",
-    email: "budi@student.unand.ac.id",
-    loginTerakhir: "2025-01-10 16:45",
-    status: "Nonaktif",
-  },
-];
-
-export const verifikatorData = [
-  {
-    key: 1,
-    nama: "Dr. Ahmad Verif",
-    email: "ahmad.verif@unand.ac.id",
-    loginTerakhir: "2025-01-15 08:00",
-    status: "Aktif",
-  },
-  {
-    key: 2,
-    nama: "Prof. Sari Validator",
-    email: "sari.validator@unand.ac.id",
-    loginTerakhir: "2025-01-12 13:20",
-    status: "Aktif",
-  },
-];
-
-export const pimpinanFakData = [
-  {
-    key: 1,
-    nama: "Prof. Dr. Dekan Teknik",
-    email: "dekan.teknik@unand.ac.id",
-    loginTerakhir: "2025-01-14 10:30",
-    status: "Aktif",
-  },
-  {
-    key: 2,
-    nama: "Dr. Dekan Ekonomi",
-    email: "dekan.ekonomi@unand.ac.id",
-    loginTerakhir: "2025-01-11 15:45",
-    status: "Nonaktif",
-  },
-];
-
-export const pimpinanDitmawaData = [
-  {
-    key: 1,
-    nama: "Prof. Dr. Direktur Kemahasiswaan",
-    email: "direktur.ditmawa@unand.ac.id",
-    loginTerakhir: "2025-01-15 07:15",
-    status: "Aktif",
-  },
-];
 
 export const scholarshipData = [
   {
@@ -114,6 +46,7 @@ const UniversalTable = ({
   title,
   data,
   columns,
+  rowKey = "key",
   searchFields = [],
   searchPlaceholder = "Cari data...",
   addButtonText = "Tambah Data",
@@ -125,6 +58,10 @@ const UniversalTable = ({
 }) => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState(data);
+
+  useEffect(() => {
+    setFilteredData(data);
+  }, [data]);
 
   // Handle search
   const handleSearch = (value) => {
@@ -206,6 +143,7 @@ const UniversalTable = ({
         <Table
           columns={columns}
           dataSource={onSearch ? data : filteredData}
+          rowKey={rowKey}
           pagination={{
             pageSize,
             showSizeChanger: true,
@@ -214,7 +152,6 @@ const UniversalTable = ({
               `${range[0]}-${range[1]} dari ${total} data`,
           }}
           scroll={scroll}
-          rowKey="key"
         />
       </div>
     </div>
@@ -276,24 +213,27 @@ export const createActionColumn = (actions) => ({
 // Helper untuk kolom nomor
 export const createNumberColumn = () => ({
   title: "No",
-  dataIndex: "key",
-  key: "key",
+  key: "number",
   width: 60,
   render: (_, __, index) => index + 1,
 });
 
 // Helper untuk kolom status dengan tag
-export const createStatusColumn = (statusConfig) => ({
+export const createStatusColumn = ({ Aktif, Nonaktif, mapValue }) => ({
   title: "Status",
-  dataIndex: "status",
   key: "status",
-  render: (status) => {
-    const config = statusConfig[status] || { color: "default" };
-    return <Tag color={config.color}>{status}</Tag>;
+  render: (_, record) => {
+    const value = mapValue ? mapValue(record) : record.status;
+    const config = (value &&
+      (Aktif && value === "Aktif" ? Aktif : Nonaktif)) || {
+      color: "default",
+    };
+    return <Tag color={config.color}>{value}</Tag>;
   },
-  filters: Object.keys(statusConfig).map((status) => ({
-    text: status,
-    value: status,
-  })),
-  onFilter: (value, record) => record.status === value,
+  filters: [
+    { text: "Aktif", value: "Aktif" },
+    { text: "Nonaktif", value: "Nonaktif" },
+  ],
+  onFilter: (value, record) =>
+    (mapValue ? mapValue(record) : record.status) === value,
 });
