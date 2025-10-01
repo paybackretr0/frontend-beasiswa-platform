@@ -1,10 +1,10 @@
 import API_BASE_URL from "./apiConfig";
 import { authFetch } from "./tokenAuth";
 
-export const getFaculties = async () => {
+export const getDepartments = async () => {
   const token = localStorage.getItem("access_token");
 
-  const data = await authFetch(`${API_BASE_URL}/faculties`, {
+  const data = await authFetch(`${API_BASE_URL}/departments`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -13,54 +13,54 @@ export const getFaculties = async () => {
   });
 
   if (!data.success) {
-    throw new Error(data.message || "Gagal mengambil daftar fakultas");
+    throw new Error(data.message || "Gagal mengambil daftar departemen");
   }
 
   return data.data;
 };
 
-export const addFaculty = async (faculty) => {
+export const addDepartment = async (department) => {
   const token = localStorage.getItem("access_token");
 
-  const data = await authFetch(`${API_BASE_URL}/faculties`, {
+  const data = await authFetch(`${API_BASE_URL}/departments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(faculty),
+    body: JSON.stringify(department),
   });
 
   if (!data.success) {
-    throw new Error(data.message || "Gagal menambahkan fakultas");
+    throw new Error(data.message || "Gagal menambahkan departemen");
   }
 
   return data.data;
 };
 
-export const editFaculty = async (id, faculty) => {
+export const editDepartment = async (id, department) => {
   const token = localStorage.getItem("access_token");
 
-  const data = await authFetch(`${API_BASE_URL}/faculties/${id}`, {
+  const data = await authFetch(`${API_BASE_URL}/departments/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(faculty),
+    body: JSON.stringify(department),
   });
 
   if (!data.success) {
-    throw new Error(data.message || "Gagal mengedit fakultas");
+    throw new Error(data.message || "Gagal mengedit departemen");
   }
 
   return data.data;
 };
 
-export const activateFaculty = async (id) => {
+export const activateDepartment = async (id) => {
   const token = localStorage.getItem("access_token");
 
-  const data = await authFetch(`${API_BASE_URL}/faculties/${id}/activate`, {
+  const data = await authFetch(`${API_BASE_URL}/departments/${id}/activate`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -69,15 +69,15 @@ export const activateFaculty = async (id) => {
   });
 
   if (!data.success) {
-    throw new Error(data.message || "Gagal mengaktifkan fakultas");
+    throw new Error(data.message || "Gagal mengaktifkan departemen");
   }
   return data.data;
 };
 
-export const deactivateFaculty = async (id) => {
+export const deactivateDepartment = async (id) => {
   const token = localStorage.getItem("access_token");
 
-  const data = await authFetch(`${API_BASE_URL}/faculties/${id}`, {
+  const data = await authFetch(`${API_BASE_URL}/departments/${id}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -86,7 +86,7 @@ export const deactivateFaculty = async (id) => {
   });
 
   if (!data.success) {
-    throw new Error(data.message || "Gagal menonaktifkan fakultas");
+    throw new Error(data.message || "Gagal menonaktifkan departemen");
   }
 
   return data.data;

@@ -1,159 +1,162 @@
 import { useEffect, useState } from "react";
 import { message, Select } from "antd";
-import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import UniversalTable, {
   createNumberColumn,
   createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
-
-const { Option } = Select;
-
-// Data dummy departemen
-const departemenData = [
-  {
-    key: 1,
-    nama: "Teknik Informatika",
-    fakultas: "Fakultas Teknik",
-    status: "Aktif",
-  },
-  {
-    key: 2,
-    nama: "Teknik Sipil",
-    fakultas: "Fakultas Teknik",
-    status: "Aktif",
-  },
-  {
-    key: 3,
-    nama: "Manajemen",
-    fakultas: "Fakultas Ekonomi",
-    status: "Aktif",
-  },
-  {
-    key: 4,
-    nama: "Akuntansi",
-    fakultas: "Fakultas Ekonomi",
-    status: "Aktif",
-  },
-  {
-    key: 5,
-    nama: "Ilmu Hukum",
-    fakultas: "Fakultas Hukum",
-    status: "Aktif",
-  },
-  {
-    key: 6,
-    nama: "Kedokteran",
-    fakultas: "Fakultas Kedokteran",
-    status: "Aktif",
-  },
-  {
-    key: 7,
-    nama: "Matematika",
-    fakultas: "Fakultas MIPA",
-    status: "Nonaktif",
-  },
-  {
-    key: 8,
-    nama: "Fisika",
-    fakultas: "Fakultas MIPA",
-    status: "Aktif",
-  },
-  {
-    key: 9,
-    nama: "Agroteknologi",
-    fakultas: "Fakultas Pertanian",
-    status: "Aktif",
-  },
-  {
-    key: 10,
-    nama: "Peternakan",
-    fakultas: "Fakultas Pertanian",
-    status: "Aktif",
-  },
-];
-
-// Filter options
-const statusOptions = ["Semua", "Aktif", "Nonaktif"];
-const fakultasOptions = [
-  "Semua",
-  "Fakultas Teknik",
-  "Fakultas Ekonomi",
-  "Fakultas Hukum",
-  "Fakultas Kedokteran",
-  "Fakultas MIPA",
-  "Fakultas Pertanian",
-];
+import UniversalModal from "../../../components/Modal";
+import {
+  getDepartments,
+  addDepartment,
+  editDepartment,
+  activateDepartment,
+  deactivateDepartment,
+} from "../../../services/departmentService";
+import { getFaculties } from "../../../services/facultyService";
 
 const Departemen = () => {
-  const [filteredDepartments, setFilteredDepartments] =
-    useState(departemenData);
-  const [filters, setFilters] = useState({
-    status: "Semua",
-    fakultas: "Semua",
-  });
+  const [filteredDepartments, setFilteredDepartments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [faculties, setFaculties] = useState([]);
+  const [fakultasOptions, setFakultasOptions] = useState(["Semua"]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState(null);
 
   useEffect(() => {
     document.title = "Kelola Departemen - Admin";
+    fetchDepartments();
+    fetchFaculties();
   }, []);
 
-  // Handle filter changes
-  const handleFilterChange = (filterType, value) => {
-    const newFilters = { ...filters, [filterType]: value };
-    setFilters(newFilters);
+  const fetchDepartments = async () => {
+    setLoading(true);
+    try {
+      const data = await getDepartments();
+      const formattedData = data.map((department) => ({
+        key: department.id,
+        nama: department.name,
+        kode: department.code,
+        jenjang: department.degree,
+        fakultas: department.Faculty ? department.Faculty.name : "-",
+        fakultasId: department.Faculty ? department.Faculty.id : null,
+        status: department.is_active ? "Aktif" : "Nonaktif",
+      }));
+      setDepartments(formattedData);
+      setFilteredDepartments(formattedData);
 
-    let filtered = departemenData;
-
-    // Apply status filter
-    if (newFilters.status !== "Semua") {
-      filtered = filtered.filter((item) => item.status === newFilters.status);
+      // Generate fakultas options for filter
+      const uniqueFakultas = [
+        ...new Set(formattedData.map((dept) => dept.fakultas)),
+      ].filter((f) => f !== "-");
+      setFakultasOptions(["Semua", ...uniqueFakultas]);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      message.error(error.message || "Gagal mengambil daftar departemen");
+    } finally {
+      setLoading(false);
     }
-
-    // Apply fakultas filter
-    if (newFilters.fakultas !== "Semua") {
-      filtered = filtered.filter(
-        (item) => item.fakultas === newFilters.fakultas
-      );
-    }
-
-    setFilteredDepartments(filtered);
   };
 
-  // Handle actions
+  const fetchFaculties = async () => {
+    try {
+      const data = await getFaculties();
+      setFaculties(data);
+    } catch (error) {
+      console.error("Error fetching faculties:", error);
+      message.error("Gagal mengambil daftar fakultas");
+    }
+  };
+
+  const handleAddDepartment = async (values) => {
+    setModalLoading(true);
+    try {
+      await addDepartment(values);
+      message.success("Departemen berhasil ditambahkan");
+      setModalVisible(false);
+      await fetchDepartments();
+    } catch (error) {
+      console.error("Error adding department:", error);
+      message.error(error.message || "Gagal menambahkan departemen");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleEditDepartment = async (id, values) => {
+    setModalLoading(true);
+    try {
+      await editDepartment(id, values);
+      message.success("Departemen berhasil diperbarui");
+      setModalVisible(false);
+      setEditingDepartment(null);
+      await fetchDepartments();
+    } catch (error) {
+      console.error("Error updating department:", error);
+      message.error(error.message || "Gagal memperbarui departemen");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleActivateDepartment = async (id) => {
+    setLoading(true);
+    try {
+      await activateDepartment(id);
+      message.success("Departemen berhasil diaktifkan");
+      await fetchDepartments();
+    } catch (error) {
+      console.error("Error activating department:", error);
+      message.error(error.message || "Gagal mengaktifkan departemen");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeactivateDepartment = async (id) => {
+    setLoading(true);
+    try {
+      await deactivateDepartment(id);
+      message.success("Departemen berhasil dinonaktifkan");
+      await fetchDepartments();
+    } catch (error) {
+      console.error("Error deactivating department:", error);
+      message.error(error.message || "Gagal menonaktifkan departemen");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAdd = () => {
-    message.info("Menuju halaman tambah departemen...");
-  };
-
-  const handleDetail = (record) => {
-    message.info(`Detail departemen: ${record.nama}`);
+    setEditingDepartment(null);
+    setModalVisible(true);
   };
 
   const handleEdit = (record) => {
-    message.info(`Edit departemen: ${record.nama}`);
+    setEditingDepartment(record);
+    setModalVisible(true);
   };
 
-  const handleDelete = (record) => {
-    message.warning(`Hapus departemen: ${record.nama}`);
-  };
-
-  // Custom search function yang mempertahankan filters
   const handleSearch = (searchValue) => {
-    let filtered = departemenData;
+    let filtered = departments;
 
-    // Apply filters first
-    if (filters.status !== "Semua") {
-      filtered = filtered.filter((item) => item.status === filters.status);
+    if (statusFilter !== "Semua") {
+      filtered = filtered.filter((item) => item.status === statusFilter);
     }
-    if (filters.fakultas !== "Semua") {
-      filtered = filtered.filter((item) => item.fakultas === filters.fakultas);
+    if (fakultasFilter !== "Semua") {
+      filtered = filtered.filter((item) => item.fakultas === fakultasFilter);
     }
 
-    // Apply search
     if (searchValue) {
       filtered = filtered.filter(
         (item) =>
           item.nama?.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.fakultas?.toLowerCase().includes(searchValue.toLowerCase())
+          item.fakultas?.toLowerCase().includes(searchValue.toLowerCase()) ||
+          item.kode?.toLowerCase().includes(searchValue.toLowerCase()) ||
+          item.jenjang?.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
@@ -163,18 +166,44 @@ const Departemen = () => {
   const departmentColumns = [
     createNumberColumn(),
     {
+      title: "Kode",
+      dataIndex: "kode",
+      key: "kode",
+      sorter: (a, b) => a.kode.localeCompare(b.kode),
+      width: "15%",
+    },
+    {
       title: "Nama Departemen",
       dataIndex: "nama",
       key: "nama",
       sorter: (a, b) => a.nama.localeCompare(b.nama),
-      width: "45%",
+      width: "30%",
+    },
+    {
+      title: "Jenjang",
+      dataIndex: "jenjang",
+      key: "jenjang",
+      width: "15%",
+      filters: [
+        { text: "D3", value: "D3" },
+        { text: "S1", value: "S1" },
+        { text: "S2", value: "S2" },
+        { text: "S3", value: "S3" },
+      ],
+      onFilter: (value, record) => record.jenjang === value,
     },
     {
       title: "Fakultas",
       dataIndex: "fakultas",
       key: "fakultas",
-      sorter: (a, b) => a.fakultas.localeCompare(b.fakultas),
-      width: "25%",
+      width: "20%",
+      filters: fakultasOptions
+        .filter((option) => option !== "Semua")
+        .map((fakultas) => ({
+          text: fakultas,
+          value: fakultas,
+        })),
+      onFilter: (value, record) => record.fakultas === value,
     },
     createStatusColumn({
       Aktif: { color: "green" },
@@ -182,67 +211,106 @@ const Departemen = () => {
     }),
     createActionColumn([
       {
-        key: "detail",
-        label: "Detail",
-        icon: <EyeOutlined />,
-        onClick: handleDetail,
-      },
-      {
         key: "edit",
-        label: "Edit",
         icon: <EditOutlined />,
         onClick: handleEdit,
       },
       {
-        key: "delete",
-        label: "Hapus",
-        icon: <DeleteOutlined />,
-        danger: true,
-        onClick: handleDelete,
+        key: "toggleStatus",
+        label: (record) =>
+          record.status === "Aktif" ? "Nonaktifkan" : "Aktifkan",
+        icon: (record) =>
+          record.status === "Aktif" ? <DeleteOutlined /> : <CheckOutlined />,
+        danger: (record) => record.status === "Aktif",
+        onClick: (record) =>
+          record.status === "Aktif"
+            ? handleDeactivateDepartment(record.key)
+            : handleActivateDepartment(record.key),
       },
     ]),
   ];
 
   return (
-    <UniversalTable
-      title="Kelola Departemen"
-      data={filteredDepartments}
-      columns={departmentColumns}
-      searchFields={["nama", "fakultas"]}
-      searchPlaceholder="Cari nama departemen atau fakultas..."
-      addButtonText="Tambah Departemen"
-      onAdd={handleAdd}
-      pageSize={10}
-      customFilters={
-        <>
-          <Select
-            value={filters.fakultas}
-            onChange={(value) => handleFilterChange("fakultas", value)}
-            placeholder="Semua Fakultas"
-            style={{ width: 180 }}
-          >
-            {fakultasOptions.map((option) => (
-              <Option key={option} value={option}>
-                {option === "Semua" ? "Semua Fakultas" : option}
-              </Option>
-            ))}
-          </Select>
-          <Select
-            value={filters.status}
-            onChange={(value) => handleFilterChange("status", value)}
-            placeholder="Semua Status"
-            style={{ width: 150 }}
-          >
-            {statusOptions.map((option) => (
-              <Option key={option} value={option}>
-                {option === "Semua" ? "Semua Status" : option}
-              </Option>
-            ))}
-          </Select>
-        </>
-      }
-      onSearch={handleSearch}
-    />
+    <>
+      <UniversalTable
+        title="Kelola Departemen"
+        data={filteredDepartments}
+        columns={departmentColumns}
+        searchFields={["nama", "fakultas", "kode", "jenjang"]}
+        searchPlaceholder="Cari nama departemen, fakultas, kode, atau jenjang..."
+        addButtonText="Tambah Departemen"
+        onAdd={handleAdd}
+        loading={loading}
+        pageSize={10}
+        onSearch={handleSearch}
+      />
+      <UniversalModal
+        visible={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+          setEditingDepartment(null);
+        }}
+        onSubmit={(values) => {
+          if (editingDepartment) {
+            handleEditDepartment(editingDepartment.key, values);
+          } else {
+            handleAddDepartment(values);
+          }
+        }}
+        title={editingDepartment ? "Edit Departemen" : "Tambah Departemen"}
+        loading={modalLoading}
+        initialValues={
+          editingDepartment
+            ? {
+                name: editingDepartment.nama,
+                code: editingDepartment.kode,
+                degree: editingDepartment.jenjang,
+                faculty_id: editingDepartment.fakultasId,
+              }
+            : {}
+        }
+        fields={[
+          {
+            name: "name",
+            label: "Nama Departemen",
+            rules: [{ required: true, message: "Nama departemen wajib diisi" }],
+          },
+          {
+            name: "code",
+            label: "Kode Departemen",
+            rules: [
+              { required: true, message: "Kode departemen wajib diisi" },
+              {
+                max: 5,
+                message: "Kode departemen maksimal 5 karakter",
+              },
+            ],
+          },
+          {
+            name: "degree",
+            label: "Jenjang",
+            type: "select",
+            options: [
+              { label: "D3", value: "D3" },
+              { label: "S1", value: "S1" },
+              { label: "S2", value: "S2" },
+              { label: "S3", value: "S3" },
+            ],
+            rules: [{ required: true, message: "Jenjang wajib dipilih" }],
+          },
+          {
+            name: "faculty_id",
+            label: "Fakultas",
+            type: "select",
+            options: faculties.map((faculty) => ({
+              label: faculty.name,
+              value: faculty.id,
+            })),
+            rules: [{ required: true, message: "Fakultas wajib dipilih" }],
+          },
+        ]}
+      />
+    </>
   );
 };
 

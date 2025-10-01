@@ -1,104 +1,124 @@
 import { useEffect, useState } from "react";
-import { message, Select } from "antd";
-import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { message } from "antd";
+import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import UniversalTable, {
   createNumberColumn,
   createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
-
-const { Option } = Select;
-
-// Data dummy fakultas yang benar
-const fakultasData = [
-  {
-    key: 1,
-    nama: "Fakultas Teknik",
-    jumlahDepartemen: 4,
-    status: "Aktif",
-  },
-  {
-    key: 2,
-    nama: "Fakultas Ekonomi",
-    jumlahDepartemen: 3,
-    status: "Aktif",
-  },
-  {
-    key: 3,
-    nama: "Fakultas Hukum",
-    jumlahDepartemen: 2,
-    status: "Aktif",
-  },
-  {
-    key: 4,
-    nama: "Fakultas Kedokteran",
-    jumlahDepartemen: 5,
-    status: "Aktif",
-  },
-  {
-    key: 5,
-    nama: "Fakultas MIPA",
-    jumlahDepartemen: 6,
-    status: "Nonaktif",
-  },
-  {
-    key: 6,
-    nama: "Fakultas Pertanian",
-    jumlahDepartemen: 4,
-    status: "Aktif",
-  },
-];
-
-// Filter options
-const statusOptions = ["Semua", "Aktif", "Nonaktif"];
+import UniversalModal from "../../../components/Modal";
+import {
+  getFaculties,
+  addFaculty,
+  editFaculty,
+  activateFaculty,
+  deactivateFaculty,
+} from "../../../services/facultyService";
 
 const Fakultas = () => {
-  const [filteredFaculties, setFilteredFaculties] = useState(fakultasData);
+  const [filteredFaculties, setFilteredFaculties] = useState([]);
   const [statusFilter, setStatusFilter] = useState("Semua");
+  const [loading, setLoading] = useState(false);
+  const [faculties, setFaculties] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [editingFaculty, setEditingFaculty] = useState(null);
 
   useEffect(() => {
     document.title = "Kelola Fakultas - Admin";
+    fetchFaculties();
   }, []);
 
-  // Handle status filter
-  const handleStatusFilter = (status) => {
-    setStatusFilter(status);
-
-    if (status === "Semua") {
-      setFilteredFaculties(fakultasData);
-    } else {
-      const filtered = fakultasData.filter((item) => item.status === status);
-      setFilteredFaculties(filtered);
+  const fetchFaculties = async () => {
+    setLoading(true);
+    try {
+      const data = await getFaculties();
+      const formattedData = data.map((faculty, index) => ({
+        key: faculty.id,
+        nama: faculty.name,
+        kode: faculty.code,
+        jumlahDepartemen: faculty.departments_count || 0,
+        status: faculty.is_active ? "Aktif" : "Nonaktif",
+      }));
+      setFaculties(formattedData);
+      setFilteredFaculties(formattedData);
+    } catch (error) {
+      console.error("Error fetching faculties:", error);
+      message.error(error.message || "Gagal mengambil daftar fakultas");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle actions
+  const handleAddFaculties = async (values) => {
+    setModalLoading(true);
+    try {
+      await addFaculty(values);
+      message.success("Fakultas berhasil ditambahkan");
+      setModalVisible(false);
+      await fetchFaculties();
+    } catch (error) {
+      console.error("Error adding Fakultas:", error);
+      message.error(error.message || "Gagal menambahkan Fakultas");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleEditFaculties = async (id, values) => {
+    setModalLoading(true);
+    try {
+      await editFaculty(id, values);
+      message.success("Fakultas berhasil diubah");
+      setModalVisible(false);
+      await fetchFaculties();
+    } catch (error) {
+      console.error("Error editing Fakultas:", error);
+      message.error(error.message || "Gagal mengubah Fakultas");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleActivateFaculty = async (id) => {
+    setLoading(true);
+    try {
+      await activateFaculty(id);
+      message.success("Fakultas berhasil diaktifkan");
+      await fetchFaculties();
+    } catch (error) {
+      console.error("Error activating faculty:", error);
+      message.error(error.message || "Gagal mengaktifkan fakultas");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeactivateFaculty = async (id) => {
+    setLoading(true);
+    try {
+      await deactivateFaculty(id);
+      message.success("Fakultas berhasil dinonaktifkan");
+      await fetchFaculties();
+    } catch (error) {
+      console.error("Error deactivating faculty:", error);
+      message.error(error.message || "Gagal menonaktifkan fakultas");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAdd = () => {
-    message.info("Menuju halaman tambah fakultas...");
+    setModalVisible(true);
   };
 
-  const handleDetail = (record) => {
-    message.info(`Detail fakultas: ${record.nama}`);
-  };
-
-  const handleEdit = (record) => {
-    message.info(`Edit fakultas: ${record.nama}`);
-  };
-
-  const handleDelete = (record) => {
-    message.warning(`Hapus fakultas: ${record.nama}`);
-  };
-
-  // Custom search function yang mempertahankan filter status
   const handleSearch = (searchValue) => {
-    let filtered = fakultasData;
+    let filtered = faculties;
 
-    // Apply status filter first
     if (statusFilter !== "Semua") {
       filtered = filtered.filter((item) => item.status === statusFilter);
     }
 
-    // Apply search
     if (searchValue) {
       filtered = filtered.filter((item) =>
         item.nama?.toLowerCase().includes(searchValue.toLowerCase())
@@ -111,18 +131,25 @@ const Fakultas = () => {
   const facultyColumns = [
     createNumberColumn(),
     {
+      title: "Kode Fakultas",
+      dataIndex: "kode",
+      key: "kode",
+      sorter: (a, b) => a.kode.localeCompare(b.kode),
+      width: "20%",
+    },
+    {
       title: "Nama Fakultas",
       dataIndex: "nama",
       key: "nama",
       sorter: (a, b) => a.nama.localeCompare(b.nama),
-      width: "45%",
+      width: "35%",
     },
     {
       title: "Jumlah Departemen",
       dataIndex: "jumlahDepartemen",
       key: "jumlahDepartemen",
       sorter: (a, b) => a.jumlahDepartemen - b.jumlahDepartemen,
-      width: "25%",
+      width: "20%",
       align: "center",
     },
     createStatusColumn({
@@ -131,53 +158,84 @@ const Fakultas = () => {
     }),
     createActionColumn([
       {
-        key: "detail",
-        label: "Detail",
-        icon: <EyeOutlined />,
-        onClick: handleDetail,
-      },
-      {
         key: "edit",
-        label: "Edit",
         icon: <EditOutlined />,
-        onClick: handleEdit,
+        onClick: (record) => {
+          setEditingFaculty(record);
+          setModalVisible(true);
+        },
       },
       {
-        key: "delete",
-        label: "Hapus",
-        icon: <DeleteOutlined />,
-        danger: true,
-        onClick: handleDelete,
+        key: "toggleStatus",
+        icon: (record) =>
+          record.status === "Aktif" ? <DeleteOutlined /> : <CheckOutlined />,
+        danger: (record) => record.status === "Aktif",
+        onClick: (record) =>
+          record.status === "Aktif"
+            ? handleDeactivateFaculty(record.key)
+            : handleActivateFaculty(record.key),
       },
     ]),
   ];
 
   return (
-    <UniversalTable
-      title="Kelola Fakultas"
-      data={filteredFaculties}
-      columns={facultyColumns}
-      searchFields={["nama"]}
-      searchPlaceholder="Cari nama fakultas..."
-      addButtonText="Tambah Fakultas"
-      onAdd={handleAdd}
-      pageSize={10}
-      customFilters={
-        <Select
-          value={statusFilter}
-          onChange={handleStatusFilter}
-          placeholder="Semua Status"
-          style={{ width: 150 }}
-        >
-          {statusOptions.map((option) => (
-            <Option key={option} value={option}>
-              {option === "Semua" ? "Semua Status" : option}
-            </Option>
-          ))}
-        </Select>
-      }
-      onSearch={handleSearch}
-    />
+    <>
+      <UniversalTable
+        title="Kelola Fakultas"
+        data={filteredFaculties}
+        columns={facultyColumns}
+        loading={loading}
+        searchFields={["nama", "kode"]}
+        searchPlaceholder="Cari nama atau kode fakultas..."
+        addButtonText="Tambah Fakultas"
+        onAdd={handleAdd}
+        pageSize={10}
+        onSearch={handleSearch}
+      />
+
+      <UniversalModal
+        visible={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+          setEditingFaculty(null);
+        }}
+        onSubmit={(values) => {
+          if (editingFaculty) {
+            handleEditFaculties(editingFaculty.key, values);
+          } else {
+            handleAddFaculties(values);
+          }
+        }}
+        title={editingFaculty ? "Edit Fakultas" : "Tambah Fakultas"}
+        loading={modalLoading}
+        initialValues={
+          editingFaculty
+            ? {
+                name: editingFaculty.nama,
+                code: editingFaculty.kode,
+              }
+            : {}
+        }
+        fields={[
+          {
+            name: "name",
+            label: "Nama Fakultas",
+            rules: [{ required: true, message: "Nama fakultas wajib diisi" }],
+          },
+          {
+            name: "code",
+            label: "Kode Fakultas",
+            rules: [
+              { required: true, message: "Kode fakultas wajib diisi" },
+              {
+                max: 2,
+                message: "Kode fakultas harus terdiri dari 2 karakter",
+              },
+            ],
+          },
+        ]}
+      />
+    </>
   );
 };
 

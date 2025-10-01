@@ -5,7 +5,7 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import {
   fetchUsersByRole,
   addUser,
@@ -136,7 +136,8 @@ const PimpinanDitmawa = () => {
       {
         key: "toggleActive",
         label: (record) => (record.is_active ? "Nonaktifkan" : "Aktifkan"),
-        icon: <DeleteOutlined />,
+        icon: (record) =>
+          record.is_active ? <DeleteOutlined /> : <CheckOutlined />,
         danger: (record) => record.is_active, // kasih warna merah kalau aktif → mau dinonaktifkan
         onClick: (record) => {
           if (record.is_active) {
