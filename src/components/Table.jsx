@@ -161,38 +161,20 @@ export default UniversalTable;
 export const createActionColumn = (actions) => ({
   title: "Aksi",
   key: "aksi",
-  width: actions.length > 2 ? 80 : 150,
+  width: 80,
   render: (_, record) => {
-    if (actions.length > 2) {
-      const menuItems = actions.map((action) => ({
-        key: action.key,
-        label: action.label,
-        icon:
-          typeof action.icon === "function" ? action.icon(record) : action.icon,
-        danger:
-          typeof action.danger === "function"
-            ? action.danger(record)
-            : action.danger,
-        onClick: () => action.onClick?.(record),
-      }));
+    const visibleActions = actions.filter((action) => {
+      if (typeof action.className === "function") {
+        const className = action.className(record);
+        return !className.includes("hidden");
+      }
+      return true;
+    });
 
-      return (
-        <Dropdown
-          menu={{ items: menuItems }}
-          trigger={["click"]}
-          placement="bottomRight"
-        >
-          <Button
-            type="text"
-            icon={<MoreOutlined />}
-            className="hover:bg-gray-100"
-          />
-        </Dropdown>
-      );
-    } else {
+    if (visibleActions.length <= 2) {
       return (
         <Space>
-          {actions.map((action) => {
+          {visibleActions.map((action) => {
             const Icon =
               typeof action.icon === "function"
                 ? action.icon(record)
@@ -206,11 +188,6 @@ export const createActionColumn = (actions) => ({
             return (
               <Button
                 key={action.key}
-                className={
-                  typeof action.className === "function"
-                    ? action.className(record)
-                    : action.className
-                }
                 size="small"
                 icon={Icon}
                 danger={danger}
@@ -223,6 +200,32 @@ export const createActionColumn = (actions) => ({
         </Space>
       );
     }
+
+    const menuItems = visibleActions.map((action) => ({
+      key: action.key,
+      label: action.label,
+      icon:
+        typeof action.icon === "function" ? action.icon(record) : action.icon,
+      danger:
+        typeof action.danger === "function"
+          ? action.danger(record)
+          : action.danger,
+      onClick: () => action.onClick?.(record),
+    }));
+
+    return (
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={["click"]}
+        placement="bottomRight"
+      >
+        <Button
+          type="text"
+          icon={<MoreOutlined />}
+          className="hover:bg-gray-100"
+        />
+      </Dropdown>
+    );
   },
 });
 
