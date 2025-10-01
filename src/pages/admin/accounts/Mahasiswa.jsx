@@ -5,7 +5,7 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import {
   fetchUsersByRole,
   addMahasiswa,
@@ -46,7 +46,7 @@ const Mahasiswa = () => {
       await addMahasiswa(values);
       message.success("Mahasiswa berhasil ditambahkan");
       setModalVisible(false);
-      fetchMahasiswa(); // Refresh data
+      fetchMahasiswa();
     } catch (error) {
       console.error("Error adding mahasiswa:", error);
       message.error(error.message || "Gagal menambahkan mahasiswa");
@@ -60,7 +60,7 @@ const Mahasiswa = () => {
     try {
       await deactivateUser(id);
       message.success("User berhasil dinonaktifkan");
-      fetchMahasiswa(); // Refresh data
+      fetchMahasiswa();
     } catch (error) {
       console.error("Error deactivating user:", error);
       message.error(error.message || "Gagal menonaktifkan user");
@@ -74,7 +74,7 @@ const Mahasiswa = () => {
     try {
       await activateUser(id);
       message.success("User berhasil diaktifkan");
-      fetchMahasiswa(); // Refresh data
+      fetchMahasiswa();
     } catch (error) {
       console.error("Error activating user:", error);
       message.error(error.message || "Gagal mengaktifkan user");
@@ -89,7 +89,7 @@ const Mahasiswa = () => {
       await updateUser(id, values);
       message.success("User berhasil diperbarui");
       setModalVisible(false);
-      fetchMahasiswa(); // Refresh data
+      fetchMahasiswa();
     } catch (error) {
       console.error("Error updating user:", error);
       message.error(error.message || "Gagal memperbarui user");
@@ -129,7 +129,6 @@ const Mahasiswa = () => {
         key: "edit",
         icon: <EditOutlined />,
         onClick: (record) => {
-          console.log("Editing user:", record);
           setEditingUser(record);
           setModalVisible(true);
         },
@@ -137,8 +136,9 @@ const Mahasiswa = () => {
       {
         key: "toggleActive",
         label: (record) => (record.is_active ? "Nonaktifkan" : "Aktifkan"),
-        icon: <DeleteOutlined />,
-        danger: (record) => record.is_active, // kasih warna merah kalau aktif → mau dinonaktifkan
+        icon: (record) =>
+          record.is_active ? <DeleteOutlined /> : <CheckOutlined />,
+        danger: (record) => record.is_active,
         onClick: (record) => {
           if (record.is_active) {
             handleDeactivateUser(record.id);
@@ -190,7 +190,6 @@ const Mahasiswa = () => {
         fields={
           editingUser
             ? [
-                // Field untuk edit - hanya full_name dan phone_number
                 {
                   name: "full_name",
                   label: "Nama Lengkap",
@@ -205,7 +204,6 @@ const Mahasiswa = () => {
                 },
               ]
             : [
-                // Field untuk tambah mahasiswa baru
                 {
                   name: "full_name",
                   label: "Nama Lengkap",

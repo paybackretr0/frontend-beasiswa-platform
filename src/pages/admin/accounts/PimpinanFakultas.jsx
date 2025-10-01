@@ -5,7 +5,7 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import {
   fetchUsersByRole,
   addPimpinanFakultas,
@@ -49,17 +49,17 @@ const PimpinanFakultas = () => {
 
   useEffect(() => {
     document.title = "Kelola Pimpinan Fakultas";
-    fetchPimpinanFakultas(); // Panggil saat komponen pertama kali dimuat
+    fetchPimpinanFakultas();
     fetchFaculties();
   }, []);
 
   const handleAddPimpinanFakultas = async (values) => {
     setModalLoading(true);
     try {
-      await addPimpinanFakultas(values); // Tambahkan user
+      await addPimpinanFakultas(values);
       message.success("Pimpinan Fakultas berhasil ditambahkan");
-      setModalVisible(false); // Tutup modal
-      await fetchPimpinanFakultas(); // Panggil ulang fungsi fetch untuk refresh data
+      setModalVisible(false);
+      await fetchPimpinanFakultas();
     } catch (error) {
       console.error("Error adding Pimpinan Fakultas:", error);
       message.error(error.message || "Gagal menambahkan Pimpinan Fakultas");
@@ -149,8 +149,9 @@ const PimpinanFakultas = () => {
       {
         key: "toggleActive",
         label: (record) => (record.is_active ? "Nonaktifkan" : "Aktifkan"),
-        icon: <DeleteOutlined />,
-        danger: (record) => record.is_active, // kasih warna merah kalau aktif → mau dinonaktifkan
+        icon: (record) =>
+          record.is_active ? <DeleteOutlined /> : <CheckOutlined />,
+        danger: (record) => record.is_active,
         onClick: (record) => {
           if (record.is_active) {
             handleDeactivateUser(record.id);
@@ -204,7 +205,6 @@ const PimpinanFakultas = () => {
         fields={
           editingUser
             ? [
-                // Field untuk edit - full_name, phone_number, faculty_id
                 {
                   name: "full_name",
                   label: "Nama Lengkap",
@@ -231,7 +231,6 @@ const PimpinanFakultas = () => {
                 },
               ]
             : [
-                // Field untuk tambah pimpinan fakultas baru
                 {
                   name: "full_name",
                   label: "Nama Lengkap",

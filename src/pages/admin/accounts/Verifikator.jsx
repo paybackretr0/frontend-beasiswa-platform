@@ -137,8 +137,9 @@ const Verifikator = () => {
       },
       {
         key: "toggleActive",
-        icon: <DeleteOutlined />,
-        danger: (record) => record.is_active, // kasih warna merah kalau aktif → mau dinonaktifkan
+        icon: (record) =>
+          record.is_active ? <DeleteOutlined /> : <CheckOutlined />,
+        danger: (record) => record.is_active,
         onClick: (record) => {
           if (record.is_active) {
             handleDeactivateUser(record.id);

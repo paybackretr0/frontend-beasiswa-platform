@@ -53,8 +53,8 @@ const UniversalTable = ({
   onAdd,
   pageSize = 10,
   scroll = { x: 800 },
-  customFilters = null, // Tambahan prop untuk custom filters
-  onSearch = null, // Custom search handler
+  customFilters = null,
+  onSearch = null,
 }) => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -63,12 +63,10 @@ const UniversalTable = ({
     setFilteredData(data);
   }, [data]);
 
-  // Handle search
   const handleSearch = (value) => {
     setSearchText(value);
 
     if (onSearch) {
-      // Use custom search handler if provided
       onSearch(value);
       return;
     }
@@ -166,12 +164,15 @@ export const createActionColumn = (actions) => ({
   width: actions.length > 2 ? 80 : 150,
   render: (_, record) => {
     if (actions.length > 2) {
-      // Dropdown untuk banyak actions
       const menuItems = actions.map((action) => ({
         key: action.key,
         label: action.label,
-        icon: action.icon,
-        danger: action.danger,
+        icon:
+          typeof action.icon === "function" ? action.icon(record) : action.icon,
+        danger:
+          typeof action.danger === "function"
+            ? action.danger(record)
+            : action.danger,
         onClick: () => action.onClick?.(record),
       }));
 
@@ -189,28 +190,42 @@ export const createActionColumn = (actions) => ({
         </Dropdown>
       );
     } else {
-      // Button langsung untuk sedikit actions
       return (
         <Space>
-          {actions.map((action) => (
-            <Button
-              key={action.key}
-              type={action.type || "primary"}
-              size="small"
-              icon={action.icon}
-              danger={action.danger}
-              onClick={() => action.onClick?.(record)}
-            >
-              {action.label}
-            </Button>
-          ))}
+          {actions.map((action) => {
+            const Icon =
+              typeof action.icon === "function"
+                ? action.icon(record)
+                : action.icon;
+
+            const danger =
+              typeof action.danger === "function"
+                ? action.danger(record)
+                : action.danger;
+
+            return (
+              <Button
+                key={action.key}
+                className={
+                  typeof action.className === "function"
+                    ? action.className(record)
+                    : action.className
+                }
+                size="small"
+                icon={Icon}
+                danger={danger}
+                onClick={() => action.onClick?.(record)}
+              >
+                {action.label}
+              </Button>
+            );
+          })}
         </Space>
       );
     }
   },
 });
 
-// Helper untuk kolom nomor
 export const createNumberColumn = () => ({
   title: "No",
   key: "number",
@@ -218,7 +233,6 @@ export const createNumberColumn = () => ({
   render: (_, __, index) => index + 1,
 });
 
-// Helper untuk kolom status dengan tag
 export const createStatusColumn = ({ Aktif, Nonaktif, mapValue }) => ({
   title: "Status",
   key: "status",
