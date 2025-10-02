@@ -1,139 +1,105 @@
 import { useEffect, useState } from "react";
 import { message, Pagination } from "antd";
-import { DownloadOutlined, DatabaseOutlined } from "@ant-design/icons";
+import {
+  DownloadOutlined,
+  DatabaseOutlined,
+  FileExcelOutlined,
+} from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
-
-// Data dummy backup history
-const backupData = [
-  {
-    id: 1,
-    namaFile: "backup_beasiswa_2025_01_18_14_30.sql",
-    timestamp: "18 Jan 2025, 14:30",
-    ukuran: "45.2 MB",
-  },
-  {
-    id: 2,
-    namaFile: "backup_beasiswa_2025_01_17_09_15.sql",
-    timestamp: "17 Jan 2025, 09:15",
-    ukuran: "44.8 MB",
-  },
-  {
-    id: 3,
-    namaFile: "backup_beasiswa_2025_01_16_16_45.sql",
-    timestamp: "16 Jan 2025, 16:45",
-    ukuran: "43.9 MB",
-  },
-  {
-    id: 4,
-    namaFile: "backup_beasiswa_2025_01_15_12_20.sql",
-    timestamp: "15 Jan 2025, 12:20",
-    ukuran: "43.5 MB",
-  },
-  {
-    id: 5,
-    namaFile: "backup_beasiswa_2025_01_14_08_30.sql",
-    timestamp: "14 Jan 2025, 08:30",
-    ukuran: "43.1 MB",
-  },
-  {
-    id: 6,
-    namaFile: "backup_beasiswa_2025_01_13_15_45.sql",
-    timestamp: "13 Jan 2025, 15:45",
-    ukuran: "42.7 MB",
-  },
-  {
-    id: 7,
-    namaFile: "backup_beasiswa_2025_01_12_11_10.sql",
-    timestamp: "12 Jan 2025, 11:10",
-    ukuran: "42.3 MB",
-  },
-  {
-    id: 8,
-    namaFile: "backup_beasiswa_2025_01_11_14_25.sql",
-    timestamp: "11 Jan 2025, 14:25",
-    ukuran: "41.9 MB",
-  },
-  {
-    id: 9,
-    namaFile: "backup_beasiswa_2025_01_10_09_50.sql",
-    timestamp: "10 Jan 2025, 09:50",
-    ukuran: "41.5 MB",
-  },
-  {
-    id: 10,
-    namaFile: "backup_beasiswa_2025_01_09_16_35.sql",
-    timestamp: "09 Jan 2025, 16:35",
-    ukuran: "41.1 MB",
-  },
-  {
-    id: 11,
-    namaFile: "backup_beasiswa_2025_01_08_13_20.sql",
-    timestamp: "08 Jan 2025, 13:20",
-    ukuran: "40.8 MB",
-  },
-  {
-    id: 12,
-    namaFile: "backup_beasiswa_2025_01_07_10_45.sql",
-    timestamp: "07 Jan 2025, 10:45",
-    ukuran: "40.4 MB",
-  },
-];
+import UniversalModal from "../../../components/Modal";
+import { getAllBackups, createBackup } from "../../../services/extraService";
 
 const BackupAdmin = () => {
+  const [backupData, setBackupData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const pageSize = 6;
 
   useEffect(() => {
     document.title = "Backup Data - Admin";
+    fetchBackups();
   }, []);
 
-  // Handle backup data
-  const handleBackupData = () => {
+  const fetchBackups = async () => {
     setIsLoading(true);
-    message.loading("Sedang membuat backup...", 0);
-
-    // Simulate backup process
-    setTimeout(() => {
+    try {
+      const data = await getAllBackups();
+      setBackupData(data);
+    } catch (error) {
+      console.error("Error fetching backups:", error);
+      message.error("Gagal memuat data backup");
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleBackupSubmit = async (values) => {
+    setIsCreatingBackup(true);
+    const backupTypeText = values.backupType === "excel" ? "Excel" : "SQL";
+    message.loading(`Sedang membuat backup ${backupTypeText}...`, 0);
+
+    try {
+      await createBackup(values.backupType);
       message.destroy();
-      message.success("Backup data berhasil dibuat!");
+      message.success(`Backup ${backupTypeText} berhasil dibuat!`);
 
-      // Add new backup to the list (simulate)
-      const newBackup = {
-        id: backupData.length + 1,
-        namaFile: `backup_beasiswa_${new Date()
-          .toISOString()
-          .slice(0, 19)
-          .replace(/[-:]/g, "_")
-          .replace("T", "_")}.sql`,
-        timestamp: new Date().toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        ukuran: `${(Math.random() * 10 + 40).toFixed(1)} MB`,
-      };
-
-      // In real implementation, you would update the state with new backup
-      console.log("New backup created:", newBackup);
-    }, 3000);
+      setModalVisible(false);
+      await fetchBackups();
+    } catch (error) {
+      message.destroy();
+      message.error(`Gagal membuat backup ${backupTypeText}`);
+      console.error("Error creating backup:", error);
+    } finally {
+      setIsCreatingBackup(false);
+    }
   };
 
-  // Handle download backup
   const handleDownload = (backup) => {
-    message.loading(`Mengunduh ${backup.namaFile}...`, 2);
+    if (!backup.file_path) {
+      message.error("File backup tidak tersedia");
+      return;
+    }
 
-    // Simulate download process
+    message.loading(`Mengunduh ${getFileName(backup.file_path)}...`, 2);
+
+    const downloadUrl = `${import.meta.env.VITE_IMAGE_URL}/${backup.file_path}`;
+
+    window.open(downloadUrl, "_blank");
+
     setTimeout(() => {
-      message.success(`${backup.namaFile} berhasil diunduh!`);
-    }, 2000);
+      message.success(`${getFileName(backup.file_path)} berhasil diunduh!`);
+    }, 1000);
   };
 
-  // Pagination logic
+  const getFileName = (filePath) => {
+    if (!filePath) return "Unknown";
+    return filePath.split("/").pop();
+  };
+
+  const getBackupType = (fileName) => {
+    if (!fileName) return "Unknown";
+    return fileName.includes(".xlsx") ? "Excel" : "SQL";
+  };
+
+  const getFileSize = (message) => {
+    if (!message) return "Unknown";
+    const match = message.match(/(\d+\.?\d*) MB/);
+    return match ? match[0] : "Unknown";
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const currentBackups = backupData.slice(startIndex, endIndex);
@@ -153,20 +119,22 @@ const BackupAdmin = () => {
           </p>
         </div>
         <Button
-          onClick={handleBackupData}
-          disabled={isLoading}
+          onClick={() => setModalVisible(true)}
+          disabled={isCreatingBackup}
           className="flex items-center gap-2"
         >
           <DatabaseOutlined />
-          {isLoading ? "Membuat Backup..." : "Backup Data"}
+          Buat Backup
         </Button>
       </div>
 
       {/* Backup History Cards */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-700">History Backup</h2>
-
-        {currentBackups.length === 0 ? (
+      <div className="space-y-4 mt-6">
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Memuat data backup...</p>
+          </div>
+        ) : currentBackups.length === 0 ? (
           <div className="text-center py-12">
             <DatabaseOutlined className="text-4xl text-gray-400 mb-4" />
             <p className="text-gray-500">Belum ada history backup</p>
@@ -177,22 +145,51 @@ const BackupAdmin = () => {
               <Card key={backup.id}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      {backup.namaFile}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>{backup.timestamp}</span>
-                      <span>•</span>
-                      <span>{backup.ukuran}</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {getFileName(backup.file_path)}
+                      </h3>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          backup.status === "SUCCESS"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {backup.status}
+                      </span>
+                      <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                        {getBackupType(backup.file_path)}
+                      </span>
                     </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span>{formatDate(backup.createdAt)}</span>
+                      <span>•</span>
+                      <span>{getFileSize(backup.message)}</span>
+                      {backup.User && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            oleh {backup.User.full_name || backup.User.email}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {backup.message && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        {backup.message}
+                      </p>
+                    )}
                   </div>
-                  <Button
-                    onClick={() => handleDownload(backup)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm"
-                  >
-                    <DownloadOutlined />
-                    Download
-                  </Button>
+                  {backup.status === "SUCCESS" && backup.file_path && (
+                    <Button
+                      onClick={() => handleDownload(backup)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm"
+                    >
+                      <DownloadOutlined />
+                      Download
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}
@@ -216,6 +213,45 @@ const BackupAdmin = () => {
           </div>
         )}
       </div>
+
+      {/* Modal Pilih Jenis Backup */}
+      <UniversalModal
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onSubmit={handleBackupSubmit}
+        title="Pilih Jenis Backup"
+        loading={isCreatingBackup}
+        fields={[
+          {
+            name: "backupType",
+            label: "Jenis Backup",
+            type: "select",
+            options: [
+              {
+                label: (
+                  <div className="flex items-center gap-2">
+                    <DatabaseOutlined />
+                    <span>
+                      SQL Database - File .sql lengkap dengan struktur
+                    </span>
+                  </div>
+                ),
+                value: "sql",
+              },
+              {
+                label: (
+                  <div className="flex items-center gap-2">
+                    <FileExcelOutlined />
+                    <span>Excel Export - Data tabel dalam format .xlsx</span>
+                  </div>
+                ),
+                value: "excel",
+              },
+            ],
+            rules: [{ required: true, message: "Pilih jenis backup" }],
+          },
+        ]}
+      />
     </div>
   );
 };
