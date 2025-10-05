@@ -25,6 +25,7 @@ import History from "../pages/user/History";
 import ProtectedRoute from "./ProtectedRoute";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ChangePassword from "../pages/admin/ChangePassword";
+import ScholarshipAdd from "../pages/admin/scholarships/ScholarshipAdd";
 
 const AppRouter = () => (
   <Router>
@@ -69,7 +70,10 @@ const AppRouter = () => (
         <Route path="accounts/pimpinan-fak" element={<PimpinanFakultas />} />
         <Route path="accounts/verifikator" element={<Verifikator />} />
         <Route path="accounts/mahasiswa" element={<Mahasiswa />} />
+
         <Route path="scholarship" element={<ScholarshipAdmin />} />
+        <Route path="scholarship/add" element={<ScholarshipAdd />} />
+
         <Route path="registration" element={<ApplicationsAdmin />} />
         <Route path="report" element={<ReportsAdmin />} />
         <Route path="website/berita" element={<NewsAdmin />} />

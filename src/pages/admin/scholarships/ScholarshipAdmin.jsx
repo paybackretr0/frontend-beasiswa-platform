@@ -1,16 +1,44 @@
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import UniversalTable, {
   createNumberColumn,
   createStatusColumn,
   createActionColumn,
-  scholarshipData,
 } from "../../../components/Table";
 import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { fetchAllScholarships } from "../../../services/scholarshipService";
+import { message } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const ScholarshipAdmin = () => {
+  const [scholarships, setScholarships] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.title = "Kelola Beasiswa - Admin";
+    fetchScholarships();
   }, []);
+
+  const fetchScholarships = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAllScholarships();
+      const formattedData = data.map((item) => ({
+        key: item.id,
+        nama: item.name,
+        penyedia: item.organizer || "Tidak Diketahui",
+        status: item.is_active ? "Aktif" : "Ditutup",
+        batasWaktu: item.end_date || "Tidak Ada",
+      }));
+      setScholarships(formattedData);
+    } catch (error) {
+      console.error("Error fetching scholarships:", error);
+      message.error("Gagal memuat data beasiswa");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     createNumberColumn(),
     {
@@ -60,12 +88,13 @@ const ScholarshipAdmin = () => {
   return (
     <UniversalTable
       title="Kelola Beasiswa"
-      data={scholarshipData}
+      data={scholarships}
       columns={columns}
       searchFields={["nama", "penyedia"]}
       searchPlaceholder="Cari nama beasiswa atau penyedia..."
       addButtonText="Tambah Beasiswa"
-      onAdd={() => console.log("Add beasiswa")}
+      onAdd={() => navigate("/admin/scholarship/add")}
+      loading={loading}
     />
   );
 };
