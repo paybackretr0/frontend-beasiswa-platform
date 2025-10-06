@@ -1,46 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Table, Tag, Button, Input, Space, Dropdown } from "antd";
 import { SearchOutlined, PlusOutlined, MoreOutlined } from "@ant-design/icons";
 
 const { Search } = Input;
-
-export const scholarshipData = [
-  {
-    key: 1,
-    nama: "Beasiswa Unggulan UNAND",
-    penyedia: "Universitas Andalas",
-    status: "Aktif",
-    batasWaktu: "2025-02-28",
-  },
-  {
-    key: 2,
-    nama: "Beasiswa KIP Kuliah",
-    penyedia: "Kementerian Pendidikan",
-    status: "Aktif",
-    batasWaktu: "2025-03-15",
-  },
-  {
-    key: 3,
-    nama: "Beasiswa Bank Indonesia",
-    penyedia: "Bank Indonesia",
-    status: "Segera Berakhir",
-    batasWaktu: "2025-01-20",
-  },
-  {
-    key: 4,
-    nama: "Beasiswa Djarum Foundation",
-    penyedia: "Djarum Foundation",
-    status: "Ditutup",
-    batasWaktu: "2025-01-10",
-  },
-  {
-    key: 5,
-    nama: "Beasiswa Tanoto Foundation",
-    penyedia: "Tanoto Foundation",
-    status: "Aktif",
-    batasWaktu: "2025-04-30",
-  },
-];
 
 const UniversalTable = ({
   title,
