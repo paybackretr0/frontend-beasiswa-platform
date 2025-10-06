@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import Button from "../../../components/Button";
-import { getFaculties } from "../../../services/facultyService";
-import { getDepartments } from "../../../services/departmentService";
+import Button from "../../../../components/Button";
+import { getFaculties } from "../../../../services/facultyService";
+import { getDepartments } from "../../../../services/departmentService";
 import { message } from "antd";
 
 const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {

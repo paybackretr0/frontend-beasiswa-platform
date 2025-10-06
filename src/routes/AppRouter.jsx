@@ -25,7 +25,9 @@ import History from "../pages/user/History";
 import ProtectedRoute from "./ProtectedRoute";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ChangePassword from "../pages/admin/ChangePassword";
-import ScholarshipAdd from "../pages/admin/scholarships/ScholarshipAdd";
+import ScholarshipAdd from "../pages/admin/scholarships/create/ScholarshipAdd";
+import ScholarshipDetail from "../pages/admin/scholarships/ScholarshipDetail";
+import ScholarshipEdit from "../pages/admin/scholarships/edit/ScholarshipEdit";
 
 const AppRouter = () => (
   <Router>
@@ -73,6 +75,8 @@ const AppRouter = () => (
 
         <Route path="scholarship" element={<ScholarshipAdmin />} />
         <Route path="scholarship/add" element={<ScholarshipAdd />} />
+        <Route path="scholarship/:id" element={<ScholarshipDetail />} />
+        <Route path="scholarship/edit/:id" element={<ScholarshipEdit />} />
 
         <Route path="registration" element={<ApplicationsAdmin />} />
         <Route path="report" element={<ReportsAdmin />} />

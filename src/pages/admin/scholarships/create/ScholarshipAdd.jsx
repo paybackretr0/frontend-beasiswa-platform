@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import StepThree from "./StepThree";
-import { createScholarship } from "../../../services/scholarshipService";
+import { createScholarship } from "../../../../services/scholarshipService";
 
 const ScholarshipAdd = () => {
   const [currentStep, setCurrentStep] = useState(1);

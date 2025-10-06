@@ -1,7 +1,11 @@
-import { useState } from "react";
-import Button from "../../../components/Button";
+import { useState, useEffect } from "react";
+import { Breadcrumb } from "antd";
+import { useNavigate } from "react-router-dom";
+import Button from "../../../../components/Button";
 
-const StepTwo = ({ onNext, onBack, initialData = {} }) => {
+const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
+  const navigate = useNavigate();
+
   const defaultDocuments = [
     "KTP/Identitas",
     "Surat Keterangan Tidak Mampu",
@@ -26,15 +30,39 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
     semester_minimum: initialData.semester_minimum || "",
   });
 
-  const [selectedDocuments, setSelectedDocuments] = useState(
-    initialData.selectedDocuments || []
-  );
-  const [additionalDocuments, setAdditionalDocuments] = useState(
-    initialData.additionalDocuments || []
-  );
-  const [additionalBenefits, setAdditionalBenefits] = useState(
-    initialData.benefits || [{ id: 1, value: "" }]
-  );
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [additionalDocuments, setAdditionalDocuments] = useState([]);
+  const [additionalBenefits, setAdditionalBenefits] = useState([]);
+
+  useEffect(() => {
+    // Set form data
+    setFormData({
+      start_date: initialData.start_date || "",
+      end_date: initialData.end_date || "",
+      quota: initialData.quota || "",
+      gpa_minimum: initialData.gpa_minimum || "",
+      semester_minimum: initialData.semester_minimum || "",
+    });
+
+    // Set dokumen yang sudah dipilih
+    const allDocuments = initialData.documents || [];
+    setSelectedDocuments(allDocuments);
+
+    // Pisahkan dokumen tambahan dari dokumen default
+    const additionalDocs = allDocuments.filter(
+      (doc) => !defaultDocuments.includes(doc)
+    );
+    setAdditionalDocuments(additionalDocs);
+
+    // Set benefit
+    const benefits = (initialData.benefits || []).map((benefit, index) => ({
+      id: index + 1,
+      value: benefit,
+    }));
+    setAdditionalBenefits(
+      benefits.length > 0 ? benefits : [{ id: 1, value: "" }]
+    );
+  }, [initialData]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -104,9 +132,11 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
   };
 
   const removeBenefitField = (id) => {
-    setAdditionalBenefits(
-      additionalBenefits.filter((benefit) => benefit.id !== id)
-    );
+    if (additionalBenefits.length > 1) {
+      setAdditionalBenefits(
+        additionalBenefits.filter((benefit) => benefit.id !== id)
+      );
+    }
   };
 
   const handleNext = () => {
@@ -132,8 +162,6 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
       ...formData,
       documents: selectedDocuments,
       benefits: validBenefits,
-      selectedDocuments,
-      additionalDocuments,
     };
 
     onNext(stepData);
@@ -142,10 +170,17 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <div className="mb-6">
-        <p className="text-sm text-gray-500">
-          Data Utama &gt;{" "}
-          <span className="font-semibold">Data Teknis Pendaftaran</span>
-        </p>
+        <Breadcrumb>
+          <Breadcrumb.Item>
+            <span
+              className="cursor-pointer hover:text-blue-500"
+              onClick={() => onBack()}
+            >
+              Data Utama
+            </span>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>Data Teknis Pendaftaran</Breadcrumb.Item>
+        </Breadcrumb>
       </div>
 
       <div className="mb-6">
@@ -341,4 +376,4 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
   );
 };
 
-export default StepTwo;
+export default EditStepTwo;

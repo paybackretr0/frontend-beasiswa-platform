@@ -1,7 +1,11 @@
-import { useState } from "react";
-import Button from "../../../components/Button";
+import { useState, useEffect } from "react";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import Button from "../../../../components/Button";
 
-const StepOne = ({ onNext, initialData = {} }) => {
+const EditStepOne = ({ onNext, initialData = {} }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     name: initialData.name || "",
     organizer: initialData.organizer || "",
@@ -9,14 +13,52 @@ const StepOne = ({ onNext, initialData = {} }) => {
     description: initialData.description || "",
   });
 
-  const [requirements, setRequirements] = useState([
-    { id: 1, type: "TEXT", text: "", file: null },
-  ]);
+  const [requirements, setRequirements] = useState([]);
   const [requirementType, setRequirementType] = useState("TEXT");
   const [logoFile, setLogoFile] = useState(null);
+  const [existingLogo, setExistingLogo] = useState(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  useEffect(() => {
+    setFormData({
+      name: initialData.name || "",
+      organizer: initialData.organizer || "",
+      year: initialData.year || new Date().getFullYear(),
+      description: initialData.description || "",
+    });
+
+    if (initialData.requirements && initialData.requirements.length > 0) {
+      const transformedReqs = initialData.requirements.map((req, index) => ({
+        id: index + 1,
+        type: req.requirement_type,
+        text: req.requirement_text || "",
+        file: null,
+        existingFile: req.requirement_file || null,
+      }));
+      setRequirements(transformedReqs);
+
+      const firstReqType = transformedReqs[0]?.type || "TEXT";
+      setRequirementType(firstReqType);
+      setIsDataLoaded(true);
+    } else if (!isDataLoaded) {
+      setRequirements([{ id: 1, type: "TEXT", text: "", file: null }]);
+      setRequirementType("TEXT");
+      setIsDataLoaded(true);
+    }
+
+    setExistingLogo(initialData.existingLogo || null);
+  }, [initialData]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleBack = () => {
+    if (location.state?.from === "detail" && initialData.id) {
+      navigate(`/admin/scholarship/${initialData.id}`);
+    } else {
+      navigate("/admin/scholarship");
+    }
   };
 
   const handleLogoChange = (e) => {
@@ -36,6 +78,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
       }
 
       setLogoFile(file);
+      setExistingLogo(null);
     } else {
       setLogoFile(null);
     }
@@ -56,7 +99,9 @@ const StepOne = ({ onNext, initialData = {} }) => {
   };
 
   const removeRequirementField = (id) => {
-    setRequirements(requirements.filter((req) => req.id !== id));
+    if (requirements.length > 1) {
+      setRequirements(requirements.filter((req) => req.id !== id));
+    }
   };
 
   const updateRequirementField = (id, key, value) => {
@@ -69,10 +114,27 @@ const StepOne = ({ onNext, initialData = {} }) => {
 
   const handleTypeChange = (type) => {
     setRequirementType(type);
-    if (type === "FILE") {
-      setRequirements([{ id: 1, type: "FILE", text: "", file: null }]);
+
+    if (
+      isDataLoaded &&
+      initialData.requirements &&
+      initialData.requirements.length > 0
+    ) {
+      const existingReqsOfType = requirements.filter(
+        (req) => req.type === type
+      );
+
+      if (existingReqsOfType.length > 0) {
+        setRequirements(existingReqsOfType);
+      } else {
+        setRequirements([{ id: 1, type: type, text: "", file: null }]);
+      }
     } else {
-      setRequirements([{ id: 1, type: "TEXT", text: "", file: null }]);
+      if (type === "FILE") {
+        setRequirements([{ id: 1, type: "FILE", text: "", file: null }]);
+      } else {
+        setRequirements([{ id: 1, type: "TEXT", text: "", file: null }]);
+      }
     }
   };
 
@@ -91,7 +153,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
       if (req.type === "TEXT") {
         return req.text.trim() !== "";
       } else {
-        return req.file !== null;
+        return req.file !== null || req.existingFile;
       }
     });
 
@@ -111,15 +173,29 @@ const StepOne = ({ onNext, initialData = {} }) => {
     onNext(stepData);
   };
 
+  const getImageSource = (logoPath) => {
+    if (logoPath) {
+      return logoPath.startsWith("http")
+        ? logoPath
+        : `${import.meta.env.VITE_IMAGE_URL}/${logoPath}`;
+    }
+    return null;
+  };
+
+  const displayedRequirements = requirements.filter(
+    (req) => req.type === requirementType
+  );
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Tambah Beasiswa Baru
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Lengkapi data berikut untuk menambahkan beasiswa baru.
-        </p>
+      <div className="mb-6 flex items-center gap-2">
+        <button
+          className="text-gray-600 hover:text-blue-500 cursor-pointer"
+          onClick={handleBack}
+        >
+          <ArrowLeftOutlined />
+        </button>
+        <h1 className="text-2xl font-bold text-gray-800">Edit Beasiswa</h1>
       </div>
 
       <div className="mb-6">
@@ -212,6 +288,15 @@ const StepOne = ({ onNext, initialData = {} }) => {
                 />
               </div>
             )}
+            {existingLogo && !logoFile && (
+              <div className="w-20 h-20 border border-gray-300 rounded-md overflow-hidden">
+                <img
+                  src={getImageSource(existingLogo)}
+                  alt="Existing logo"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
           {logoFile && (
             <div className="mt-2">
@@ -230,8 +315,13 @@ const StepOne = ({ onNext, initialData = {} }) => {
                 }}
                 className="text-red-500 hover:text-red-700 text-xs mt-1"
               >
-                Hapus Logo
+                Hapus Logo Baru
               </button>
+            </div>
+          )}
+          {existingLogo && (
+            <div className="mt-2">
+              <p className="text-xs text-blue-600">Logo saat ini tersimpan</p>
             </div>
           )}
         </div>
@@ -240,6 +330,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
           <label className="block text-sm font-medium text-gray-700 mb-4">
             Syarat dan Ketentuan <span className="text-red-500">*</span>
           </label>
+
           <div className="mb-4">
             <select
               value={requirementType}
@@ -251,7 +342,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
             </select>
           </div>
 
-          {requirements.map((requirement) => (
+          {displayedRequirements.map((requirement) => (
             <div key={requirement.id} className="flex items-center gap-4 mb-4">
               {requirementType === "FILE" ? (
                 <div className="flex-1">
@@ -269,7 +360,20 @@ const StepOne = ({ onNext, initialData = {} }) => {
                   />
                   {requirement.file && (
                     <p className="text-xs text-gray-500 mt-1">
-                      File dipilih: {requirement.file.name}
+                      File baru dipilih: {requirement.file.name}
+                    </p>
+                  )}
+                  {requirement.existingFile && !requirement.file && (
+                    <p className="text-xs text-blue-500 mt-1">
+                      File sebelumnya:{" "}
+                      <a
+                        href={getImageSource(requirement.existingFile)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        Lihat File
+                      </a>
                     </p>
                   )}
                 </div>
@@ -288,15 +392,16 @@ const StepOne = ({ onNext, initialData = {} }) => {
                   placeholder="Masukkan syarat atau ketentuan"
                 />
               )}
-              {requirementType !== "FILE" && requirements.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeRequirementField(requirement.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Hapus
-                </button>
-              )}
+              {requirementType !== "FILE" &&
+                displayedRequirements.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeRequirementField(requirement.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Hapus
+                  </button>
+                )}
             </div>
           ))}
 
@@ -319,4 +424,4 @@ const StepOne = ({ onNext, initialData = {} }) => {
   );
 };
 
-export default StepOne;
+export default EditStepOne;

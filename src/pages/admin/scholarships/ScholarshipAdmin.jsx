@@ -4,8 +4,17 @@ import UniversalTable, {
   createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
-import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { fetchAllScholarships } from "../../../services/scholarshipService";
+import {
+  EyeOutlined,
+  EditOutlined,
+  CheckOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+import {
+  fetchAllScholarships,
+  deactivateScholarship,
+  activateScholarship,
+} from "../../../services/scholarshipService";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
@@ -25,9 +34,10 @@ const ScholarshipAdmin = () => {
       const data = await fetchAllScholarships();
       const formattedData = data.map((item) => ({
         key: item.id,
+        id: item.id,
         nama: item.name,
         penyedia: item.organizer || "Tidak Diketahui",
-        status: item.is_active ? "Aktif" : "Ditutup",
+        status: item.scholarship_status === "AKTIF" ? "Aktif" : "Nonaktif",
         batasWaktu: item.end_date || "Tidak Ada",
       }));
       setScholarships(formattedData);
@@ -36,6 +46,28 @@ const ScholarshipAdmin = () => {
       message.error("Gagal memuat data beasiswa");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleActivate = async (id) => {
+    try {
+      await activateScholarship(id);
+      message.success("Beasiswa diaktifkan");
+      fetchScholarships();
+    } catch (error) {
+      console.error("Error activating scholarship:", error);
+      message.error("Gagal mengaktifkan beasiswa");
+    }
+  };
+
+  const handleDeactivate = async (id) => {
+    try {
+      await deactivateScholarship(id);
+      message.success("Beasiswa dinonaktifkan");
+      fetchScholarships();
+    } catch (error) {
+      console.error("Error deactivating scholarship:", error);
+      message.error("Gagal menonaktifkan beasiswa");
     }
   };
 
@@ -54,7 +86,7 @@ const ScholarshipAdmin = () => {
     },
     createStatusColumn({
       Aktif: { color: "green" },
-      Ditutup: { color: "red" },
+      Nonaktif: { color: "red" },
       "Segera Berakhir": { color: "orange" },
     }),
     {
@@ -67,20 +99,31 @@ const ScholarshipAdmin = () => {
         key: "detail",
         label: "Detail",
         icon: <EyeOutlined />,
-        onClick: (record) => console.log("Detail", record),
+        onClick: (record) => navigate(`/admin/scholarship/${record.id}`),
       },
       {
         key: "edit",
         label: "Edit",
         icon: <EditOutlined />,
-        onClick: (record) => console.log("Edit", record),
+        onClick: (record) => navigate(`/admin/scholarship/edit/${record.id}`),
       },
       {
-        key: "delete",
-        label: "Hapus",
+        key: "activate",
+        label: "Aktifkan",
+        icon: <CheckOutlined />,
+        onClick: (record) => {
+          handleActivate(record.id);
+        },
+        hidden: (record) => record.status === "Aktif",
+      },
+      {
+        key: "deactivate",
+        label: "Nonaktifkan",
         icon: <DeleteOutlined />,
-        danger: true,
-        onClick: (record) => console.log("Delete", record),
+        onClick: (record) => {
+          handleDeactivate(record.id);
+        },
+        hidden: (record) => record.status === "Nonaktif",
       },
     ]),
   ];

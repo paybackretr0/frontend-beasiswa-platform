@@ -86,3 +86,103 @@ export const fetchActiveScholarships = async () => {
 
   return data.data;
 };
+
+export const getBeasiswaById = async (id) => {
+  const token = localStorage.getItem("access_token");
+
+  const data = await authFetch(`${API_BASE_URL}/beasiswa/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!data.success) {
+    throw new Error(data.message || `Gagal mengambil beasiswa`);
+  }
+
+  return data.data;
+};
+
+export const updateScholarship = async (id, scholarshipData) => {
+  const token = localStorage.getItem("access_token");
+
+  const formData = new FormData();
+
+  Object.keys(scholarshipData).forEach((key) => {
+    if (key === "requirements") {
+      const requirementsForAPI = scholarshipData[key].map((req) => ({
+        type: req.type,
+        text: req.text || "",
+        existingFile: req.existingFile || null,
+      }));
+      formData.append("requirements", JSON.stringify(requirementsForAPI));
+    } else if (
+      key === "documents" ||
+      key === "benefits" ||
+      key === "faculties" ||
+      key === "departments"
+    ) {
+      formData.append(key, JSON.stringify(scholarshipData[key]));
+    } else if (
+      key === "requirementFile" &&
+      scholarshipData[key] instanceof File
+    ) {
+      formData.append("requirement_file", scholarshipData[key]);
+    } else if (key === "logoFile" && scholarshipData[key] instanceof File) {
+      formData.append("logo_file", scholarshipData[key]);
+    } else if (
+      key !== "requirementFile" &&
+      key !== "logoFile" &&
+      scholarshipData[key] !== null &&
+      scholarshipData[key] !== undefined
+    ) {
+      formData.append(key, scholarshipData[key]);
+    }
+  });
+
+  const data = await authFetch(`${API_BASE_URL}/beasiswa/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal memperbarui beasiswa");
+  }
+
+  return data.data;
+};
+
+export const deactivateScholarship = async (id) => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(`${API_BASE_URL}/beasiswa/${id}/deactivate`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!data.success) {
+    throw new Error(data.message || "Gagal menonaktifkan beasiswa");
+  }
+  return data.data;
+};
+
+export const activateScholarship = async (id) => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(`${API_BASE_URL}/beasiswa/${id}/activate`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengaktifkan beasiswa");
+  }
+  return data.data;
+};
