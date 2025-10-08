@@ -4,11 +4,6 @@ import {
   LineChart,
   HorizontalBarChart,
   PieChart,
-  summaryData,
-  fakultasData,
-  departemenData,
-  tahunData,
-  genderData,
   ActivityCard,
   StatusSummary,
 } from "../../components/Chart";
@@ -35,7 +30,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Chart Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <HorizontalBarChart
           data={fakultasData}
           title="Penerima Berdasarkan Fakultas"
