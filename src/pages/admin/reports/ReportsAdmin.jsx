@@ -20,7 +20,7 @@ import {
   ChartEmptyState,
 } from "../../../components/Chart";
 import {
-  getMainSummary,
+  getSummary,
   getSelectionSummary,
   getFacultyDistribution,
   getDepartmentDistribution,
@@ -28,7 +28,7 @@ import {
   getGenderDistribution,
   getApplicationsList,
   getFilterOptions,
-} from "../../../services/reportService";
+} from "../../../services/analyticsService";
 
 const { Option } = Select;
 
@@ -104,7 +104,7 @@ const ReportsAdmin = () => {
 
   const fetchMainSummary = async () => {
     try {
-      const data = await getMainSummary(selectedYear);
+      const data = await getSummary(selectedYear);
       const summary = [
         {
           title: "Jumlah Pendaftar",
@@ -138,7 +138,7 @@ const ReportsAdmin = () => {
       const data = await getSelectionSummary(selectedYear);
       const summary = [
         {
-          title: "Lolos Seleksi Berkas",
+          title: "Jumlah Mahasiswa Diterima",
           value: data.lolosSeleksiBerkas || 0,
           color: "text-green-600",
         },

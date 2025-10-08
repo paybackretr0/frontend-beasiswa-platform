@@ -1,30 +1,26 @@
 import API_BASE_URL from "./apiConfig";
 import { authFetch } from "./tokenAuth";
 
-// Main Summary
-export const getMainSummary = async (year) => {
+export const getSummary = async (year = null) => {
   const token = localStorage.getItem("access_token");
-  const data = await authFetch(
-    `${API_BASE_URL}/reports/main-summary?year=${year}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const params = year ? `?year=${year}` : "";
+  const data = await authFetch(`${API_BASE_URL}/analytics/summary${params}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
   if (!data.success) {
-    throw new Error(data.message || "Gagal mengambil ringkasan utama");
+    throw new Error(data.message || "Gagal mengambil ringkasan");
   }
   return data.data;
 };
 
-// Selection Summary
 export const getSelectionSummary = async (year) => {
   const token = localStorage.getItem("access_token");
   const data = await authFetch(
-    `${API_BASE_URL}/reports/selection-summary?year=${year}`,
+    `${API_BASE_URL}/analytics/selection-summary?year=${year}`,
     {
       method: "GET",
       headers: {
@@ -39,11 +35,30 @@ export const getSelectionSummary = async (year) => {
   return data.data;
 };
 
-// Faculty Distribution
-export const getFacultyDistribution = async (year) => {
+export const getStatusSummary = async (year = null) => {
   const token = localStorage.getItem("access_token");
+  const params = year ? `?year=${year}` : "";
   const data = await authFetch(
-    `${API_BASE_URL}/reports/faculty-distribution?year=${year}`,
+    `${API_BASE_URL}/analytics/status-summary${params}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil ringkasan status");
+  }
+  return data.data;
+};
+
+export const getFacultyDistribution = async (year = null) => {
+  const token = localStorage.getItem("access_token");
+  const params = year ? `?year=${year}` : "";
+  const data = await authFetch(
+    `${API_BASE_URL}/analytics/faculty-distribution${params}`,
     {
       method: "GET",
       headers: {
@@ -58,11 +73,11 @@ export const getFacultyDistribution = async (year) => {
   return data.data;
 };
 
-// Department Distribution
-export const getDepartmentDistribution = async (year) => {
+export const getDepartmentDistribution = async (year = null) => {
   const token = localStorage.getItem("access_token");
+  const params = year ? `?year=${year}` : "";
   const data = await authFetch(
-    `${API_BASE_URL}/reports/department-distribution?year=${year}`,
+    `${API_BASE_URL}/analytics/department-distribution${params}`,
     {
       method: "GET",
       headers: {
@@ -77,10 +92,9 @@ export const getDepartmentDistribution = async (year) => {
   return data.data;
 };
 
-// Yearly Trend
 export const getYearlyTrend = async () => {
   const token = localStorage.getItem("access_token");
-  const data = await authFetch(`${API_BASE_URL}/reports/yearly-trend`, {
+  const data = await authFetch(`${API_BASE_URL}/analytics/yearly-trend`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -93,11 +107,11 @@ export const getYearlyTrend = async () => {
   return data.data;
 };
 
-// Gender Distribution
-export const getGenderDistribution = async (year) => {
+export const getGenderDistribution = async (year = null) => {
   const token = localStorage.getItem("access_token");
+  const params = year ? `?year=${year}` : "";
   const data = await authFetch(
-    `${API_BASE_URL}/reports/gender-distribution?year=${year}`,
+    `${API_BASE_URL}/analytics/gender-distribution${params}`,
     {
       method: "GET",
       headers: {
@@ -112,7 +126,21 @@ export const getGenderDistribution = async (year) => {
   return data.data;
 };
 
-// Applications List
+export const getActivities = async () => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(`${API_BASE_URL}/analytics/activities`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil aktivitas");
+  }
+  return data.data;
+};
+
 export const getApplicationsList = async (filters = {}) => {
   const token = localStorage.getItem("access_token");
   const params = new URLSearchParams();
@@ -124,7 +152,7 @@ export const getApplicationsList = async (filters = {}) => {
   });
 
   const data = await authFetch(
-    `${API_BASE_URL}/reports/applications-list?${params}`,
+    `${API_BASE_URL}/analytics/applications-list?${params}`,
     {
       method: "GET",
       headers: {
@@ -139,11 +167,9 @@ export const getApplicationsList = async (filters = {}) => {
   return data.data;
 };
 
-// Get Filter Options (for dropdowns)
 export const getFilterOptions = async () => {
   const token = localStorage.getItem("access_token");
 
-  // Get faculties
   const facultiesData = await authFetch(`${API_BASE_URL}/faculties`, {
     method: "GET",
     headers: {
@@ -152,7 +178,6 @@ export const getFilterOptions = async () => {
     },
   });
 
-  // Get departments
   const departmentsData = await authFetch(`${API_BASE_URL}/departments`, {
     method: "GET",
     headers: {

@@ -64,7 +64,6 @@ const HorizontalBarChart = ({ data, title, description }) => {
 const LineChart = ({ data, title, description }) => {
   const [hovered, setHovered] = useState(null);
 
-  // Check if data is empty or all values are 0
   const hasData =
     data && data.length > 0 && data.some((item) => item.value > 0);
 
@@ -127,7 +126,6 @@ const LineChart = ({ data, title, description }) => {
             </linearGradient>
           </defs>
 
-          {/* Grid lines */}
           {Array.from({ length: 5 }).map((_, i) => (
             <line
               key={i}
@@ -140,10 +138,8 @@ const LineChart = ({ data, title, description }) => {
             />
           ))}
 
-          {/* Area */}
           <path d={areaPath} fill="url(#areaGradient)" stroke="none" />
 
-          {/* Line */}
           <path
             d={linePath}
             fill="none"
@@ -153,7 +149,6 @@ const LineChart = ({ data, title, description }) => {
             strokeLinejoin="round"
           />
 
-          {/* Points */}
           {points.map((p, i) => (
             <g
               key={i}
@@ -182,7 +177,6 @@ const LineChart = ({ data, title, description }) => {
             </g>
           ))}
 
-          {/* Labels */}
           {points.map((p, i) => (
             <text
               key={i}
@@ -197,7 +191,6 @@ const LineChart = ({ data, title, description }) => {
           ))}
         </svg>
 
-        {/* Tooltip */}
         {hovered && (
           <div
             className="absolute p-2 text-sm bg-white border border-gray-200 rounded-lg shadow-lg pointer-events-none transition-all duration-200 z-10"
@@ -216,7 +209,6 @@ const LineChart = ({ data, title, description }) => {
 };
 
 const PieChart = ({ data, title, description }) => {
-  // Check if data is empty or all values are 0
   const hasData =
     data && data.length > 0 && data.some((item) => item.value > 0);
 
@@ -279,58 +271,4 @@ const PieChart = ({ data, title, description }) => {
   );
 };
 
-const StatusSummary = () => (
-  <Card
-    title="Status Pendaftaran"
-    description="Ringkasan status pendaftaran beasiswa"
-  >
-    <div className="space-y-3 mt-2">
-      {statusCounts.map((s, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between bg-[#D9D9D9] rounded-lg px-4 py-2"
-        >
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-block w-3 h-3 rounded-full"
-              style={{ background: s.color }}
-            />
-            <span className="text-sm text-gray-700">{s.label}</span>
-          </div>
-          <span className="text-sm font-semibold text-gray-800">{s.value}</span>
-        </div>
-      ))}
-    </div>
-  </Card>
-);
-
-const ActivityCard = () => (
-  <Card
-    title="Aktivitas Terbaru"
-    description="Aktivitas sistem dalam 24 jam terakhir"
-  >
-    <ul className="mt-2 space-y-3">
-      {activities.map((act, idx) => (
-        <li
-          key={idx}
-          className="flex items-center gap-2 bg-[#D9D9D9] rounded-lg px-4 py-2"
-        >
-          <span className="text-xs text-[#2D60FF] font-semibold min-w-[110px]">
-            {act.type}
-          </span>
-          <span className="text-sm text-gray-700 flex-1">{act.desc}</span>
-          <span className="text-xs text-gray-500">{act.time}</span>
-        </li>
-      ))}
-    </ul>
-  </Card>
-);
-
-export {
-  LineChart,
-  PieChart,
-  HorizontalBarChart,
-  StatusSummary,
-  ActivityCard,
-  ChartEmptyState,
-};
+export { LineChart, PieChart, HorizontalBarChart, ChartEmptyState };
