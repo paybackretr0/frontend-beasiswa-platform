@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Select, message } from "antd";
+import { Select, message, Spin } from "antd";
 import {
   DownloadOutlined,
   EyeOutlined,
@@ -17,152 +17,221 @@ import {
   HorizontalBarChart,
   LineChart,
   PieChart,
-  tahunData,
-  genderData,
-  fakultasData,
-  departemenData,
+  ChartEmptyState,
 } from "../../../components/Chart";
+import {
+  getSummary,
+  getSelectionSummary,
+  getFacultyDistribution,
+  getDepartmentDistribution,
+  getYearlyTrend,
+  getGenderDistribution,
+  getApplicationsList,
+  getFilterOptions,
+} from "../../../services/analyticsService";
 
 const { Option } = Select;
 
-// Data untuk dropdown tahun
-const years = [2021, 2022, 2023, 2024, 2025];
-
-// Data summary utama
-const mainSummaryData = [
-  {
-    title: "Jumlah Pendaftar",
-    value: 1240,
-    color: "text-blue-600",
-  },
-  {
-    title: "Jumlah Beasiswa",
-    value: 15,
-    color: "text-purple-600",
-  },
-  {
-    title: "Beasiswa Masih Buka",
-    value: 8,
-    color: "text-green-600",
-  },
-  {
-    title: "Beasiswa Sudah Tutup",
-    value: 7,
-    color: "text-red-600",
-  },
-];
-
-// Data summary status seleksi
-const selectionSummaryData = [
-  {
-    title: "Lolos Seleksi Berkas",
-    value: 450,
-    color: "text-green-600",
-  },
-  {
-    title: "Menunggu Verifikasi",
-    value: 320,
-    color: "text-orange-600",
-  },
-  {
-    title: "Menunggu Validasi",
-    value: 180,
-    color: "text-yellow-600",
-  },
-  {
-    title: "Tidak Lolos Seleksi",
-    value: 290,
-    color: "text-red-600",
-  },
-];
-
-// Data pendaftar beasiswa
-const pendaftarData = [
-  {
-    key: 1,
-    nama: "Andi Pratama",
-    nim: "2021001001",
-    fakultas: "Teknik",
-    departemen: "Informatika",
-    gender: "Laki-laki",
-    status: "Disetujui",
-    beasiswa: "Beasiswa Unggulan UNAND",
-  },
-  {
-    key: 2,
-    nama: "Siti Nurhaliza",
-    nim: "2021002002",
-    fakultas: "Ekonomi",
-    departemen: "Manajemen",
-    gender: "Perempuan",
-    status: "Menunggu Verifikasi",
-    beasiswa: "Beasiswa KIP Kuliah",
-  },
-  {
-    key: 3,
-    nama: "Budi Santoso",
-    nim: "2021003003",
-    fakultas: "Hukum",
-    departemen: "Ilmu Hukum",
-    gender: "Laki-laki",
-    status: "Ditolak",
-    beasiswa: "Beasiswa Bank Indonesia",
-  },
-  {
-    key: 4,
-    nama: "Dewi Sartika",
-    nim: "2021004004",
-    fakultas: "Kedokteran",
-    departemen: "Kedokteran",
-    gender: "Perempuan",
-    status: "Menunggu Validasi",
-    beasiswa: "Beasiswa Djarum Foundation",
-  },
-  {
-    key: 5,
-    nama: "Eka Putra",
-    nim: "2021005005",
-    fakultas: "MIPA",
-    departemen: "Matematika",
-    gender: "Laki-laki",
-    status: "Disetujui",
-    beasiswa: "Beasiswa Tanoto Foundation",
-  },
-];
-
-// Filter options
-const fakultasOptions = [
-  "Semua",
-  "Teknik",
-  "Ekonomi",
-  "Hukum",
-  "Kedokteran",
-  "MIPA",
-  "Pertanian",
-];
-const departemenOptions = [
-  "Semua",
-  "Informatika",
-  "Manajemen",
-  "Ilmu Hukum",
-  "Kedokteran",
-  "Matematika",
-  "Agroteknologi",
-];
-const genderOptions = ["Semua", "Laki-laki", "Perempuan"];
+const currentYear = new Date().getFullYear();
+const years = Array.from(
+  { length: currentYear - 2025 + 1 },
+  (_, i) => 2025 + i
+);
 
 const ReportsAdmin = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [filteredPendaftar, setFilteredPendaftar] = useState(pendaftarData);
+  const [loading, setLoading] = useState(true);
+  const [chartsLoading, setChartsLoading] = useState(true);
+
+  const [mainSummaryData, setMainSummaryData] = useState([]);
+  const [selectionSummaryData, setSelectionSummaryData] = useState([]);
+
+  const [fakultasData, setFakultasData] = useState([]);
+  const [departemenData, setDepartemenData] = useState([]);
+  const [tahunData, setTahunData] = useState([]);
+  const [genderData, setGenderData] = useState([]);
+
+  const [pendaftarData, setPendaftarData] = useState([]);
+  const [filteredPendaftar, setFilteredPendaftar] = useState([]);
+
   const [filters, setFilters] = useState({
     fakultas: "Semua",
     departemen: "Semua",
     gender: "Semua",
   });
+  const [filterOptions, setFilterOptions] = useState({
+    faculties: [],
+    departments: [],
+    genders: [],
+  });
 
   useEffect(() => {
     document.title = "Laporan - Admin";
+    fetchAllData();
+    fetchFilterOptions();
   }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [selectedYear]);
+
+  const fetchAllData = async () => {
+    setMainSummaryData([]);
+    setSelectionSummaryData([]);
+    setFakultasData([]);
+    setDepartemenData([]);
+    setTahunData([]);
+    setGenderData([]);
+    setPendaftarData([]);
+    setFilteredPendaftar([]);
+
+    setLoading(true);
+    setChartsLoading(true);
+
+    try {
+      await Promise.all([fetchMainSummary(), fetchSelectionSummary()]);
+
+      setLoading(false);
+
+      await Promise.all([fetchChartData(), fetchPendaftarData()]);
+    } catch (error) {
+      console.error("Error fetching all data:", error);
+      message.error("Gagal memuat data laporan");
+    } finally {
+      setChartsLoading(false);
+    }
+  };
+
+  const fetchMainSummary = async () => {
+    try {
+      const data = await getSummary(selectedYear);
+      const summary = [
+        {
+          title: "Jumlah Pendaftar",
+          value: data.totalPendaftar || 0,
+          color: "text-blue-600",
+        },
+        {
+          title: "Jumlah Beasiswa",
+          value: data.totalBeasiswa || 0,
+          color: "text-purple-600",
+        },
+        {
+          title: "Beasiswa Masih Buka",
+          value: data.beasiswaMasihBuka || 0,
+          color: "text-green-600",
+        },
+        {
+          title: "Beasiswa Sudah Tutup",
+          value: data.beasiswaSudahTutup || 0,
+          color: "text-red-600",
+        },
+      ];
+      setMainSummaryData(summary);
+    } catch (error) {
+      console.error("Error fetching main summary:", error);
+    }
+  };
+
+  const fetchSelectionSummary = async () => {
+    try {
+      const data = await getSelectionSummary(selectedYear);
+      const summary = [
+        {
+          title: "Jumlah Mahasiswa Diterima",
+          value: data.lolosSeleksiBerkas || 0,
+          color: "text-green-600",
+        },
+        {
+          title: "Menunggu Verifikasi",
+          value: data.menungguVerifikasi || 0,
+          color: "text-orange-600",
+        },
+        {
+          title: "Menunggu Validasi",
+          value: data.menungguValidasi || 0,
+          color: "text-yellow-600",
+        },
+        {
+          title: "Tidak Lolos Seleksi",
+          value: data.tidakLolosSeleksi || 0,
+          color: "text-red-600",
+        },
+      ];
+      setSelectionSummaryData(summary);
+    } catch (error) {
+      console.error("Error fetching selection summary:", error);
+    }
+  };
+
+  const fetchChartData = async () => {
+    try {
+      const [fakultas, departemen, tahun, gender] = await Promise.all([
+        getFacultyDistribution(selectedYear),
+        getDepartmentDistribution(selectedYear),
+        getYearlyTrend(),
+        getGenderDistribution(selectedYear),
+      ]);
+
+      setFakultasData(fakultas || []);
+      setDepartemenData(departemen || []);
+      setTahunData(tahun || []);
+      setGenderData(gender || []);
+    } catch (error) {
+      console.error("Error fetching chart data:", error);
+    }
+  };
+
+  const fetchPendaftarData = async () => {
+    try {
+      const searchFilters = {
+        year: selectedYear,
+        ...filters,
+      };
+      const data = await getApplicationsList(searchFilters);
+
+      const transformedData = data.map((item, index) => ({
+        key: item.id || index,
+        id: item.id,
+        nama: item.nama,
+        nim: item.nim,
+        fakultas: item.fakultas,
+        departemen: item.departemen,
+        gender: item.gender,
+        status: item.status,
+        beasiswa: item.beasiswa,
+        tanggalDaftar: item.tanggalDaftar,
+      }));
+
+      setPendaftarData(transformedData);
+      setFilteredPendaftar(transformedData);
+    } catch (error) {
+      console.error("Error fetching pendaftar data:", error);
+    }
+  };
+
+  const fetchFilterOptions = async () => {
+    try {
+      const options = await getFilterOptions();
+      const fakultasOptions = [
+        "Semua",
+        ...options.faculties.map((f) => f.name),
+      ];
+      const departemenOptions = [
+        "Semua",
+        ...options.departments.map((d) => d.name),
+      ];
+      const genderOptions = ["Semua", ...options.genders];
+
+      setFilterOptions({
+        faculties: fakultasOptions,
+        departments: departemenOptions,
+        genders: genderOptions,
+      });
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+    }
+  };
 
   const handleYearChange = (year) => {
     setSelectedYear(year);
@@ -173,28 +242,36 @@ const ReportsAdmin = () => {
     message.success(`Mengunduh laporan tahun ${selectedYear}...`);
   };
 
-  // Handle filter changes
   const handleFilterChange = (filterType, value) => {
     const newFilters = { ...filters, [filterType]: value };
     setFilters(newFilters);
 
-    let filtered = pendaftarData;
+    const searchFilters = {
+      year: selectedYear,
+      ...newFilters,
+    };
 
-    if (newFilters.fakultas !== "Semua") {
-      filtered = filtered.filter(
-        (item) => item.fakultas === newFilters.fakultas
-      );
-    }
-    if (newFilters.departemen !== "Semua") {
-      filtered = filtered.filter(
-        (item) => item.departemen === newFilters.departemen
-      );
-    }
-    if (newFilters.gender !== "Semua") {
-      filtered = filtered.filter((item) => item.gender === newFilters.gender);
-    }
+    getApplicationsList(searchFilters)
+      .then((data) => {
+        const transformedData = data.map((item, index) => ({
+          key: item.id || index,
+          id: item.id,
+          nama: item.nama,
+          nim: item.nim,
+          fakultas: item.fakultas,
+          departemen: item.departemen,
+          gender: item.gender,
+          status: item.status,
+          beasiswa: item.beasiswa,
+          tanggalDaftar: item.tanggalDaftar,
+        }));
 
-    setFilteredPendaftar(filtered);
+        setFilteredPendaftar(transformedData);
+      })
+      .catch((error) => {
+        console.error("Error applying filters:", error);
+        message.error("Gagal menerapkan filter");
+      });
   };
 
   const handleDetail = (record) => {
@@ -221,6 +298,18 @@ const ReportsAdmin = () => {
       title: "NIM",
       dataIndex: "nim",
       key: "nim",
+    },
+    {
+      title: "Fakultas",
+      dataIndex: "fakultas",
+      key: "fakultas",
+      sorter: (a, b) => a.fakultas.localeCompare(b.fakultas),
+    },
+    {
+      title: "Departemen",
+      dataIndex: "departemen",
+      key: "departemen",
+      sorter: (a, b) => a.departemen.localeCompare(b.departemen),
     },
     createStatusColumn({
       Disetujui: { color: "green" },
@@ -257,9 +346,16 @@ const ReportsAdmin = () => {
     ]),
   ];
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header Section */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Select
@@ -284,7 +380,6 @@ const ReportsAdmin = () => {
         </Button>
       </div>
 
-      {/* Main Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {mainSummaryData.map((item, idx) => (
           <Card key={idx}>
@@ -298,7 +393,6 @@ const ReportsAdmin = () => {
         ))}
       </div>
 
-      {/* Selection Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {selectionSummaryData.map((item, idx) => (
           <Card key={idx}>
@@ -312,34 +406,78 @@ const ReportsAdmin = () => {
         ))}
       </div>
 
-      {/* Chart Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <HorizontalBarChart
-          data={fakultasData}
-          title="Penerima Berdasarkan Fakultas"
-          description={`Distribusi penerima beasiswa per fakultas tahun ${selectedYear}`}
-        />
-        <HorizontalBarChart
-          data={departemenData}
-          title="Penerima Berdasarkan Departemen"
-          description={`Distribusi penerima beasiswa per departemen tahun ${selectedYear}`}
-        />
+        {chartsLoading ? (
+          <>
+            <Card
+              title="Penerima Berdasarkan Fakultas"
+              description={`Distribusi penerima beasiswa per fakultas tahun ${selectedYear}`}
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+            <Card
+              title="Penerima Berdasarkan Departemen"
+              description={`Distribusi penerima beasiswa per departemen tahun ${selectedYear}`}
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <HorizontalBarChart
+              data={fakultasData}
+              title="Penerima Berdasarkan Fakultas"
+              description={`Distribusi penerima beasiswa per fakultas tahun ${selectedYear}`}
+            />
+            <HorizontalBarChart
+              data={departemenData}
+              title="Penerima Berdasarkan Departemen"
+              description={`Distribusi penerima beasiswa per departemen tahun ${selectedYear}`}
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <LineChart
-          data={tahunData}
-          title="Penerima Tahun ke Tahun"
-          description="Perbandingan penerima beasiswa dari tahun ke tahun"
-        />
-        <PieChart
-          data={genderData}
-          title="Penerima Berdasarkan Gender"
-          description="Distribusi penerima beasiswa berdasarkan gender"
-        />
+        {chartsLoading ? (
+          <>
+            <Card
+              title="Penerima Tahun ke Tahun"
+              description="Perbandingan penerima beasiswa dari tahun ke tahun"
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+            <Card
+              title="Penerima Berdasarkan Gender"
+              description="Distribusi penerima beasiswa berdasarkan gender"
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <LineChart
+              data={tahunData}
+              title="Penerima Tahun ke Tahun"
+              description="Perbandingan penerima beasiswa dari tahun ke tahun"
+            />
+            <PieChart
+              data={genderData}
+              title="Penerima Berdasarkan Gender"
+              description="Distribusi penerima beasiswa berdasarkan gender"
+            />
+          </>
+        )}
       </div>
 
-      {/* Pendaftar Table */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
@@ -362,7 +500,7 @@ const ReportsAdmin = () => {
                 placeholder="Semua Fakultas"
                 style={{ width: 140 }}
               >
-                {fakultasOptions.map((option) => (
+                {filterOptions.faculties.map((option) => (
                   <Option key={option} value={option}>
                     {option === "Semua" ? "Semua Fakultas" : option}
                   </Option>
@@ -375,7 +513,7 @@ const ReportsAdmin = () => {
                 placeholder="Semua Departemen"
                 style={{ width: 150 }}
               >
-                {departemenOptions.map((option) => (
+                {filterOptions.departments.map((option) => (
                   <Option key={option} value={option}>
                     {option === "Semua" ? "Semua Departemen" : option}
                   </Option>
@@ -388,7 +526,7 @@ const ReportsAdmin = () => {
                 placeholder="Semua Gender"
                 style={{ width: 130 }}
               >
-                {genderOptions.map((option) => (
+                {filterOptions.genders.map((option) => (
                   <Option key={option} value={option}>
                     {option === "Semua" ? "Semua Gender" : option}
                   </Option>
@@ -397,37 +535,33 @@ const ReportsAdmin = () => {
             </>
           }
           onSearch={(value) => {
-            // Custom search logic yang mempertahankan filter
-            let filtered = pendaftarData;
+            const searchFilters = {
+              year: selectedYear,
+              search: value,
+              ...filters,
+            };
 
-            // Apply filters
-            if (filters.fakultas !== "Semua") {
-              filtered = filtered.filter(
-                (item) => item.fakultas === filters.fakultas
-              );
-            }
-            if (filters.departemen !== "Semua") {
-              filtered = filtered.filter(
-                (item) => item.departemen === filters.departemen
-              );
-            }
-            if (filters.gender !== "Semua") {
-              filtered = filtered.filter(
-                (item) => item.gender === filters.gender
-              );
-            }
+            getApplicationsList(searchFilters)
+              .then((data) => {
+                const transformedData = data.map((item, index) => ({
+                  key: item.id || index,
+                  id: item.id,
+                  nama: item.nama,
+                  nim: item.nim,
+                  fakultas: item.fakultas,
+                  departemen: item.departemen,
+                  gender: item.gender,
+                  status: item.status,
+                  beasiswa: item.beasiswa,
+                  tanggalDaftar: item.tanggalDaftar,
+                }));
 
-            // Apply search
-            if (value) {
-              filtered = filtered.filter(
-                (item) =>
-                  item.nama?.toLowerCase().includes(value.toLowerCase()) ||
-                  item.nim?.toLowerCase().includes(value.toLowerCase()) ||
-                  item.beasiswa?.toLowerCase().includes(value.toLowerCase())
-              );
-            }
-
-            setFilteredPendaftar(filtered);
+                setFilteredPendaftar(transformedData);
+              })
+              .catch((error) => {
+                console.error("Error searching:", error);
+                message.error("Gagal mencari data");
+              });
           }}
         />
       </div>

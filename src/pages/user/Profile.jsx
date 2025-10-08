@@ -39,7 +39,6 @@ const Profile = () => {
     department: "",
   });
 
-  // Validation state
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -60,8 +59,8 @@ const Profile = () => {
           nim: user.nim || "",
           phone_number: user.phone_number || "",
           gender: user.gender || "",
-          faculty: user.Faculty?.name || "N/A",
-          department: user.Department?.name || "N/A",
+          faculty: user.faculty?.name || "N/A",
+          department: user.department?.name || "N/A",
         });
       } else {
         message.error("Gagal memuat profil");
@@ -101,7 +100,6 @@ const Profile = () => {
       [name]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -117,7 +115,6 @@ const Profile = () => {
       [name]: value,
     }));
 
-    // Clear error saat user mengetik
     if (passwordErrors[name]) {
       setPasswordErrors((prev) => ({
         ...prev,
