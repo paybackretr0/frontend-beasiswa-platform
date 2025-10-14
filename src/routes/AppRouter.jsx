@@ -22,12 +22,14 @@ import BackupAdmin from "../pages/admin/extras/BackupAdmin";
 import LogAdmin from "../pages/admin/extras/LogAdmin";
 import Profile from "../pages/user/Profile";
 import History from "../pages/user/History";
-import ProtectedRoute from "./ProtectedRoute";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ChangePassword from "../pages/admin/ChangePassword";
 import ScholarshipAdd from "../pages/admin/scholarships/create/ScholarshipAdd";
 import ScholarshipDetail from "../pages/admin/scholarships/ScholarshipDetail";
 import ScholarshipEdit from "../pages/admin/scholarships/edit/ScholarshipEdit";
+
+import ProtectedRoute from "./ProtectedRoute";
+import GuestRoute from "./GuestRoute";
 
 const AppRouter = () => (
   <Router>
@@ -36,9 +38,32 @@ const AppRouter = () => (
       <Route path="/" element={<Home />} />
       <Route path="/scholarship" element={<Scholarship />} />
       <Route path="/contact" element={<Contact />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<SignUp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+
+      {/* Guest Routes */}
+      <Route
+        path="/login"
+        element={
+          <GuestRoute>
+            <Login />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <GuestRoute>
+            <SignUp />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <GuestRoute>
+            <ForgotPassword />
+          </GuestRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
@@ -62,7 +87,14 @@ const AppRouter = () => (
       <Route
         path="/admin/*"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute
+            allowedRoles={[
+              "SUPERADMIN",
+              "VERIFIKATOR",
+              "PIMPINAN_FAKULTAS",
+              "PIMPINAN_DITMAWA",
+            ]}
+          >
             <AdminLayout />
           </ProtectedRoute>
         }

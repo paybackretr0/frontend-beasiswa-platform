@@ -7,7 +7,7 @@ import { login } from "../../services/authService";
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -20,27 +20,39 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await login(form);
+    setLoading(true);
+    setError("");
 
-    if (res?.data?.access_token) {
-      localStorage.setItem("access_token", res.data.access_token);
-      localStorage.setItem("refresh_token", res.data.refresh_token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+    try {
+      const res = await login(form);
 
-      // cek role untuk redirect
-      if (res.data.user.role === "MAHASISWA") {
-        navigate("/", { replace: true });
+      if (res?.data?.access_token && res?.data?.user) {
+        // simpan token dan user
+        localStorage.setItem("access_token", res.data.access_token);
+        localStorage.setItem("refresh_token", res.data.refresh_token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+
+        // redirect berdasarkan role
+        const role = res.data.user.role?.toUpperCase();
+        if (role === "MAHASISWA") {
+          navigate("/", { replace: true });
+        } else {
+          navigate("/admin/dashboard", { replace: true });
+        }
       } else {
-        navigate("/admin/dashboard", { replace: true });
+        setError(res?.message || "Email atau kata sandi salah");
       }
-    } else {
-      setError(res.message || "Login gagal");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Terjadi kesalahan pada server. Coba lagi nanti.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* Left: Background Image with Gradient */}
+      {/* Left: Background Image */}
       <div className="hidden md:block w-0 md:w-[70%] relative">
         <img
           src={AuthImg}
@@ -49,12 +61,14 @@ const Login = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-[#2D60FF]/70 via-[#eaf0ff]/60 to-transparent" />
       </div>
-      {/* Right: Login Form Centered */}
+
+      {/* Right: Login Form */}
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-md bg-white rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-600 mb-6 text-center">
             Masuk Sistem Beasiswa
           </h2>
+
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
@@ -84,9 +98,11 @@ const Login = () => {
                 required
               />
             </div>
+
             {error && (
               <div className="text-red-500 text-sm text-center">{error}</div>
             )}
+
             <div className="flex justify-between items-center text-sm">
               <button
                 type="button"
@@ -103,10 +119,12 @@ const Login = () => {
                 Beranda
               </button>
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Memproses..." : "Masuk"}
             </Button>
           </form>
+
           <div className="mt-6 text-center text-sm">
             Belum punya akun?{" "}
             <button

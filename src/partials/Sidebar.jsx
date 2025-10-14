@@ -13,6 +13,23 @@ import {
   MdExpandLess,
 } from "react-icons/md";
 
+const roleAccess = {
+  SUPERADMIN: [
+    "Dashboard",
+    "Kelola Akun",
+    "Beasiswa",
+    "Pendaftaran",
+    "Pelaporan",
+    "Website",
+    "Referensi",
+    "Tambahan",
+  ],
+  VERIFIKATOR: ["Dashboard", "Pendaftaran"],
+  PIMPINAN_DITMAWA: ["Dashboard", "Pendaftaran", "Pelaporan"],
+  PIMPINAN_FAKULTAS: ["Dashboard", "Pelaporan"],
+  MAHASISWA: [],
+};
+
 const menus = [
   {
     label: "Dashboard",
@@ -70,8 +87,15 @@ const Sidebar = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const location = useLocation();
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const role = user?.role?.toUpperCase() || "SUPERADMIN";
+
+  const allowedMenus = menus.filter((menu) =>
+    roleAccess[role]?.includes(menu.label)
+  );
+
   useEffect(() => {
-    const found = menus.find(
+    const found = allowedMenus.find(
       (menu) =>
         menu.submenu &&
         menu.submenu.some((sub) => location.pathname.startsWith(sub.to))
@@ -83,7 +107,6 @@ const Sidebar = () => {
     }
   }, [location.pathname]);
 
-  // Function to check if menu is active (including submenu)
   const isMenuActive = (menu) => {
     if (menu.submenu) {
       return menu.submenu.some((sub) => location.pathname.startsWith(sub.to));
@@ -95,7 +118,7 @@ const Sidebar = () => {
     <aside className="w-64 bg-white border-r border-gray-200 h-full flex flex-col">
       <nav className="flex-1 overflow-y-auto py-6">
         <ul className="space-y-1 px-2">
-          {menus.map((menu) => (
+          {allowedMenus.map((menu) => (
             <li key={menu.to}>
               {menu.submenu ? (
                 <>

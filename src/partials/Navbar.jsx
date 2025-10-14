@@ -15,13 +15,11 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Check authentication status
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     setIsAuthenticated(!!token);
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -34,7 +32,14 @@ const Navbar = () => {
 
   const user = isAuthenticated
     ? JSON.parse(localStorage.getItem("user") || "{}")
-    : { name: "", email: "" };
+    : { full_name: "", email: "", role: "" };
+
+  const isAdminRole = [
+    "SUPERADMIN",
+    "PIMPINAN_DITMAWA",
+    "PIMPINAN_FAKULTAS",
+    "VERIFIKATOR",
+  ].includes(user.role);
 
   return (
     <nav className="sticky top-0 z-50 backdrop-blur bg-white/70">
@@ -45,7 +50,8 @@ const Navbar = () => {
             BeasiswaApp
           </NavLink>
         </div>
-        {/* Menu Tengah - Conditional berdasarkan login status */}
+
+        {/* Menu Tengah */}
         <div className="flex gap-8">
           {isAuthenticated ? (
             <>
@@ -90,6 +96,18 @@ const Navbar = () => {
               >
                 Riwayat
               </NavLink>
+              {isAdminRole && (
+                <NavLink
+                  to="/admin/dashboard"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-blue-600 font-semibold"
+                      : "text-gray-800 hover:text-blue-600 transition-colors"
+                  }
+                >
+                  Dashboard
+                </NavLink>
+              )}
             </>
           ) : (
             <>
@@ -127,7 +145,8 @@ const Navbar = () => {
             </>
           )}
         </div>
-        {/* Right Side - Conditional berdasarkan login status */}
+
+        {/* Right Side */}
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
@@ -157,10 +176,8 @@ const Navbar = () => {
                   />
                 </button>
 
-                {/* Dropdown Menu */}
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    {/* User Info */}
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="font-semibold text-gray-800">
                         {user.full_name}
@@ -172,8 +189,6 @@ const Navbar = () => {
                         {user.email}
                       </p>
                     </div>
-
-                    {/* Menu Items */}
                     <div className="py-2">
                       <button
                         onClick={() => {
@@ -198,7 +213,6 @@ const Navbar = () => {
               </div>
             </>
           ) : (
-            // Guest: Login/Sign Up buttons
             <div className="flex gap-8 items-center">
               <NavLink
                 to="/login"
