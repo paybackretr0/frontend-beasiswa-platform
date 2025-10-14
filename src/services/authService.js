@@ -11,12 +11,23 @@ export const register = async (data) => {
 };
 
 export const login = async (data) => {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Gagal login");
+    }
+
+    return res.json();
+  } catch (err) {
+    console.error("Login service error:", err);
+    return { message: err.message };
+  }
 };
 
 export const logout = () => {
