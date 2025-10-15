@@ -9,7 +9,7 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
     contact_person_name: initialData.contact_person_name || "",
     contact_person_email: initialData.contact_person_email || "",
     contact_person_phone: initialData.contact_person_phone || "",
-    scholarship_status: initialData.scholarship_status || "AKTIF",
+    is_active: initialData.is_active || true,
     scholarship_value: initialData.scholarship_value || "",
     duration_semesters: initialData.duration_semesters || "",
     website_url: initialData.website_url || "",
@@ -179,14 +179,14 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
             Status Beasiswa <span className="text-red-500">*</span>
           </label>
           <select
-            value={formData.scholarship_status}
+            value={formData.is_active ? "AKTIF" : "NONAKTIF"}
             onChange={(e) =>
-              handleInputChange("scholarship_status", e.target.value)
+              handleInputChange("is_active", e.target.value === "AKTIF")
             }
             className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
           >
-            <option value="AKTIF">Aktif</option>
-            <option value="NONAKTIF">Nonaktif</option>
+            <option value="1">Aktif</option>
+            <option value="0">Nonaktif</option>
           </select>
         </div>
       </div>

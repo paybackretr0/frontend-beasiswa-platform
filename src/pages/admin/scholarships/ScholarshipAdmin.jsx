@@ -9,6 +9,7 @@ import {
   EditOutlined,
   CheckOutlined,
   DeleteOutlined,
+  AlignLeftOutlined,
 } from "@ant-design/icons";
 import {
   fetchAllScholarships,
@@ -17,6 +18,7 @@ import {
 } from "../../../services/scholarshipService";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
+import { checkScholarshipForm } from "../../../services/formService";
 
 const ScholarshipAdmin = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -37,7 +39,7 @@ const ScholarshipAdmin = () => {
         id: item.id,
         nama: item.name,
         penyedia: item.organizer || "Tidak Diketahui",
-        status: item.scholarship_status === "AKTIF" ? "Aktif" : "Nonaktif",
+        status: item.is_active ? "Aktif" : "Nonaktif",
         batasWaktu: item.end_date || "Tidak Ada",
       }));
       setScholarships(formattedData);
@@ -71,6 +73,21 @@ const ScholarshipAdmin = () => {
     }
   };
 
+  const handleFormNavigation = async (scholarshipId) => {
+    try {
+      const { hasForm } = await checkScholarshipForm(scholarshipId);
+
+      if (hasForm) {
+        navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
+      } else {
+        navigate(`/admin/scholarship/${scholarshipId}/form/create`);
+      }
+    } catch (error) {
+      console.error("Error checking form status:", error);
+      message.error("Gagal memeriksa status form");
+    }
+  };
+
   const columns = [
     createNumberColumn(),
     {
@@ -100,6 +117,12 @@ const ScholarshipAdmin = () => {
         label: "Detail",
         icon: <EyeOutlined />,
         onClick: (record) => navigate(`/admin/scholarship/${record.id}`),
+      },
+      {
+        key: "form",
+        label: "Kelola Form",
+        icon: <AlignLeftOutlined />,
+        onClick: (record) => handleFormNavigation(record.id),
       },
       {
         key: "edit",
