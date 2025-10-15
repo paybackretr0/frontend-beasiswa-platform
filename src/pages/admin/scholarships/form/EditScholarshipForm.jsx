@@ -48,14 +48,14 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  createFormField,
-  checkScholarshipForm,
+  getFormFields,
+  updateFormField,
 } from "../../../../services/formService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-function SortableFieldItem({
+function SortableEditFieldItem({
   field,
   index,
   onFieldChange,
@@ -73,7 +73,7 @@ function SortableFieldItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: field.id });
+  } = useSortable({ id: field.id || `field-${index}` });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -105,6 +105,11 @@ function SortableFieldItem({
               {field.is_required && (
                 <Tag color="red" className="ml-2">
                   Wajib
+                </Tag>
+              )}
+              {field.id && (
+                <Tag color="green" className="ml-2">
+                  Tersimpan
                 </Tag>
               )}
             </Title>
@@ -222,20 +227,12 @@ function SortableFieldItem({
   );
 }
 
-const CreateScholarshipForm = () => {
+const EditScholarshipForm = () => {
   const { id: scholarshipId } = useParams();
   const navigate = useNavigate();
-  const [formFields, setFormFields] = useState([
-    {
-      id: "1",
-      label: "",
-      type: "TEXT",
-      is_required: true,
-      options: [],
-    },
-  ]);
+  const [formFields, setFormFields] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [checkingForm, setCheckingForm] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -254,31 +251,53 @@ const CreateScholarshipForm = () => {
   };
 
   useEffect(() => {
-    const checkFormExists = async () => {
-      try {
-        const { hasForm } = await checkScholarshipForm(scholarshipId);
-        if (hasForm) {
-          message.info("Form sudah ada, mengarahkan ke halaman preview...");
-          navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
-        }
-      } catch (error) {
-        console.error("Error checking form existence:", error);
-        message.error("Gagal memeriksa status form");
-      } finally {
-        setCheckingForm(false);
-      }
-    };
+    fetchFormFields();
+  }, [scholarshipId]);
 
-    checkFormExists();
-  }, [scholarshipId, navigate]);
+  const fetchFormFields = async () => {
+    try {
+      setInitialLoading(true);
+      const fields = await getFormFields(scholarshipId);
 
-  if (checkingForm) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spin size="large" />
-      </div>
-    );
-  }
+      const transformedFields = fields.map((field, index) => ({
+        id: field.id || `field-${index}-${Date.now()}`,
+        label: field.label,
+        type: field.type,
+        is_required: field.is_required,
+        options: field.options_json || [],
+        order_no: field.order_no,
+        originalId: field.id,
+      }));
+
+      setFormFields(
+        transformedFields.length > 0
+          ? transformedFields
+          : [
+              {
+                id: `field-${Date.now()}`,
+                label: "",
+                type: "TEXT",
+                is_required: true,
+                options: [],
+              },
+            ]
+      );
+    } catch (error) {
+      console.error("Error fetching form fields:", error);
+      message.error("Gagal memuat form yang sudah ada");
+      setFormFields([
+        {
+          id: `field-${Date.now()}`,
+          label: "",
+          type: "TEXT",
+          is_required: true,
+          options: [],
+        },
+      ]);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const handleAddField = () => {
     const newField = {
@@ -376,14 +395,19 @@ const CreateScholarshipForm = () => {
     try {
       setLoading(true);
 
-      const fieldsToSend = formFields.map(({ id, ...field }) => field);
+      const fieldsToSend = formFields.map((field) => ({
+        label: field.label,
+        type: field.type,
+        is_required: field.is_required,
+        options: field.options,
+      }));
 
-      await createFormField(scholarshipId, fieldsToSend);
-      message.success("Form berhasil dibuat!");
+      await updateFormField(scholarshipId, fieldsToSend);
+      message.success("Form berhasil diupdate!");
       navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
     } catch (error) {
-      console.error("Error creating form:", error);
-      message.error("Gagal membuat form");
+      console.error("Error updating form:", error);
+      message.error("Gagal mengupdate form");
     } finally {
       setLoading(false);
     }
@@ -402,6 +426,14 @@ const CreateScholarshipForm = () => {
     }
   }
 
+  if (initialLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <Card className="mb-6 border-0 shadow-sm">
@@ -415,23 +447,32 @@ const CreateScholarshipForm = () => {
             />
             <div>
               <Title level={3} className="!mb-1 flex items-center">
-                Buat Form Beasiswa
+                Edit Form Beasiswa
               </Title>
               <Text type="secondary">
-                Desain formulir pendaftaran untuk beasiswa ini
+                Ubah formulir pendaftaran untuk beasiswa ini
               </Text>
             </div>
           </div>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={loading}
-            onClick={handleSubmit}
-            size="large"
-            className="bg-green-500 hover:bg-green-600 border-green-500"
-          >
-            Simpan Form
-          </Button>
+          <Space>
+            <Button
+              onClick={() =>
+                navigate(`/admin/scholarship/${scholarshipId}/form/preview`)
+              }
+            >
+              Lihat Preview
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={loading}
+              onClick={handleSubmit}
+              size="large"
+              className="bg-green-500 hover:bg-green-600 border-green-500"
+            >
+              Update Form
+            </Button>
+          </Space>
         </div>
       </Card>
 
@@ -460,7 +501,7 @@ const CreateScholarshipForm = () => {
               >
                 <Space direction="vertical" size="large" className="w-full">
                   {formFields.map((field, index) => (
-                    <SortableFieldItem
+                    <SortableEditFieldItem
                       key={field.id}
                       field={field}
                       index={index}
@@ -490,7 +531,6 @@ const CreateScholarshipForm = () => {
           </Card>
         </Col>
 
-        {/* Preview */}
         <Col xs={24} lg={8}>
           <Card
             title={
@@ -567,4 +607,4 @@ const CreateScholarshipForm = () => {
   );
 };
 
-export default CreateScholarshipForm;
+export default EditScholarshipForm;

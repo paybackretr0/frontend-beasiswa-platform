@@ -27,6 +27,10 @@ import ChangePassword from "../pages/admin/ChangePassword";
 import ScholarshipAdd from "../pages/admin/scholarships/create/ScholarshipAdd";
 import ScholarshipDetail from "../pages/admin/scholarships/ScholarshipDetail";
 import ScholarshipEdit from "../pages/admin/scholarships/edit/ScholarshipEdit";
+import CreateScholarshipForm from "../pages/admin/scholarships/form/CreateScholarshipForm";
+import PreviewScholarshipForm from "../pages/admin/scholarships/form/PreviewScholarshipForm";
+import EditScholarshipForm from "../pages/admin/scholarships/form/EditScholarshipForm";
+import DetailScholarship from "../pages/DetailScholarship";
 
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
@@ -34,12 +38,12 @@ import GuestRoute from "./GuestRoute";
 const AppRouter = () => (
   <Router>
     <Routes>
-      {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/scholarship" element={<Scholarship />} />
       <Route path="/contact" element={<Contact />} />
 
-      {/* Guest Routes */}
+      <Route path="/scholarship/:id" element={<DetailScholarship />} />
+
       <Route
         path="/login"
         element={
@@ -65,7 +69,6 @@ const AppRouter = () => (
         }
       />
 
-      {/* Protected Routes */}
       <Route
         path="/profile"
         element={
@@ -83,7 +86,6 @@ const AppRouter = () => (
         }
       />
 
-      {/* Admin Protected Routes */}
       <Route
         path="/admin/*"
         element={
@@ -109,6 +111,18 @@ const AppRouter = () => (
         <Route path="scholarship/add" element={<ScholarshipAdd />} />
         <Route path="scholarship/:id" element={<ScholarshipDetail />} />
         <Route path="scholarship/edit/:id" element={<ScholarshipEdit />} />
+        <Route
+          path="scholarship/:id/form/create"
+          element={<CreateScholarshipForm />}
+        />
+        <Route
+          path="scholarship/:id/form/preview"
+          element={<PreviewScholarshipForm />}
+        />
+        <Route
+          path="scholarship/:id/form/edit"
+          element={<EditScholarshipForm />}
+        />
 
         <Route path="registration" element={<ApplicationsAdmin />} />
         <Route path="report" element={<ReportsAdmin />} />

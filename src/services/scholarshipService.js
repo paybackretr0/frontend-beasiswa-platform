@@ -71,7 +71,7 @@ export const createScholarship = async (scholarshipData) => {
 };
 
 export const fetchActiveScholarships = async () => {
-  const response = await fetch(`${API_BASE_URL}/beasiswa/active`, {
+  const response = await fetch(`${API_BASE_URL}/beasiswa/user`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export const fetchActiveScholarships = async () => {
   const data = await response.json();
 
   if (!data.success) {
-    throw new Error(data.message || "Gagal mendapatkan daftar beasiswa aktif");
+    throw new Error(data.message || "Gagal mendapatkan daftar beasiswa");
   }
 
   return data.data;
@@ -184,5 +184,42 @@ export const activateScholarship = async (id) => {
   if (!data.success) {
     throw new Error(data.message || "Gagal mengaktifkan beasiswa");
   }
+  return data.data;
+};
+
+export const getScholarshipByIdPublic = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/beasiswa/user/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mendapatkan detail beasiswa");
+  }
+
+  return data.data;
+};
+
+export const getOtherScholarships = async (id, limit = 5) => {
+  const response = await fetch(
+    `${API_BASE_URL}/beasiswa/user/${id}/others?limit=${limit}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mendapatkan beasiswa lainnya");
+  }
+
   return data.data;
 };

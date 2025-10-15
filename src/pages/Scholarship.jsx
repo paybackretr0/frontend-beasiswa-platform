@@ -3,6 +3,7 @@ import GuestLayout from "../layouts/GuestLayout";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import { fetchActiveScholarships } from "../services/scholarshipService";
+import { Link } from "react-router-dom";
 
 const Scholarship = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -145,7 +146,6 @@ const Scholarship = () => {
               image={getImageSource(scholarship.logo_path)}
               title={scholarship.name}
               subtitle={`${scholarship.organizer} • ${scholarship.year}`}
-              description={scholarship.description}
             >
               <div className="mt-4 space-y-2">
                 <div className="text-sm text-gray-600 space-y-1">
@@ -186,14 +186,12 @@ const Scholarship = () => {
                 </div>
 
                 <div className="pt-2">
-                  <Button
-                    className="w-full px-4 py-2 text-sm"
-                    onClick={() => {
-                      alert(`Detail beasiswa: ${scholarship.name}`);
-                    }}
+                  <Link
+                    to={`/scholarship/${scholarship.id}`}
+                    className="block w-full text-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Lihat Detail & Daftar
-                  </Button>
+                    Lihat Detail
+                  </Link>
                 </div>
               </div>
             </Card>

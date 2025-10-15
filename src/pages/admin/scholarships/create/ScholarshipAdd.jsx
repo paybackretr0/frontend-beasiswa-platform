@@ -31,7 +31,7 @@ const ScholarshipAdd = () => {
     contact_person_name: "",
     contact_person_email: "",
     contact_person_phone: "",
-    scholarship_status: "AKTIF",
+    is_active: true,
     scholarship_value: "",
     duration_semesters: "",
     website_url: "",
