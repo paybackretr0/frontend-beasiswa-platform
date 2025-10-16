@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Select, DatePicker, Tag } from "antd";
+import { Select, DatePicker, Tag, message } from "antd";
 import {
   EyeOutlined,
   DownloadOutlined,
@@ -10,160 +10,110 @@ import UniversalTable, {
   createActionColumn,
 } from "../../components/Table";
 import GuestLayout from "../../layouts/GuestLayout";
-
-export const historyData = [
-  {
-    key: 1,
-    namaBeasiswa: "Beasiswa Unggulan UNAND",
-    tanggalDaftar: "2025-01-10 10:30",
-    statusPendaftaran: "Diterima",
-    tahapan: "Pengumuman",
-    nilaiBeasiswa: "Rp 10.000.000",
-    periode: "2024/2025 Ganjil",
-  },
-  {
-    key: 2,
-    namaBeasiswa: "Beasiswa KIP Kuliah",
-    tanggalDaftar: "2024-12-15 14:20",
-    statusPendaftaran: "Dalam Review",
-    tahapan: "Verifikasi Berkas",
-    nilaiBeasiswa: "Rp 12.000.000",
-    periode: "2024/2025 Ganjil",
-  },
-  {
-    key: 3,
-    namaBeasiswa: "Beasiswa Bank Indonesia",
-    tanggalDaftar: "2024-11-20 09:45",
-    statusPendaftaran: "Ditolak",
-    tahapan: "Seleksi Administrasi",
-    nilaiBeasiswa: "Rp 15.000.000",
-    periode: "2024/2025 Ganjil",
-  },
-  {
-    key: 4,
-    namaBeasiswa: "Beasiswa Djarum Foundation",
-    tanggalDaftar: "2024-10-05 16:15",
-    statusPendaftaran: "Diterima",
-    tahapan: "Pencairan Dana",
-    nilaiBeasiswa: "Rp 8.000.000",
-    periode: "2024/2025 Genap",
-  },
-  {
-    key: 5,
-    namaBeasiswa: "Beasiswa Tanoto Foundation",
-    tanggalDaftar: "2024-09-12 11:30",
-    statusPendaftaran: "Pending",
-    tahapan: "Menunggu Pengumuman",
-    nilaiBeasiswa: "Rp 20.000.000",
-    periode: "2024/2025 Genap",
-  },
-];
+import Card from "../../components/Card";
+import { getUserApplications } from "../../services/historyService";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const History = () => {
-  const [filteredData, setFilteredData] = useState(historyData);
+  const [applications, setApplications] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Riwayat Daftar Beasiswa";
+    document.title = "Riwayat Pendaftaran Beasiswa - UNAND";
+    fetchApplications();
   }, []);
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const data = await getUserApplications();
+      setApplications(data || []);
+      setFilteredData(data || []);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      message.error("Gagal memuat data riwayat pendaftaran");
+      setApplications([]);
+      setFilteredData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Custom status column untuk history
   const createStatusColumn = () => ({
     title: "Status",
-    dataIndex: "statusPendaftaran",
-    key: "statusPendaftaran",
+    dataIndex: "status",
+    key: "status",
     render: (status) => {
       const statusConfig = {
-        Diterima: { color: "green", text: "Diterima" },
-        Ditolak: { color: "red", text: "Ditolak" },
-        "Dalam Review": { color: "blue", text: "Dalam Review" },
-        Pending: { color: "orange", text: "Pending" },
-        Dibatalkan: { color: "gray", text: "Dibatalkan" },
+        VALIDATED: { color: "green", text: "Divalidasi" },
+        REJECTED: { color: "red", text: "Ditolak" },
+        MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
+        MENUNGGU_VALIDASI: { color: "orange", text: "Pending" },
+        VERIFIED: { color: "cyan", text: "Terverifikasi" },
+        DRAFT: { color: "gray", text: "Draft" },
       };
 
       const config = statusConfig[status] || { color: "default", text: status };
       return <Tag color={config.color}>{config.text}</Tag>;
     },
     filters: [
-      { text: "Diterima", value: "Diterima" },
-      { text: "Ditolak", value: "Ditolak" },
-      { text: "Dalam Review", value: "Dalam Review" },
-      { text: "Pending", value: "Pending" },
+      { text: "Divalidasi", value: "VALIDATED" },
+      { text: "Ditolak", value: "REJECTED" },
+      { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
+      { text: "Pending", value: "MENUNGGU_VALIDASI" },
+      { text: "Terverifikasi", value: "VERIFIED" },
+      { text: "Draft", value: "DRAFT" },
     ],
-    onFilter: (value, record) => record.statusPendaftaran === value,
-  });
-
-  // Custom tahapan column
-  const createTahapanColumn = () => ({
-    title: "Tahapan",
-    dataIndex: "tahapan",
-    key: "tahapan",
-    render: (tahapan, record) => {
-      const tahapanConfig = {
-        Pengumuman: { color: "green" },
-        "Verifikasi Berkas": { color: "blue" },
-        "Seleksi Administrasi": { color: "orange" },
-        "Pencairan Dana": { color: "purple" },
-        "Menunggu Pengumuman": { color: "gray" },
-      };
-
-      const config = tahapanConfig[tahapan] || { color: "default" };
-      return <Tag color={config.color}>{tahapan}</Tag>;
-    },
+    onFilter: (value, record) => record.status === value,
   });
 
   const columns = [
     createNumberColumn(),
     {
       title: "Nama Beasiswa",
-      dataIndex: "namaBeasiswa",
-      key: "namaBeasiswa",
-      sorter: (a, b) => a.namaBeasiswa.localeCompare(b.namaBeasiswa),
-      render: (text) => <div className="font-medium text-gray-800">{text}</div>,
+      dataIndex: "beasiswa",
+      key: "beasiswa",
+      sorter: (a, b) => a.beasiswa?.localeCompare(b.beasiswa) || 0,
+      render: (text) => (
+        <div className="font-medium text-gray-800">{text || "-"}</div>
+      ),
+    },
+    {
+      title: "Penyelenggara",
+      dataIndex: "penyelenggara",
+      key: "penyelenggara",
+      render: (text) => (
+        <div className="text-gray-600 text-sm">{text || "-"}</div>
+      ),
     },
     {
       title: "Tanggal Daftar",
       dataIndex: "tanggalDaftar",
       key: "tanggalDaftar",
       sorter: (a, b) => new Date(a.tanggalDaftar) - new Date(b.tanggalDaftar),
-      render: (date) => (
-        <div className="text-gray-600">
-          {new Date(date).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </div>
-      ),
+      render: (date) =>
+        date ? (
+          <div className="text-gray-600 text-sm">
+            {new Date(date).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </div>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
     },
     createStatusColumn(),
-    createTahapanColumn(),
     {
-      title: "Nilai Beasiswa",
-      dataIndex: "nilaiBeasiswa",
-      key: "nilaiBeasiswa",
-      sorter: (a, b) => {
-        const valueA = parseInt(a.nilaiBeasiswa.replace(/\D/g, ""));
-        const valueB = parseInt(b.nilaiBeasiswa.replace(/\D/g, ""));
-        return valueA - valueB;
-      },
-      render: (nilai) => (
-        <div className="font-semibold text-green-600">{nilai}</div>
-      ),
-    },
-    {
-      title: "Periode",
-      dataIndex: "periode",
-      key: "periode",
-      filters: [
-        { text: "2024/2025 Ganjil", value: "2024/2025 Ganjil" },
-        { text: "2024/2025 Genap", value: "2024/2025 Genap" },
-      ],
-      onFilter: (value, record) => record.periode === value,
+      title: "Tahapan",
+      dataIndex: "tahapan",
+      key: "tahapan",
+      render: () => <Tag color="default">-</Tag>,
     },
     createActionColumn([
       {
@@ -190,54 +140,37 @@ const History = () => {
 
   // Custom filters
   const customFilters = (
-    <>
+    <div className="flex gap-4">
       <Select
         placeholder="Filter Status"
         style={{ width: 150 }}
         allowClear
         onChange={(value) => {
           if (value) {
-            const filtered = historyData.filter(
-              (item) => item.statusPendaftaran === value
+            const filtered = applications.filter(
+              (item) => item.status === value
             );
             setFilteredData(filtered);
           } else {
-            setFilteredData(historyData);
+            setFilteredData(applications);
           }
         }}
       >
-        <Option value="Diterima">Diterima</Option>
-        <Option value="Ditolak">Ditolak</Option>
-        <Option value="Dalam Review">Dalam Review</Option>
-        <Option value="Pending">Pending</Option>
-      </Select>
-
-      <Select
-        placeholder="Filter Periode"
-        style={{ width: 160 }}
-        allowClear
-        onChange={(value) => {
-          if (value) {
-            const filtered = historyData.filter(
-              (item) => item.periode === value
-            );
-            setFilteredData(filtered);
-          } else {
-            setFilteredData(historyData);
-          }
-        }}
-      >
-        <Option value="2024/2025 Ganjil">2024/2025 Ganjil</Option>
-        <Option value="2024/2025 Genap">2024/2025 Genap</Option>
+        <Option value="VALIDATED">Divalidasi</Option>
+        <Option value="REJECTED">Ditolak</Option>
+        <Option value="MENUNGGU_VERIFIKASI">Menunggu Verifikasi</Option>
+        <Option value="MENUNGGU_VALIDASI">Pending</Option>
+        <Option value="VERIFIED">Terverifikasi</Option>
+        <Option value="DRAFT">Draft</Option>
       </Select>
 
       <RangePicker
         placeholder={["Dari Tanggal", "Sampai Tanggal"]}
-        style={{ width: 250 }}
+        style={{ width: 280 }}
         onChange={(dates) => {
           if (dates && dates[0] && dates[1]) {
             const [startDate, endDate] = dates;
-            const filtered = historyData.filter((item) => {
+            const filtered = applications.filter((item) => {
               const itemDate = new Date(item.tanggalDaftar);
               return (
                 itemDate >= startDate.toDate() && itemDate <= endDate.toDate()
@@ -245,104 +178,113 @@ const History = () => {
             });
             setFilteredData(filtered);
           } else {
-            setFilteredData(historyData);
+            setFilteredData(applications);
           }
         }}
       />
-    </>
+    </div>
   );
+
+  // Calculate stats
+  const totalApplications = applications.length;
+  const validatedCount = applications.filter(
+    (item) => item.status === "VALIDATED"
+  ).length;
+  const inProgressCount = applications.filter(
+    (item) => !["VALIDATED", "REJECTED"].includes(item.status)
+  ).length;
+  const totalValue = applications
+    .filter((item) => item.status === "VALIDATED")
+    .reduce((total, item) => total + (item.scholarship_value || 0), 0);
+
+  if (loading) {
+    return (
+      <GuestLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Memuat data riwayat pendaftaran...</p>
+          </div>
+        </div>
+      </GuestLayout>
+    );
+  }
 
   return (
     <GuestLayout>
-      <div className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-10 text-center">
-              Riwayat Pendaftaran
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              Riwayat Pendaftaran Beasiswa
             </h1>
+            <p className="text-gray-600">
+              Data lengkap pendaftaran beasiswa yang pernah Anda lakukan
+            </p>
           </div>
 
           {/* Statistik Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Total Pendaftaran</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {historyData.length}
-                  </p>
+            <Card className="text-center bg-white hover:shadow-md transition-shadow">
+              <div className="p-6">
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  {totalApplications}
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FileTextOutlined className="text-blue-600 text-lg" />
+                <div className="text-sm text-gray-600 font-medium">
+                  Total Pendaftaran
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Diterima</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {
-                      historyData.filter(
-                        (item) => item.statusPendaftaran === "Diterima"
-                      ).length
-                    }
-                  </p>
+            <Card className="text-center bg-white hover:shadow-md transition-shadow">
+              <div className="p-6">
+                <div className="text-3xl font-bold text-green-600 mb-2">
+                  {validatedCount}
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <EyeOutlined className="text-green-600 text-lg" />
+                <div className="text-sm text-gray-600 font-medium">
+                  Divalidasi
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Dalam Proses</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {
-                      historyData.filter((item) =>
-                        ["Dalam Review", "Pending"].includes(
-                          item.statusPendaftaran
-                        )
-                      ).length
-                    }
-                  </p>
+            <Card className="text-center bg-white hover:shadow-md transition-shadow">
+              <div className="p-6">
+                <div className="text-3xl font-bold text-orange-600 mb-2">
+                  {inProgressCount}
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <DownloadOutlined className="text-yellow-600 text-lg" />
+                <div className="text-sm text-gray-600 font-medium">
+                  Dalam Proses
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Total Dana</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    Rp 65 Juta
-                  </p>
+            <Card className="text-center bg-white hover:shadow-md transition-shadow">
+              <div className="p-6">
+                <div className="text-2xl font-bold text-purple-600 mb-2">
+                  Rp {totalValue.toLocaleString("id-ID")}
                 </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FileTextOutlined className="text-purple-600 text-lg" />
+                <div className="text-sm text-gray-600 font-medium">
+                  Total Dana Diterima
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Tabel */}
-          <UniversalTable
-            title="Riwayat Pendaftaran Beasiswa"
-            data={filteredData}
-            columns={columns}
-            searchFields={["namaBeasiswa", "tahapan"]}
-            searchPlaceholder="Cari nama beasiswa atau tahapan..."
-            customFilters={customFilters}
-            pageSize={10}
-            scroll={{ x: 1200 }}
-          />
+          <div className="bg-white rounded-lg shadow-sm">
+            <UniversalTable
+              title="Data Pendaftaran Beasiswa"
+              data={filteredData}
+              columns={columns}
+              searchFields={["beasiswa", "organizer"]}
+              searchPlaceholder="Cari nama beasiswa atau penyelenggara..."
+              customFilters={customFilters}
+              pageSize={10}
+              scroll={{ x: 1200 }}
+              loading={loading}
+            />
+          </div>
         </div>
       </div>
     </GuestLayout>
