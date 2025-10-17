@@ -78,6 +78,12 @@ const ScholarshipEdit = () => {
         existingRequirementFiles:
           data.requirements?.filter((req) => req.requirement_type === "FILE") ||
           [],
+        stages:
+          data.stages?.map((stage) => ({
+            id: stage.id,
+            stage_name: stage.stage_name,
+            order_no: stage.order_no,
+          })) || [],
       };
 
       setScholarshipData(transformedData);
@@ -95,12 +101,8 @@ const ScholarshipEdit = () => {
     setCurrentStep((prev) => prev + 1);
   };
 
-  const handleBack = (step = null) => {
-    if (step !== null) {
-      setCurrentStep(step);
-    } else {
-      setCurrentStep((prev) => prev - 1);
-    }
+  const handleBack = () => {
+    setCurrentStep((prev) => prev - 1);
   };
 
   const handleSubmit = async (stepData) => {

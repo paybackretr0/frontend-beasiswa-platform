@@ -33,9 +33,9 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
   const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [additionalDocuments, setAdditionalDocuments] = useState([]);
   const [additionalBenefits, setAdditionalBenefits] = useState([]);
+  const [stages, setStages] = useState([]);
 
   useEffect(() => {
-    // Set form data
     setFormData({
       start_date: initialData.start_date || "",
       end_date: initialData.end_date || "",
@@ -44,17 +44,14 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
       semester_minimum: initialData.semester_minimum || "",
     });
 
-    // Set dokumen yang sudah dipilih
     const allDocuments = initialData.documents || [];
     setSelectedDocuments(allDocuments);
 
-    // Pisahkan dokumen tambahan dari dokumen default
     const additionalDocs = allDocuments.filter(
       (doc) => !defaultDocuments.includes(doc)
     );
     setAdditionalDocuments(additionalDocs);
 
-    // Set benefit
     const benefits = (initialData.benefits || []).map((benefit, index) => ({
       id: index + 1,
       value: benefit,
@@ -62,10 +59,34 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
     setAdditionalBenefits(
       benefits.length > 0 ? benefits : [{ id: 1, value: "" }]
     );
+
+    const stages = (initialData.stages || []).map((stage, index) => ({
+      id: stage.id || index + 1,
+      stage_name: stage.stage_name || "",
+    }));
+    setStages(stages.length > 0 ? stages : [{ id: 1, name: "ADMINISTRASI" }]);
+
+    console.log("Initial Stages:", initialData.stages);
   }, [initialData]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addStage = () => {
+    setStages([...stages, { id: stages.length + 1, name: "" }]);
+  };
+
+  const updateStage = (id, value) => {
+    setStages(
+      stages.map((stage) =>
+        stage.id === id ? { ...stage, stage_name: value } : stage
+      )
+    );
+  };
+
+  const removeStage = (id) => {
+    setStages(stages.filter((stage) => stage.id !== id));
   };
 
   const addDocumentField = () => {
@@ -149,6 +170,14 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
       return;
     }
 
+    if (
+      stages.length === 0 ||
+      stages.some((stage) => stage.stage_name.trim() === "")
+    ) {
+      alert("Mohon tambahkan minimal satu tahapan seleksi!");
+      return;
+    }
+
     if (selectedDocuments.length === 0) {
       alert("Mohon pilih minimal satu dokumen wajib!");
       return;
@@ -160,6 +189,10 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
 
     const stepData = {
       ...formData,
+      stages: stages.map((stage, index) => ({
+        order_no: index + 1,
+        stage_name: stage.stage_name.trim(),
+      })),
       documents: selectedDocuments,
       benefits: validBenefits,
     };
@@ -170,17 +203,10 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <div className="mb-6">
-        <Breadcrumb>
-          <Breadcrumb.Item>
-            <span
-              className="cursor-pointer hover:text-blue-500"
-              onClick={() => onBack()}
-            >
-              Data Utama
-            </span>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>Data Teknis Pendaftaran</Breadcrumb.Item>
-        </Breadcrumb>
+        <p className="text-sm text-gray-500">
+          Data Utama &gt;{" "}
+          <span className="font-semibold">Data Teknis Pendaftaran</span>
+        </p>
       </div>
 
       <div className="mb-6">
@@ -193,6 +219,41 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
           </h2>
         </div>
         <hr className="border-gray-300 mb-6" />
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-4">
+          Tahapan Seleksi <span className="text-red-500">*</span>
+        </label>
+        <div className="space-y-4">
+          {stages.map((stage) => (
+            <div key={stage.id} className="flex items-center gap-4">
+              <input
+                type="text"
+                value={stage.stage_name} // Gunakan stage_name
+                onChange={(e) => updateStage(stage.id, e.target.value)}
+                className="flex-1 border border-gray-300 rounded-md px-4 py-2 text-sm"
+                placeholder="Masukkan nama tahapan (contoh: ADMINISTRASI)"
+              />
+              {stages.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeStage(stage.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  Hapus
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addStage}
+          className="text-blue-500 hover:text-blue-700 text-sm mt-2"
+        >
+          + Tambah Tahapan
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

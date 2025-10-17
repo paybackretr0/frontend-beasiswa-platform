@@ -52,7 +52,7 @@ const History = () => {
         VALIDATED: { color: "green", text: "Divalidasi" },
         REJECTED: { color: "red", text: "Ditolak" },
         MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
-        MENUNGGU_VALIDASI: { color: "orange", text: "Pending" },
+        MENUNGGU_VALIDASI: { color: "orange", text: "Menunggu Validasi" },
         VERIFIED: { color: "cyan", text: "Terverifikasi" },
         DRAFT: { color: "gray", text: "Draft" },
       };
@@ -64,7 +64,7 @@ const History = () => {
       { text: "Divalidasi", value: "VALIDATED" },
       { text: "Ditolak", value: "REJECTED" },
       { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
-      { text: "Pending", value: "MENUNGGU_VALIDASI" },
+      { text: "Menunggu Validasi", value: "MENUNGGU_VALIDASI" },
       { text: "Terverifikasi", value: "VERIFIED" },
       { text: "Draft", value: "DRAFT" },
     ],
@@ -159,7 +159,7 @@ const History = () => {
         <Option value="VALIDATED">Divalidasi</Option>
         <Option value="REJECTED">Ditolak</Option>
         <Option value="MENUNGGU_VERIFIKASI">Menunggu Verifikasi</Option>
-        <Option value="MENUNGGU_VALIDASI">Pending</Option>
+        <Option value="MENUNGGU_VALIDASI">Menunggu Validasi</Option>
         <Option value="VERIFIED">Terverifikasi</Option>
         <Option value="DRAFT">Draft</Option>
       </Select>

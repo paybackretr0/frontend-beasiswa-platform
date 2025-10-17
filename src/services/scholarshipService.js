@@ -35,7 +35,8 @@ export const createScholarship = async (scholarshipData) => {
       key === "documents" ||
       key === "benefits" ||
       key === "faculties" ||
-      key === "departments"
+      key === "departments" ||
+      key === "stages"
     ) {
       formData.append(key, JSON.stringify(scholarshipData[key]));
     } else if (
@@ -122,7 +123,8 @@ export const updateScholarship = async (id, scholarshipData) => {
       key === "documents" ||
       key === "benefits" ||
       key === "faculties" ||
-      key === "departments"
+      key === "departments" ||
+      key === "stages"
     ) {
       formData.append(key, JSON.stringify(scholarshipData[key]));
     } else if (

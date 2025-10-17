@@ -34,13 +34,23 @@ const ScholarshipAdmin = () => {
     setLoading(true);
     try {
       const data = await fetchAllScholarships();
+      const formatDate = (dateStr) => {
+        if (!dateStr) return "Tidak Ada";
+        const d = new Date(dateStr);
+        if (isNaN(d)) return "Tidak Ada";
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
       const formattedData = data.map((item) => ({
         key: item.id,
         id: item.id,
         nama: item.name,
         penyedia: item.organizer || "Tidak Diketahui",
         status: item.is_active ? "Aktif" : "Nonaktif",
-        batasWaktu: item.end_date || "Tidak Ada",
+        batasWaktu: formatDate(item.end_date),
       }));
       setScholarships(formattedData);
     } catch (error) {

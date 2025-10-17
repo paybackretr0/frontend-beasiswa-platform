@@ -37,6 +37,7 @@ const ScholarshipAdd = () => {
     website_url: "",
     faculties: [],
     departments: [],
+    stages: [],
   });
 
   const handleNext = (stepData) => {

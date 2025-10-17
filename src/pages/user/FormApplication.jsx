@@ -407,7 +407,7 @@ const FormApplication = () => {
           <Card>
             <div className="text-center py-8">
               <Alert
-                message="Pendaftaran Sudah Ada"
+                message="Pendaftaran Sudah Dilakukan"
                 description={
                   <div>
                     <p className="mb-4">

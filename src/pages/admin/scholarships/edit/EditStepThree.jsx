@@ -128,25 +128,10 @@ const EditStepThree = ({
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <div className="mb-6">
-        <Breadcrumb>
-          <Breadcrumb.Item>
-            <span
-              className="cursor-pointer hover:text-blue-500"
-              onClick={() => onBack(1)}
-            >
-              Data Utama
-            </span>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <span
-              className="cursor-pointer hover:text-blue-500"
-              onClick={() => onBack()}
-            >
-              Data Teknis Pendaftaran
-            </span>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>Data Administrasi</Breadcrumb.Item>
-        </Breadcrumb>
+        <p className="text-sm text-gray-500">
+          Data Utama &gt; Data Teknis Pendaftaran &gt;{" "}
+          <span className="font-semibold">Data Administrasi</span>
+        </p>
       </div>
 
       <div className="mb-6">

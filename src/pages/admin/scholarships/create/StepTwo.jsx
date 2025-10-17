@@ -26,6 +26,26 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
     semester_minimum: initialData.semester_minimum || "",
   });
 
+  const [stages, setStages] = useState(
+    initialData.stages || [{ id: 1, name: "ADMINISTRASI" }]
+  );
+
+  const addStage = () => {
+    setStages([...stages, { id: stages.length + 1, name: "" }]);
+  };
+
+  const updateStage = (id, value) => {
+    setStages(
+      stages.map((stage) =>
+        stage.id === id ? { ...stage, name: value } : stage
+      )
+    );
+  };
+
+  const removeStage = (id) => {
+    setStages(stages.filter((stage) => stage.id !== id));
+  };
+
   const [selectedDocuments, setSelectedDocuments] = useState(
     initialData.selectedDocuments || []
   );
@@ -119,6 +139,14 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
       return;
     }
 
+    if (
+      stages.length === 0 ||
+      stages.some((stage) => stage.name.trim() === "")
+    ) {
+      alert("Mohon tambahkan minimal satu tahapan seleksi!");
+      return;
+    }
+
     if (selectedDocuments.length === 0) {
       alert("Mohon pilih minimal satu dokumen wajib!");
       return;
@@ -130,6 +158,10 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
 
     const stepData = {
       ...formData,
+      stages: stages.map((stage, index) => ({
+        order_no: index + 1,
+        name: stage.name.trim(),
+      })),
       documents: selectedDocuments,
       benefits: validBenefits,
       selectedDocuments,
@@ -158,6 +190,41 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
           </h2>
         </div>
         <hr className="border-gray-300 mb-6" />
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-4">
+          Tahapan Seleksi <span className="text-red-500">*</span>
+        </label>
+        <div className="space-y-4">
+          {stages.map((stage) => (
+            <div key={stage.id} className="flex items-center gap-4">
+              <input
+                type="text"
+                value={stage.name}
+                onChange={(e) => updateStage(stage.id, e.target.value)}
+                className="flex-1 border border-gray-300 rounded-md px-4 py-2 text-sm"
+                placeholder="Masukkan nama tahapan (contoh: ADMINISTRASI)"
+              />
+              {stages.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeStage(stage.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  Hapus
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addStage}
+          className="text-blue-500 hover:text-blue-700 text-sm mt-2"
+        >
+          + Tambah Tahapan
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
