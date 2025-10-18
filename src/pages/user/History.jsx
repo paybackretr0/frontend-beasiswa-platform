@@ -42,7 +42,6 @@ const History = () => {
     }
   };
 
-  // Custom status column untuk history
   const createStatusColumn = () => ({
     title: "Status",
     dataIndex: "status",
@@ -123,22 +122,9 @@ const History = () => {
         type: "default",
         onClick: (record) => console.log("View detail", record),
       },
-      {
-        key: "download",
-        label: "Unduh",
-        icon: <DownloadOutlined />,
-        onClick: (record) => console.log("Download", record),
-      },
-      {
-        key: "document",
-        label: "Dokumen",
-        icon: <FileTextOutlined />,
-        onClick: (record) => console.log("View documents", record),
-      },
     ]),
   ];
 
-  // Custom filters
   const customFilters = (
     <div className="flex gap-4">
       <Select
@@ -185,7 +171,6 @@ const History = () => {
     </div>
   );
 
-  // Calculate stats
   const totalApplications = applications.length;
   const validatedCount = applications.filter(
     (item) => item.status === "VALIDATED"
@@ -214,7 +199,6 @@ const History = () => {
     <GuestLayout>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
               Riwayat Pendaftaran Beasiswa
@@ -224,7 +208,6 @@ const History = () => {
             </p>
           </div>
 
-          {/* Statistik Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card className="text-center bg-white hover:shadow-md transition-shadow">
               <div className="p-6">
@@ -265,13 +248,12 @@ const History = () => {
                   Rp {totalValue.toLocaleString("id-ID")}
                 </div>
                 <div className="text-sm text-gray-600 font-medium">
-                  Total Dana Diterima
+                  Total Nilai Bantuan Diterima
                 </div>
               </div>
             </Card>
           </div>
 
-          {/* Tabel */}
           <div className="bg-white rounded-lg shadow-sm">
             <UniversalTable
               title="Data Pendaftaran Beasiswa"

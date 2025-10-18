@@ -45,6 +45,18 @@ const statusApplications = {
   VALIDATED: "DISETUJUI",
 };
 
+// Helper function to clean file name
+const getCleanFileName = (filePath) => {
+  if (!filePath) return "Unknown file";
+
+  // Ambil nama file dari path
+  const fullFileName = filePath.split("\\").pop(); // Untuk Windows (gunakan "/" jika di Linux/Unix)
+
+  // Hilangkan timestamp (format: timestamp-filename.extension)
+  const match = fullFileName.match(/^\d+-(.+)$/);
+  return match ? match[1] : fullFileName;
+};
+
 const FormApplication = () => {
   const { id: scholarshipId } = useParams();
   const navigate = useNavigate();
@@ -89,7 +101,7 @@ const FormApplication = () => {
           if (field.type === "FILE") {
             initialAnswers[field.id] = existingAnswer.file_path
               ? {
-                  name: existingAnswer.file_path.split("/").pop(),
+                  name: getCleanFileName(existingAnswer.file_path), // Bersihkan nama file
                   path: existingAnswer.file_path,
                 }
               : null;
@@ -279,10 +291,7 @@ const FormApplication = () => {
                   ? [
                       {
                         uid: "-1",
-                        name:
-                          value.name ||
-                          value.path?.split("/").pop() ||
-                          "Unknown file",
+                        name: value.name || getCleanFileName(value.path),
                         status: "done",
                       },
                     ]
@@ -299,7 +308,7 @@ const FormApplication = () => {
             </Upload>
             {value && (
               <div className="mt-2 text-sm text-gray-600">
-                File terpilih: {value.name || value.path?.split("/").pop()}
+                File terpilih: {value.name || getCleanFileName(value.path)}{" "}
                 {value.size && ` (${(value.size / 1024 / 1024).toFixed(2)} MB)`}
               </div>
             )}

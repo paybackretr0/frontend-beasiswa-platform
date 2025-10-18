@@ -26,19 +26,25 @@ export const submitApplication = async (
   try {
     const formData = new FormData();
 
-    // Add answers data
     const answersData = {};
 
-    // Process answers and separate files
     Object.keys(answers).forEach((fieldId) => {
       const answer = answers[fieldId];
 
       if (answer instanceof File) {
-        // Handle file upload
         formData.append(`field_${fieldId}`, answer);
-        answersData[fieldId] = { file_path: answer.name };
+        answersData[fieldId] = {
+          file_path: answer.name,
+          mime_type: answer.type,
+          size_bytes: answer.size,
+        };
+      } else if (answer?.path) {
+        answersData[fieldId] = {
+          file_path: answer.path,
+          mime_type: answer.mime_type || null,
+          size_bytes: answer.size_bytes || null,
+        };
       } else {
-        // Handle text answers
         answersData[fieldId] = { answer_text: answer };
       }
     });
@@ -50,7 +56,7 @@ export const submitApplication = async (
       `${API_BASE_URL}/pendaftaran/scholarship/${scholarshipId}/submit`,
       {
         method: "POST",
-        body: formData, // Don't set Content-Type header, let browser set it for FormData
+        body: formData,
       }
     );
 
