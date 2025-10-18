@@ -58,6 +58,7 @@ const PreviewScholarshipForm = () => {
   };
 
   useEffect(() => {
+    document.title = "Preview Form Beasiswa - Admin";
     fetchFormFields();
   }, [scholarshipId]);
 

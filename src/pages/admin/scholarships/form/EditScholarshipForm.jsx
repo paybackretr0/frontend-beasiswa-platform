@@ -176,7 +176,7 @@ function SortableEditFieldItem({
                     onFieldChange(index, "is_required", e.target.checked)
                   }
                 >
-                  Field wajib
+                  Wajib diisi
                 </Checkbox>
               </div>
             </div>
@@ -251,6 +251,7 @@ const EditScholarshipForm = () => {
   };
 
   useEffect(() => {
+    document.title = "Edit Form Beasiswa - Admin";
     fetchFormFields();
   }, [scholarshipId]);
 

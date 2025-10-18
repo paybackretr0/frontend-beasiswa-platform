@@ -171,7 +171,7 @@ function SortableFieldItem({
                     onFieldChange(index, "is_required", e.target.checked)
                   }
                 >
-                  Field wajib
+                  Wajib diisi
                 </Checkbox>
               </div>
             </div>
@@ -254,6 +254,7 @@ const CreateScholarshipForm = () => {
   };
 
   useEffect(() => {
+    document.title = "Buat Form Beasiswa - Admin";
     const checkFormExists = async () => {
       try {
         const { hasForm } = await checkScholarshipForm(scholarshipId);

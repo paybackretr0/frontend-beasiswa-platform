@@ -1,4 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { Tag } from "antd";
+import {
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
 import GuestLayout from "../layouts/GuestLayout";
 import Card from "../components/Card";
 import Button from "../components/Button";
@@ -72,6 +78,90 @@ const Scholarship = () => {
     return "https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=400&q=80";
   };
 
+  const getStatusTag = (isActive, endDate) => {
+    if (!isActive) {
+      return (
+        <Tag color="red" icon={<ExclamationCircleOutlined />} className="mb-2">
+          Tutup
+        </Tag>
+      );
+    }
+
+    if (!endDate) {
+      return (
+        <Tag color="green" icon={<CheckCircleOutlined />} className="mb-2">
+          Buka
+        </Tag>
+      );
+    }
+
+    const today = new Date();
+    const end = new Date(endDate);
+    const diffTime = end - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return (
+        <Tag color="red" icon={<ClockCircleOutlined />} className="mb-2">
+          Berakhir
+        </Tag>
+      );
+    }
+    if (diffDays <= 7) {
+      return (
+        <Tag color="orange" icon={<ClockCircleOutlined />} className="mb-2">
+          Berakhir {diffDays} hari lagi
+        </Tag>
+      );
+    }
+    return (
+      <Tag color="green" icon={<CheckCircleOutlined />} className="mb-2">
+        Aktif
+      </Tag>
+    );
+  };
+
+  const getButtonStyle = (isActive, endDate) => {
+    if (!isActive) {
+      return "bg-gray-500 text-white hover:bg-gray-600";
+    }
+
+    if (endDate) {
+      const today = new Date();
+      const end = new Date(endDate);
+      const diffTime = end - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        return "bg-gray-500 text-white hover:bg-gray-600";
+      }
+      if (diffDays <= 7) {
+        return "bg-orange-600 text-white hover:bg-orange-700";
+      }
+    }
+
+    return "bg-blue-600 text-white hover:bg-blue-700";
+  };
+
+  const getButtonText = (isActive, endDate) => {
+    if (!isActive) {
+      return "Lihat Detail";
+    }
+
+    if (endDate) {
+      const today = new Date();
+      const end = new Date(endDate);
+      const diffTime = end - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        return "Lihat Detail";
+      }
+    }
+
+    return "Lihat Detail";
+  };
+
   if (loading) {
     return (
       <GuestLayout>
@@ -135,7 +225,7 @@ const Scholarship = () => {
               {Math.min(indexOfLastItem, scholarships.length)}
             </span>{" "}
             dari <span className="font-semibold">{scholarships.length}</span>{" "}
-            beasiswa aktif
+            beasiswa
           </p>
         </div>
 
@@ -147,7 +237,11 @@ const Scholarship = () => {
               title={scholarship.name}
               subtitle={`${scholarship.organizer} • ${scholarship.year}`}
             >
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-3">
+                <div className="flex justify-start">
+                  {getStatusTag(scholarship.is_active, scholarship.end_date)}
+                </div>
+
                 <div className="text-sm text-gray-600 space-y-1">
                   {scholarship.quota && (
                     <div className="flex justify-between">
@@ -188,9 +282,12 @@ const Scholarship = () => {
                 <div className="pt-2">
                   <Link
                     to={`/scholarship/${scholarship.id}`}
-                    className="block w-full text-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className={`block w-full text-center px-4 py-2 text-sm rounded-lg transition-colors ${getButtonStyle(
+                      scholarship.is_active,
+                      scholarship.end_date
+                    )}`}
                   >
-                    Lihat Detail
+                    {getButtonText(scholarship.is_active, scholarship.end_date)}
                   </Link>
                 </div>
               </div>

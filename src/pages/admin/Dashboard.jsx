@@ -137,16 +137,16 @@ const AdminDashboard = () => {
         {chartsLoading ? (
           <>
             <Card
-              title="Penerima Berdasarkan Fakultas"
-              description="Distribusi penerima beasiswa per fakultas"
+              title="Pendaftar Berdasarkan Fakultas"
+              description="Distribusi pendaftar beasiswa per fakultas"
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
               </div>
             </Card>
             <Card
-              title="Penerima Berdasarkan Departemen"
-              description="Distribusi penerima beasiswa per departemen"
+              title="Pendaftar Berdasarkan Departemen"
+              description="Distribusi pendaftar beasiswa per departemen"
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
@@ -157,13 +157,13 @@ const AdminDashboard = () => {
           <>
             <HorizontalBarChart
               data={fakultasData}
-              title="Penerima Berdasarkan Fakultas"
-              description="Distribusi penerima beasiswa per fakultas"
+              title="Pendaftar Berdasarkan Fakultas"
+              description="Distribusi pendaftar beasiswa per fakultas"
             />
             <HorizontalBarChart
               data={departemenData}
-              title="Penerima Berdasarkan Departemen"
-              description="Distribusi penerima beasiswa per departemen"
+              title="Pendaftar Berdasarkan Departemen"
+              description="Distribusi pendaftar beasiswa per departemen"
             />
           </>
         )}
@@ -181,8 +181,8 @@ const AdminDashboard = () => {
               </div>
             </Card>
             <Card
-              title="Penerima Berdasarkan Gender"
-              description="Distribusi penerima beasiswa berdasarkan gender"
+              title="Pendaftar Berdasarkan Gender"
+              description="Distribusi pendaftar beasiswa berdasarkan gender"
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
@@ -193,13 +193,13 @@ const AdminDashboard = () => {
           <>
             <LineChart
               data={tahunData}
-              title="Penerima Tahun ke Tahun"
-              description="Perbandingan penerima beasiswa dari tahun ke tahun"
+              title="Pendaftar Tahun ke Tahun"
+              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
             />
             <PieChart
               data={genderData}
-              title="Penerima Berdasarkan Gender"
-              description="Distribusi penerima beasiswa berdasarkan gender"
+              title="Pendaftar Berdasarkan Gender"
+              description="Distribusi pendaftar beasiswa berdasarkan gender"
             />
           </>
         )}

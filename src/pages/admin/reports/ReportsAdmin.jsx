@@ -298,6 +298,7 @@ const ReportsAdmin = () => {
       title: "NIM",
       dataIndex: "nim",
       key: "nim",
+      sorter: (a, b) => a.nim.localeCompare(b.nim),
     },
     {
       title: "Fakultas",
@@ -410,16 +411,16 @@ const ReportsAdmin = () => {
         {chartsLoading ? (
           <>
             <Card
-              title="Penerima Berdasarkan Fakultas"
-              description={`Distribusi penerima beasiswa per fakultas tahun ${selectedYear}`}
+              title="Pendaftar Berdasarkan Fakultas"
+              description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
               </div>
             </Card>
             <Card
-              title="Penerima Berdasarkan Departemen"
-              description={`Distribusi penerima beasiswa per departemen tahun ${selectedYear}`}
+              title="Pendaftar Berdasarkan Departemen"
+              description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
@@ -430,13 +431,13 @@ const ReportsAdmin = () => {
           <>
             <HorizontalBarChart
               data={fakultasData}
-              title="Penerima Berdasarkan Fakultas"
-              description={`Distribusi penerima beasiswa per fakultas tahun ${selectedYear}`}
+              title="Pendaftar Berdasarkan Fakultas"
+              description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
             />
             <HorizontalBarChart
               data={departemenData}
-              title="Penerima Berdasarkan Departemen"
-              description={`Distribusi penerima beasiswa per departemen tahun ${selectedYear}`}
+              title="Pendaftar Berdasarkan Departemen"
+              description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
             />
           </>
         )}
@@ -446,16 +447,16 @@ const ReportsAdmin = () => {
         {chartsLoading ? (
           <>
             <Card
-              title="Penerima Tahun ke Tahun"
-              description="Perbandingan penerima beasiswa dari tahun ke tahun"
+              title="Pendaftar Tahun ke Tahun"
+              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
               </div>
             </Card>
             <Card
-              title="Penerima Berdasarkan Gender"
-              description="Distribusi penerima beasiswa berdasarkan gender"
+              title="Pendaftar Berdasarkan Gender"
+              description="Distribusi pendaftar beasiswa berdasarkan gender"
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
@@ -466,13 +467,13 @@ const ReportsAdmin = () => {
           <>
             <LineChart
               data={tahunData}
-              title="Penerima Tahun ke Tahun"
-              description="Perbandingan penerima beasiswa dari tahun ke tahun"
+              title="Pendaftar Tahun ke Tahun"
+              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
             />
             <PieChart
               data={genderData}
-              title="Penerima Berdasarkan Gender"
-              description="Distribusi penerima beasiswa berdasarkan gender"
+              title="Pendaftar Berdasarkan Gender"
+              description="Distribusi pendaftar beasiswa berdasarkan gender"
             />
           </>
         )}

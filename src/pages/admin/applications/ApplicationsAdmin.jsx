@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { message, Spin } from "antd";
+import { message, Spin, Tag } from "antd";
 import UniversalTable, {
   createNumberColumn,
-  createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
 import { EyeOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
@@ -28,7 +27,6 @@ const ApplicationsAdmin = () => {
     try {
       setLoading(true);
       const data = await getAllApplications();
-      // Transform data untuk table
       const transformedData = data.map((item, index) => ({
         key: item.id || index,
         id: item.id,
@@ -109,16 +107,13 @@ const ApplicationsAdmin = () => {
   };
 
   const handleDetail = (record) => {
-    // Navigate to detail page or open modal
     message.info(`Detail pendaftaran: ${record.nama}`);
     console.log("Application detail:", record);
   };
 
   const handleApprove = async (record) => {
     try {
-      // TODO: Implement approve API call
       message.success(`Setujui pendaftaran: ${record.nama}`);
-      // Refresh data after action
       fetchApplications();
       fetchSummary();
     } catch (error) {
@@ -128,9 +123,7 @@ const ApplicationsAdmin = () => {
 
   const handleReject = async (record) => {
     try {
-      // TODO: Implement reject API call
       message.warning(`Tolak pendaftaran: ${record.nama}`);
-      // Refresh data after action
       fetchApplications();
       fetchSummary();
     } catch (error) {
@@ -230,7 +223,6 @@ const ApplicationsAdmin = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {summaryLoading
           ? Array.from({ length: 4 }).map((_, idx) => (
@@ -254,14 +246,13 @@ const ApplicationsAdmin = () => {
             ))}
       </div>
 
-      {/* Table */}
       <UniversalTable
         title="Kelola Pendaftaran"
         data={applications}
         columns={columns}
         searchFields={["nama", "email", "beasiswa"]}
         searchPlaceholder="Cari nama pendaftar, email, atau beasiswa..."
-        onAdd={null} // Tidak ada tombol tambah
+        onAdd={null}
         loading={loading}
       />
     </div>

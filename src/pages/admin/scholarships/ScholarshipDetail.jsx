@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getBeasiswaById } from "../../../services/scholarshipService";
-import { message, Spin, Divider, Tag, Badge } from "antd";
+import { message, Spin, Divider, Tag, Timeline } from "antd";
 import {
   EditOutlined,
   CalendarOutlined,
@@ -130,14 +130,9 @@ const ScholarshipDetail = () => {
                   <p className="text-gray-600 mb-2">{scholarship.organizer}</p>
                   <div className="flex items-center space-x-4 mb-3">
                     <Tag color="blue">{scholarship.year}</Tag>
-                    <Badge
-                      status={
-                        scholarship.scholarship_status === "AKTIF"
-                          ? "success"
-                          : "error"
-                      }
-                      text={scholarship.scholarship_status}
-                    />
+                    <Tag color={scholarship.is_active ? "green" : "red"}>
+                      {scholarship.is_active ? "Aktif" : "Tidak Aktif"}
+                    </Tag>
                   </div>
                   <p className="text-gray-700 leading-relaxed break-words whitespace-pre-wrap">
                     {scholarship.description}
@@ -242,6 +237,31 @@ const ScholarshipDetail = () => {
             ) : (
               <p className="text-gray-500">
                 Belum ada manfaat yang ditambahkan.
+              </p>
+            )}
+          </Card>
+
+          <Card
+            title={
+              <div className="flex items-center">
+                <BookOutlined className="mr-2" />
+                <span>Tahapan Seleksi</span>
+              </div>
+            }
+          >
+            {scholarship.stages?.length ? (
+              <Timeline>
+                {scholarship.stages
+                  .sort((a, b) => a.order_no - b.order_no)
+                  .map((stage) => (
+                    <Timeline.Item key={stage.id}>
+                      <span className="font-medium">{stage.stage_name}</span>
+                    </Timeline.Item>
+                  ))}
+              </Timeline>
+            ) : (
+              <p className="text-gray-500">
+                Belum ada tahapan seleksi yang ditambahkan.
               </p>
             )}
           </Card>

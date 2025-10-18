@@ -3,7 +3,7 @@ import { authFetch } from "./tokenAuth";
 
 export const getAllApplications = async () => {
   const token = localStorage.getItem("access_token");
-  const data = await authFetch(`${API_BASE_URL}/pendaftaran`, {
+  const data = await authFetch(`${API_BASE_URL}/applications`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -18,7 +18,7 @@ export const getAllApplications = async () => {
 
 export const getApplicationsSummary = async () => {
   const token = localStorage.getItem("access_token");
-  const data = await authFetch(`${API_BASE_URL}/pendaftaran/summary`, {
+  const data = await authFetch(`${API_BASE_URL}/applications/summary`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
