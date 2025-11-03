@@ -131,3 +131,78 @@ export const archiveInformation = async (id) => {
   }
   return data.data;
 };
+
+export const getLatestInformation = async () => {
+  const response = await fetch(`${API_BASE_URL}/websites/informations/latest`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil informasi terbaru");
+  }
+
+  const baseUrl = import.meta.env.VITE_IMAGE_URL;
+  const informationWithFullUrl = data.data.map((information) => ({
+    ...information,
+    cover_url: information.cover_url
+      ? `${baseUrl}/${information.cover_url}`
+      : null,
+  }));
+
+  return informationWithFullUrl;
+};
+
+export const getInformationBySlug = async (slug) => {
+  const response = await fetch(
+    `${API_BASE_URL}/websites/informations/${slug}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil informasi");
+  }
+
+  const baseUrl = import.meta.env.VITE_IMAGE_URL;
+  const information = {
+    ...data.data,
+    cover_url: data.data.cover_url ? `${baseUrl}/${data.data.cover_url}` : null,
+  };
+
+  return information;
+};
+
+export const getAllInformations = async () => {
+  const response = await fetch(`${API_BASE_URL}/websites/informations`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil daftar informasi");
+  }
+
+  const baseUrl = import.meta.env.VITE_IMAGE_URL;
+  const informationsWithFullUrl = data.data.map((information) => ({
+    ...information,
+    cover_url: information.cover_url
+      ? `${baseUrl}/${information.cover_url}`
+      : null,
+  }));
+
+  return informationsWithFullUrl;
+};

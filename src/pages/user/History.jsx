@@ -208,46 +208,46 @@ const History = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card className="text-center bg-white hover:shadow-md transition-shadow">
-              <div className="p-6">
-                <div className="text-3xl font-bold text-blue-600 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <Card className="text-center bg-white">
+              <div className="p-4">
+                <div className="text-2xl font-bold text-blue-600 mb-1">
                   {totalApplications}
                 </div>
-                <div className="text-sm text-gray-600 font-medium">
+                <div className="text-xs text-gray-600 font-medium">
                   Total Pendaftaran
                 </div>
               </div>
             </Card>
 
-            <Card className="text-center bg-white hover:shadow-md transition-shadow">
-              <div className="p-6">
-                <div className="text-3xl font-bold text-green-600 mb-2">
+            <Card className="text-center bg-white">
+              <div className="p-4">
+                <div className="text-2xl font-bold text-green-600 mb-1">
                   {validatedCount}
                 </div>
-                <div className="text-sm text-gray-600 font-medium">
+                <div className="text-xs text-gray-600 font-medium">
                   Divalidasi
                 </div>
               </div>
             </Card>
 
-            <Card className="text-center bg-white hover:shadow-md transition-shadow">
-              <div className="p-6">
-                <div className="text-3xl font-bold text-orange-600 mb-2">
+            <Card className="text-center bg-white">
+              <div className="p-4">
+                <div className="text-2xl font-bold text-orange-600 mb-1">
                   {inProgressCount}
                 </div>
-                <div className="text-sm text-gray-600 font-medium">
+                <div className="text-xs text-gray-600 font-medium">
                   Dalam Proses
                 </div>
               </div>
             </Card>
 
-            <Card className="text-center bg-white hover:shadow-md transition-shadow">
-              <div className="p-6">
-                <div className="text-2xl font-bold text-purple-600 mb-2">
+            <Card className="text-center bg-white">
+              <div className="p-4">
+                <div className="text-lg font-bold text-purple-600 mb-1">
                   Rp {totalValue.toLocaleString("id-ID")}
                 </div>
-                <div className="text-sm text-gray-600 font-medium">
+                <div className="text-xs text-gray-600 font-medium">
                   Total Nilai Bantuan Diterima
                 </div>
               </div>
@@ -256,7 +256,7 @@ const History = () => {
 
           <div className="bg-white rounded-lg shadow-sm">
             <UniversalTable
-              title="Data Pendaftaran Beasiswa"
+              title="Riwayat Pendaftaran Beasiswa"
               data={filteredData}
               columns={columns}
               searchFields={["beasiswa", "organizer"]}

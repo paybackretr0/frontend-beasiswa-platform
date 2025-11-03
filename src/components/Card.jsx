@@ -1,5 +1,3 @@
-import React from "react";
-
 const Card = ({
   image,
   title,
@@ -7,12 +5,15 @@ const Card = ({
   description,
   children,
   className = "",
+  onClick,
 }) => (
   <div
     className={`
       bg-white border border-[#DFEAF2] rounded-2xl transition p-0 flex flex-col overflow-hidden
       w-full max-w-full ${className}
     `}
+    onClick={onClick}
+    style={{ cursor: onClick ? "pointer" : "default" }}
   >
     {image && (
       <img src={image} alt={title} className="w-full h-40 object-cover" />

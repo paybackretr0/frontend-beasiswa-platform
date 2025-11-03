@@ -17,6 +17,24 @@ export const getSummary = async (year = null) => {
   return data.data;
 };
 
+export const getMonthlyTrend = async (year) => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(
+    `${API_BASE_URL}/analytics/monthly-trend?year=${year}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil tren bulanan");
+  }
+  return data.data;
+};
+
 export const getSelectionSummary = async (year) => {
   const token = localStorage.getItem("access_token");
   const data = await authFetch(
@@ -191,4 +209,44 @@ export const getFilterOptions = async () => {
     departments: departmentsData.success ? departmentsData.data : [],
     genders: ["Laki-laki", "Perempuan"],
   };
+};
+
+export const getScholarshipPerformance = async (year = null) => {
+  const token = localStorage.getItem("access_token");
+  const params = year ? `?year=${year}` : "";
+  const data = await authFetch(
+    `${API_BASE_URL}/analytics/scholarship-performance${params}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil performa beasiswa");
+  }
+  return data.data;
+};
+
+export const getTopPerformingFaculties = async (year = null) => {
+  const token = localStorage.getItem("access_token");
+  const params = year ? `?year=${year}` : "";
+  const data = await authFetch(
+    `${API_BASE_URL}/analytics/top-performing-faculties${params}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!data.success) {
+    throw new Error(
+      data.message || "Gagal mengambil fakultas berperforma terbaik"
+    );
+  }
+  return data.data;
 };
