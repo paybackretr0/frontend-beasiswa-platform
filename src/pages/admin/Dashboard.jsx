@@ -87,10 +87,24 @@ const AdminDashboard = () => {
         getGenderDistribution(),
       ]);
 
+      const defaultGenderData = [
+        { label: "Laki-laki", value: 0, color: "#2D60FF" },
+        { label: "Perempuan", value: 0, color: "#FF6384" },
+      ];
+
+      const mergedGenderData = defaultGenderData.map((defaultItem) => {
+        const existingItem = gender.find(
+          (item) => item.label === defaultItem.label
+        );
+        return existingItem || defaultItem;
+      });
+
+      console.log("Gender Data (Processed):", mergedGenderData);
+
       setFakultasData(fakultas || []);
       setDepartemenData(departemen || []);
       setTahunData(tahun || []);
-      setGenderData(gender || []);
+      setGenderData(mergedGenderData);
     } catch (error) {
       console.error("Error fetching chart data:", error);
     }

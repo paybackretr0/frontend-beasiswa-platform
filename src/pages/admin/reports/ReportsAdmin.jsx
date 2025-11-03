@@ -331,19 +331,6 @@ const ReportsAdmin = () => {
         icon: <EyeOutlined />,
         onClick: handleDetail,
       },
-      {
-        key: "edit",
-        label: "Edit",
-        icon: <EditOutlined />,
-        onClick: handleEdit,
-      },
-      {
-        key: "delete",
-        label: "Hapus",
-        icon: <DeleteOutlined />,
-        danger: true,
-        onClick: handleDelete,
-      },
     ]),
   ];
 

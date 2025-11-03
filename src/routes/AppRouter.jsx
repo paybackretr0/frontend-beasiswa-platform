@@ -32,6 +32,8 @@ import PreviewScholarshipForm from "../pages/admin/scholarships/form/PreviewScho
 import EditScholarshipForm from "../pages/admin/scholarships/form/EditScholarshipForm";
 import DetailScholarship from "../pages/DetailScholarship";
 import FormApplication from "../pages/user/FormApplication";
+import Information from "../pages/Information";
+import DetailInformation from "../pages/DetailInformation";
 
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
@@ -42,6 +44,8 @@ const AppRouter = () => (
       <Route path="/" element={<Home />} />
       <Route path="/scholarship" element={<Scholarship />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/informations" element={<Information />} />
+      <Route path="/informations/:slug" element={<DetailInformation />} />
 
       <Route path="/scholarship/:id" element={<DetailScholarship />} />
       <Route
