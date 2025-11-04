@@ -12,9 +12,12 @@ const AdminNavbar = () => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Tutup dropdown kalau klik di luar
   useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    setIsAuthenticated(!!token);
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
@@ -23,6 +26,10 @@ const AdminNavbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const user = isAuthenticated
+    ? JSON.parse(localStorage.getItem("user") || "{}")
+    : { full_name: "", email: "", role: "" };
 
   return (
     <nav className="w-full h-16 flex items-center justify-between px-6 bg-white border-b border-gray-200">
@@ -62,6 +69,9 @@ const AdminNavbar = () => {
 
           {open && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <p className="font-semibold text-gray-800">{user.full_name}</p>
+              </div>
               <button
                 onClick={() => navigate("/admin/change-password")}
                 className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:cursor-pointer"

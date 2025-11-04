@@ -17,6 +17,12 @@ const ApplicationsAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [summaryLoading, setSummaryLoading] = useState(true);
 
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (e) {}
+  const role = user?.role?.toUpperCase() || null;
+
   useEffect(() => {
     document.title = "Kelola Pendaftaran - Admin";
     fetchApplications();
@@ -190,25 +196,39 @@ const ApplicationsAdmin = () => {
         onClick: handleDetail,
       },
       {
-        key: "approve",
-        label: "Setujui",
+        key: "verify",
+        label: "Verifikasi",
         icon: <CheckOutlined />,
-        onClick: handleApprove,
-        className: (record) =>
-          record.rawStatus === "VALIDATED" || record.rawStatus === "REJECTED"
-            ? "hidden"
-            : "",
+        hidden: (record) =>
+          !(
+            role === "VERIFIKATOR" && record.rawStatus === "MENUNGGU_VERIFIKASI"
+          ),
+        onClick: {},
+      },
+      {
+        key: "validate",
+        label: "Validasi",
+        icon: <CheckOutlined />,
+        hidden: (record) =>
+          !(
+            role === "PIMPINAN_DITMAWA" &&
+            ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus)
+          ),
+        onClick: {},
       },
       {
         key: "reject",
         label: "Tolak",
         icon: <CloseOutlined />,
         danger: true,
-        onClick: handleReject,
-        className: (record) =>
-          record.rawStatus === "VALIDATED" || record.rawStatus === "REJECTED"
-            ? "hidden"
-            : "",
+        hidden: (record) =>
+          !(
+            (role === "VERIFIKATOR" &&
+              record.rawStatus === "MENUNGGU_VERIFIKASI") ||
+            (role === "PIMPINAN_DITMAWA" &&
+              ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus))
+          ),
+        onClick: {},
       },
     ]),
   ];
