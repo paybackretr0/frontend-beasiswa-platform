@@ -44,7 +44,6 @@ const AdminDashboard = () => {
 
       await Promise.all([fetchChartData(), fetchStatusAndActivities()]);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
       message.error("Gagal memuat data dashboard");
     } finally {
       setChartsLoading(false);
@@ -98,8 +97,6 @@ const AdminDashboard = () => {
         );
         return existingItem || defaultItem;
       });
-
-      console.log("Gender Data (Processed):", mergedGenderData);
 
       setFakultasData(fakultas || []);
       setDepartemenData(departemen || []);
@@ -169,16 +166,20 @@ const AdminDashboard = () => {
           </>
         ) : (
           <>
-            <HorizontalBarChart
-              data={fakultasData}
-              title="Pendaftar Berdasarkan Fakultas"
-              description="Distribusi pendaftar beasiswa per fakultas"
-            />
-            <HorizontalBarChart
-              data={departemenData}
-              title="Pendaftar Berdasarkan Departemen"
-              description="Distribusi pendaftar beasiswa per departemen"
-            />
+            <div className="flex flex-col h-full">
+              <HorizontalBarChart
+                data={fakultasData}
+                title="Pendaftar Berdasarkan Fakultas"
+                description="Distribusi pendaftar beasiswa per fakultas"
+              />
+            </div>
+            <div className="flex flex-col h-full">
+              <HorizontalBarChart
+                data={departemenData}
+                title="Pendaftar Berdasarkan Departemen"
+                description="Distribusi pendaftar beasiswa per departemen"
+              />
+            </div>
           </>
         )}
       </div>
@@ -241,8 +242,12 @@ const AdminDashboard = () => {
           </>
         ) : (
           <>
-            <ActivityCard activities={activities} />
-            <StatusSummary statusCounts={statusCounts} />
+            <div className="flex flex-col h-full">
+              <ActivityCard activities={activities} />
+            </div>
+            <div className="flex flex-col h-full">
+              <StatusSummary statusCounts={statusCounts} />
+            </div>
           </>
         )}
       </div>
