@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Select, message, Spin } from "antd";
-import {
-  DownloadOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import UniversalTable, {
@@ -17,7 +12,7 @@ import {
   HorizontalBarChart,
   LineChart,
   PieChart,
-  ChartEmptyState,
+  PerformanceBarChart,
 } from "../../../components/Chart";
 import {
   getSummary,
@@ -28,6 +23,10 @@ import {
   getGenderDistribution,
   getApplicationsList,
   getFilterOptions,
+  getMonthlyTrend,
+  getScholarshipPerformance,
+  getTopPerformingFaculties,
+  exportLaporanBeasiswa,
 } from "../../../services/analyticsService";
 
 const { Option } = Select;
@@ -53,6 +52,10 @@ const ReportsAdmin = () => {
 
   const [pendaftarData, setPendaftarData] = useState([]);
   const [filteredPendaftar, setFilteredPendaftar] = useState([]);
+
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [scholarshipPerformance, setScholarshipPerformance] = useState([]);
+  const [topFaculties, setTopFaculties] = useState([]);
 
   const [filters, setFilters] = useState({
     fakultas: "Semua",
@@ -82,6 +85,9 @@ const ReportsAdmin = () => {
     setDepartemenData([]);
     setTahunData([]);
     setGenderData([]);
+    setMonthlyData([]);
+    setScholarshipPerformance([]);
+    setTopFaculties([]);
     setPendaftarData([]);
     setFilteredPendaftar([]);
 
@@ -93,7 +99,11 @@ const ReportsAdmin = () => {
 
       setLoading(false);
 
-      await Promise.all([fetchChartData(), fetchPendaftarData()]);
+      await Promise.all([
+        fetchChartData(),
+        fetchPerformanceData(),
+        fetchPendaftarData(),
+      ]);
     } catch (error) {
       console.error("Error fetching all data:", error);
       message.error("Gagal memuat data laporan");
@@ -166,19 +176,34 @@ const ReportsAdmin = () => {
 
   const fetchChartData = async () => {
     try {
-      const [fakultas, departemen, tahun, gender] = await Promise.all([
+      const [fakultas, departemen, tahun, gender, monthly] = await Promise.all([
         getFacultyDistribution(selectedYear),
         getDepartmentDistribution(selectedYear),
         getYearlyTrend(),
         getGenderDistribution(selectedYear),
+        getMonthlyTrend(selectedYear),
       ]);
 
       setFakultasData(fakultas || []);
       setDepartemenData(departemen || []);
       setTahunData(tahun || []);
       setGenderData(gender || []);
+      setMonthlyData(monthly || []);
     } catch (error) {
       console.error("Error fetching chart data:", error);
+    }
+  };
+
+  const fetchPerformanceData = async () => {
+    try {
+      const [scholarshipData, facultyData] = await Promise.all([
+        getScholarshipPerformance(selectedYear),
+        getTopPerformingFaculties(selectedYear),
+      ]);
+      setScholarshipPerformance(scholarshipData || []);
+      setTopFaculties(facultyData || []);
+    } catch (error) {
+      console.error("Error fetching performance data:", error);
     }
   };
 
@@ -238,8 +263,16 @@ const ReportsAdmin = () => {
     message.info(`Menampilkan data tahun ${year}`);
   };
 
-  const handleExportReport = () => {
-    message.success(`Mengunduh laporan tahun ${selectedYear}...`);
+  const handleExportReport = async () => {
+    try {
+      message.loading("Sedang mengekspor laporan...", 0);
+      await exportLaporanBeasiswa(selectedYear);
+      message.destroy();
+      message.success("Laporan berhasil diexport!");
+    } catch (error) {
+      message.destroy();
+      message.error("Gagal mengekspor laporan: " + error.message);
+    }
   };
 
   const handleFilterChange = (filterType, value) => {
@@ -276,14 +309,6 @@ const ReportsAdmin = () => {
 
   const handleDetail = (record) => {
     message.info(`Detail pendaftar: ${record.nama}`);
-  };
-
-  const handleEdit = (record) => {
-    message.info(`Edit pendaftar: ${record.nama}`);
-  };
-
-  const handleDelete = (record) => {
-    message.warning(`Hapus pendaftar: ${record.nama}`);
   };
 
   const pendaftarColumns = [
@@ -398,6 +423,83 @@ const ReportsAdmin = () => {
         {chartsLoading ? (
           <>
             <Card
+              title="Tren Bulanan"
+              description="Pendaftar per bulan tahun ini"
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+            <Card
+              title="Pendaftar Tahun ke Tahun"
+              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <LineChart
+              data={monthlyData}
+              title="Tren Pendaftaran Bulanan"
+              description={`Jumlah pendaftar per bulan tahun ${selectedYear}`}
+            />
+            <LineChart
+              data={tahunData}
+              title="Pendaftar Tahun ke Tahun"
+              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
+            />
+          </>
+        )}
+      </div>
+
+      {/* Performance Analysis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {chartsLoading ? (
+          <>
+            <Card
+              title="Performa Beasiswa"
+              description="Tingkat penerimaan per beasiswa"
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+            <Card
+              title="Fakultas Terbaik"
+              description="Fakultas dengan tingkat keberhasilan tertinggi"
+            >
+              <div className="flex justify-center items-center py-12">
+                <Spin size="large" />
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col h-full">
+              <PerformanceBarChart
+                data={scholarshipPerformance}
+                title="Performa Beasiswa"
+                description={`Top 10 beasiswa dengan peminat terbanyak tahun ${selectedYear}`}
+              />
+            </div>
+            <div className="flex flex-col h-full">
+              <PerformanceBarChart
+                data={topFaculties}
+                title="Fakultas Terbaik"
+                description="5 fakultas dengan tingkat keberhasilan tertinggi"
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {chartsLoading ? (
+          <>
+            <Card
               title="Pendaftar Berdasarkan Fakultas"
               description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
             >
@@ -416,16 +518,20 @@ const ReportsAdmin = () => {
           </>
         ) : (
           <>
-            <HorizontalBarChart
-              data={fakultasData}
-              title="Pendaftar Berdasarkan Fakultas"
-              description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
-            />
-            <HorizontalBarChart
-              data={departemenData}
-              title="Pendaftar Berdasarkan Departemen"
-              description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
-            />
+            <div className="flex flex-col h-full">
+              <HorizontalBarChart
+                data={fakultasData}
+                title="Pendaftar Berdasarkan Fakultas"
+                description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
+              />
+            </div>
+            <div className="flex flex-col h-full">
+              <HorizontalBarChart
+                data={departemenData}
+                title="Pendaftar Berdasarkan Departemen"
+                description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
+              />
+            </div>
           </>
         )}
       </div>

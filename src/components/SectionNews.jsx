@@ -14,7 +14,6 @@ const SectionNews = () => {
     const fetchInformations = async () => {
       try {
         const informations = await getLatestInformation();
-        console.log("Fetched informations:", informations);
         setInformationList(informations);
       } catch (error) {
         console.error("Error fetching latest information:", error);

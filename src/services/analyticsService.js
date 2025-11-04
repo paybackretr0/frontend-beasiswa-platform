@@ -250,3 +250,53 @@ export const getTopPerformingFaculties = async (year = null) => {
   }
   return data.data;
 };
+
+export const exportLaporanBeasiswa = async (year = null) => {
+  const token = localStorage.getItem("access_token");
+  const params = year ? `?year=${year}` : "";
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/analytics/export-laporan${params}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to export report");
+    }
+
+    const contentDisposition = response.headers.get("content-disposition");
+    let filename = `laporan_beasiswa_${year || new Date().getFullYear()}.xlsx`;
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const blob = await response.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = filename;
+
+    document.body.appendChild(a);
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Export error:", error);
+    throw new Error("Gagal mengekspor laporan beasiswa");
+  }
+};

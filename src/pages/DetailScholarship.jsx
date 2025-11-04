@@ -487,7 +487,7 @@ const DetailScholarship = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-20 space-y-6">
               {/* Action Card */}
-              {scholarship.is_active && (
+              {scholarship.is_active && scholarship.end_date < new Date() && (
                 <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">
                     Siap untuk mendaftar?
