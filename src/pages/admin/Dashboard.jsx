@@ -15,6 +15,7 @@ import {
   getGenderDistribution,
   getStatusSummary,
   getActivities,
+  getApplicationsList,
 } from "../../services/analyticsService";
 
 const AdminDashboard = () => {
@@ -28,6 +29,8 @@ const AdminDashboard = () => {
   const [genderData, setGenderData] = useState([]);
   const [statusCounts, setStatusCounts] = useState([]);
   const [activities, setActivities] = useState([]);
+
+  const [recentApplications, setRecentApplications] = useState([]);
 
   useEffect(() => {
     document.title = "Dashboard - Admin";
@@ -47,6 +50,21 @@ const AdminDashboard = () => {
       message.error("Gagal memuat data dashboard");
     } finally {
       setChartsLoading(false);
+    }
+  };
+
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (e) {}
+  const role = user?.role?.toUpperCase() || null;
+
+  const fetchRecentApplications = async () => {
+    try {
+      const data = await getApplicationsList({ limit: 5 }); // Ambil 5 terakhir
+      setRecentApplications(data.slice(0, 5));
+    } catch (error) {
+      console.error("Error fetching recent applications:", error);
     }
   };
 
@@ -109,13 +127,22 @@ const AdminDashboard = () => {
 
   const fetchStatusAndActivities = async () => {
     try {
-      const [statusData, activitiesData] = await Promise.all([
-        getStatusSummary(),
-        getActivities(),
-      ]);
+      const promises = [getStatusSummary()];
 
-      setStatusCounts(statusData || []);
-      setActivities(activitiesData || []);
+      if (role === "SUPERADMIN") {
+        promises.push(getActivities());
+      } else {
+        // Panggil fetchRecentApplications untuk role selain SUPERADMIN
+        await fetchRecentApplications();
+      }
+
+      const results = await Promise.all(promises);
+
+      setStatusCounts(results[0] || []);
+
+      if (role === "SUPERADMIN") {
+        setActivities(results[1] || []);
+      }
     } catch (error) {
       console.error("Error fetching status and activities:", error);
     }
@@ -223,14 +250,25 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
-            <Card
-              title="Aktivitas Terbaru"
-              description="Aktivitas sistem dalam 24 jam terakhir"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
+            {role === "SUPERADMIN" ? (
+              <Card
+                title="Aktivitas Terbaru"
+                description="Aktivitas sistem dalam 24 jam terakhir"
+              >
+                <div className="flex justify-center items-center py-12">
+                  <Spin size="large" />
+                </div>
+              </Card>
+            ) : (
+              <Card
+                title="Pendaftaran Terbaru"
+                description="5 pendaftaran beasiswa terbaru"
+              >
+                <div className="flex justify-center items-center py-12">
+                  <Spin size="large" />
+                </div>
+              </Card>
+            )}
             <Card
               title="Status Pendaftaran"
               description="Ringkasan status pendaftaran beasiswa"
@@ -243,7 +281,11 @@ const AdminDashboard = () => {
         ) : (
           <>
             <div className="flex flex-col h-full">
-              <ActivityCard activities={activities} />
+              {role === "SUPERADMIN" ? (
+                <ActivityCard activities={activities} />
+              ) : (
+                <RecentApplicationsCard applications={recentApplications} />
+              )}
             </div>
             <div className="flex flex-col h-full">
               <StatusSummary statusCounts={statusCounts} />
@@ -254,6 +296,32 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
+const RecentApplicationsCard = ({ applications }) => (
+  <Card
+    title="Pendaftaran Terbaru"
+    description="5 pendaftaran beasiswa terbaru"
+  >
+    {applications.length === 0 ? (
+      <ChartEmptyState message="Belum ada pendaftaran terbaru" />
+    ) : (
+      <ul className="mt-2 space-y-3">
+        {applications.map((app, idx) => (
+          <li
+            key={idx}
+            className="flex items-center gap-2 bg-[#D9D9D9] rounded-lg px-4 py-2"
+          >
+            <span className="text-xs text-[#2D60FF] font-semibold min-w-[80px]">
+              {app.status}
+            </span>
+            <span className="text-sm text-gray-700 flex-1">{app.nama}</span>
+            <span className="text-xs text-gray-500">{app.fakultas}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </Card>
+);
 
 const ActivityCard = ({ activities }) => (
   <Card

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
-import { Select, message, Spin } from "antd";
-import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
+import { Select, message, Spin, Tag } from "antd";
+import {
+  DownloadOutlined,
+  EyeOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import UniversalTable, {
   createNumberColumn,
-  createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
 import {
@@ -223,7 +227,8 @@ const ReportsAdmin = () => {
         fakultas: item.fakultas,
         departemen: item.departemen,
         gender: item.gender,
-        status: item.status,
+        status: getStatusLabel(item.status),
+        rawStatus: item.status,
         beasiswa: item.beasiswa,
         tanggalDaftar: item.tanggalDaftar,
       }));
@@ -294,7 +299,8 @@ const ReportsAdmin = () => {
           fakultas: item.fakultas,
           departemen: item.departemen,
           gender: item.gender,
-          status: item.status,
+          status: getStatusLabel(item.status),
+          rawStatus: item.status,
           beasiswa: item.beasiswa,
           tanggalDaftar: item.tanggalDaftar,
         }));
@@ -307,8 +313,36 @@ const ReportsAdmin = () => {
       });
   };
 
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (e) {}
+  const role = user?.role?.toUpperCase() || null;
+
   const handleDetail = (record) => {
     message.info(`Detail pendaftar: ${record.nama}`);
+  };
+
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
+      VERIFIED: "Terverifikasi",
+      MENUNGGU_VALIDASI: "Menunggu Validasi",
+      REJECTED: "Dikembalikan",
+      VALIDATED: "Disetujui",
+    };
+    return statusMap[status] || status;
+  };
+
+  const getStatusColor = (status) => {
+    const colorMap = {
+      "Menunggu Verifikasi": "orange",
+      Terverifikasi: "blue",
+      "Menunggu Validasi": "gold",
+      Dikembalikan: "red",
+      Disetujui: "green",
+    };
+    return colorMap[status] || "default";
   };
 
   const pendaftarColumns = [
@@ -337,12 +371,23 @@ const ReportsAdmin = () => {
       key: "departemen",
       sorter: (a, b) => a.departemen.localeCompare(b.departemen),
     },
-    createStatusColumn({
-      Disetujui: { color: "green" },
-      "Menunggu Verifikasi": { color: "orange" },
-      "Menunggu Validasi": { color: "gold" },
-      Ditolak: { color: "red" },
-    }),
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => {
+        const color = getStatusColor(status);
+        return <Tag color={color}>{status}</Tag>;
+      },
+      filters: [
+        { text: "Menunggu Verifikasi", value: "Menunggu Verifikasi" },
+        { text: "Terverifikasi", value: "Terverifikasi" },
+        { text: "Menunggu Validasi", value: "Menunggu Validasi" },
+        { text: "Dikembalikan", value: "Dikembalikan" },
+        { text: "Disetujui", value: "Disetujui" },
+      ],
+      onFilter: (value, record) => record.status === value,
+    },
     {
       title: "Beasiswa",
       dataIndex: "beasiswa",
@@ -355,6 +400,41 @@ const ReportsAdmin = () => {
         label: "Detail",
         icon: <EyeOutlined />,
         onClick: handleDetail,
+      },
+      {
+        key: "verify",
+        label: "Verifikasi",
+        icon: <CheckOutlined />,
+        hidden: (record) =>
+          !(
+            role === "VERIFIKATOR" && record.rawStatus === "MENUNGGU_VERIFIKASI"
+          ),
+        onClick: {},
+      },
+      {
+        key: "validate",
+        label: "Validasi",
+        icon: <CheckOutlined />,
+        hidden: (record) =>
+          !(
+            role === "PIMPINAN_DITMAWA" &&
+            ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus)
+          ),
+        onClick: {},
+      },
+      {
+        key: "reject",
+        label: "Tolak",
+        icon: <CloseOutlined />,
+        danger: true,
+        hidden: (record) =>
+          !(
+            (role === "VERIFIKATOR" &&
+              record.rawStatus === "MENUNGGU_VERIFIKASI") ||
+            (role === "PIMPINAN_DITMAWA" &&
+              ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus))
+          ),
+        onClick: {},
       },
     ]),
   ];

@@ -126,10 +126,19 @@ export const createActionColumn = (actions) => ({
   width: 80,
   render: (_, record) => {
     const visibleActions = actions.filter((action) => {
+      // jika hidden boolean true → sembunyikan
+      if (typeof action.hidden === "boolean" && action.hidden) return false;
+
+      // jika hidden function → cek berdasarkan record
+      if (typeof action.hidden === "function" && action.hidden(record))
+        return false;
+
+      // dukung juga className dengan "hidden"
       if (typeof action.className === "function") {
         const className = action.className(record);
-        return !className.includes("hidden");
+        if (className?.includes("hidden")) return false;
       }
+
       return true;
     });
 
