@@ -487,22 +487,24 @@ const DetailScholarship = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-20 space-y-6">
               {/* Action Card */}
-              {scholarship.is_active && scholarship.end_date < new Date() && (
-                <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
-                    Siap untuk mendaftar?
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-6">
-                    Pastikan Anda memenuhi semua persyaratan sebelum mendaftar.
-                  </p>
-                  <Button
-                    className="w-full"
-                    onClick={() => navigate(`/scholarship/${id}/apply`)}
-                  >
-                    Daftar Sekarang
-                  </Button>
-                </Card>
-              )}
+              {scholarship.is_active &&
+                new Date() <= new Date(scholarship.end_date) && (
+                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">
+                      Siap untuk mendaftar?
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-6">
+                      Pastikan Anda memenuhi semua persyaratan sebelum
+                      mendaftar.
+                    </p>
+                    <Button
+                      className="w-full"
+                      onClick={() => navigate(`/scholarship/${id}/apply`)}
+                    >
+                      Daftar Sekarang
+                    </Button>
+                  </Card>
+                )}
 
               {/* Other Scholarships Card */}
               <Card>

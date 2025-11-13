@@ -41,8 +41,8 @@ const Departemen = () => {
         nama: department.name,
         kode: department.code,
         jenjang: department.degree,
-        fakultas: department.Faculty ? department.Faculty.name : "-",
-        fakultasId: department.Faculty ? department.Faculty.id : null,
+        fakultas: department.faculty ? department.faculty.name : "-",
+        fakultasId: department.faculty ? department.faculty.id : null,
         status: department.is_active ? "Aktif" : "Nonaktif",
       }));
       setDepartments(formattedData);
