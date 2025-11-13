@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { message, Spin, Tag } from "antd";
+import { message, Spin, Tag, Modal, Input } from "antd";
 import UniversalTable, {
   createNumberColumn,
   createActionColumn,
@@ -9,13 +9,24 @@ import Card from "../../../components/Card";
 import {
   getAllApplications,
   getApplicationsSummary,
+  getApplicationDetail,
 } from "../../../services/applicationService";
+import {
+  verifyApplication,
+  rejectApplication,
+} from "../../../services/verifikatorService";
+import { validateApplication } from "../../../services/validatorService";
+import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 
 const ApplicationsAdmin = () => {
   const [applications, setApplications] = useState([]);
   const [summaryData, setSummaryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [summaryLoading, setSummaryLoading] = useState(true);
+
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   let user = null;
   try {
@@ -112,27 +123,97 @@ const ApplicationsAdmin = () => {
     return colorMap[status] || "default";
   };
 
-  const handleDetail = (record) => {
-    message.info(`Detail pendaftaran: ${record.nama}`);
-    console.log("Application detail:", record);
+  const handleDetail = async (record) => {
+    try {
+      setDetailLoading(true);
+      setDetailModalVisible(true);
+
+      const detail = await getApplicationDetail(record.id);
+      setSelectedApplication(detail);
+    } catch (error) {
+      console.error("Error fetching application detail:", error);
+      message.error("Gagal memuat detail pendaftaran");
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
-  const handleApprove = async (record) => {
+  const handleCloseDetailModal = () => {
+    setDetailModalVisible(false);
+    setSelectedApplication(null);
+  };
+
+  const handleVerify = async (record) => {
     try {
-      message.success(`Setujui pendaftaran: ${record.nama}`);
-      fetchApplications();
-      fetchSummary();
+      await verifyApplication(record.id, "");
+      message.success(
+        `Pendaftaran ${
+          record.nama || record.student?.nama
+        } berhasil diverifikasi`
+      );
+
+      await fetchApplications();
+      await fetchSummary();
+
+      if (detailModalVisible) {
+        setDetailModalVisible(false);
+        setSelectedApplication(null);
+      }
     } catch (error) {
-      message.error("Gagal menyetujui pendaftaran");
+      console.error("Error verifying application:", error);
+      message.error("Gagal memverifikasi pendaftaran");
+    }
+  };
+
+  const handleValidate = async (record) => {
+    try {
+      await validateApplication(record.id, "");
+      message.success(
+        `Pendaftaran ${record.nama || record.student?.nama} berhasil divalidasi`
+      );
+
+      await fetchApplications();
+      await fetchSummary();
+
+      if (detailModalVisible) {
+        setDetailModalVisible(false);
+        setSelectedApplication(null);
+      }
+    } catch (error) {
+      console.error("Error validating application:", error);
+      message.error("Gagal memvalidasi pendaftaran");
     }
   };
 
   const handleReject = async (record) => {
     try {
-      message.warning(`Tolak pendaftaran: ${record.nama}`);
-      fetchApplications();
-      fetchSummary();
+      const notes = prompt(
+        `Alasan penolakan untuk ${record.nama || record.student?.nama}:`
+      );
+
+      if (notes === null) {
+        return;
+      }
+
+      if (!notes.trim()) {
+        message.error("Alasan penolakan harus diisi");
+        return;
+      }
+
+      await rejectApplication(record.id, notes);
+      message.success(
+        `Pendaftaran ${record.nama || record.student?.nama} berhasil ditolak`
+      );
+
+      await fetchApplications();
+      await fetchSummary();
+
+      if (detailModalVisible) {
+        setDetailModalVisible(false);
+        setSelectedApplication(null);
+      }
     } catch (error) {
+      console.error("Error rejecting application:", error);
       message.error("Gagal menolak pendaftaran");
     }
   };
@@ -203,7 +284,7 @@ const ApplicationsAdmin = () => {
           !(
             role === "VERIFIKATOR" && record.rawStatus === "MENUNGGU_VERIFIKASI"
           ),
-        onClick: {},
+        onClick: handleVerify,
       },
       {
         key: "validate",
@@ -214,7 +295,7 @@ const ApplicationsAdmin = () => {
             role === "PIMPINAN_DITMAWA" &&
             ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus)
           ),
-        onClick: {},
+        onClick: handleValidate,
       },
       {
         key: "reject",
@@ -228,7 +309,7 @@ const ApplicationsAdmin = () => {
             (role === "PIMPINAN_DITMAWA" &&
               ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus))
           ),
-        onClick: {},
+        onClick: handleReject,
       },
     ]),
   ];
@@ -274,6 +355,16 @@ const ApplicationsAdmin = () => {
         searchPlaceholder="Cari nama pendaftar, email, atau beasiswa..."
         onAdd={null}
         loading={loading}
+      />
+
+      <ApplicationDetailModal
+        visible={detailModalVisible}
+        onClose={handleCloseDetailModal}
+        applicationDetail={selectedApplication}
+        loading={detailLoading}
+        onVerify={handleVerify}
+        onReject={handleReject}
+        role={role}
       />
     </div>
   );

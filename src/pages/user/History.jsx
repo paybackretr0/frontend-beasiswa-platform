@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Select, DatePicker, Tag, message } from "antd";
-import {
-  EyeOutlined,
-  DownloadOutlined,
-  FileTextOutlined,
-} from "@ant-design/icons";
+import { EyeOutlined } from "@ant-design/icons";
 import UniversalTable, {
   createNumberColumn,
   createActionColumn,
@@ -12,6 +8,8 @@ import UniversalTable, {
 import GuestLayout from "../../layouts/GuestLayout";
 import Card from "../../components/Card";
 import { getUserApplications } from "../../services/historyService";
+import ApplicationDetailModal from "../../components/ApplicationDetailModal";
+import { getApplicationDetailUser } from "../../services/applicationService";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -20,6 +18,16 @@ const History = () => {
   const [applications, setApplications] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (e) {}
+  const role = user?.role?.toUpperCase() || null;
 
   useEffect(() => {
     document.title = "Riwayat Pendaftaran Beasiswa - UNAND";
@@ -40,6 +48,34 @@ const History = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDetail = async (record) => {
+    try {
+      setDetailLoading(true);
+      setDetailModalVisible(true);
+
+      const detail = await getApplicationDetailUser(record.id);
+      setSelectedApplication(detail);
+    } catch (error) {
+      console.error("Error fetching application detail:", error);
+      message.error("Gagal memuat detail pendaftaran");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setDetailModalVisible(false);
+    setSelectedApplication(null);
+  };
+
+  const handleVerify = async (record) => {
+    message.info("Fitur verifikasi hanya tersedia di halaman admin");
+  };
+
+  const handleReject = async (record) => {
+    message.info("Fitur penolakan hanya tersedia di halaman admin");
   };
 
   const createStatusColumn = () => ({
@@ -120,7 +156,7 @@ const History = () => {
         label: "Detail",
         icon: <EyeOutlined />,
         type: "default",
-        onClick: (record) => console.log("View detail", record),
+        onClick: handleDetail,
       },
     ]),
   ];
@@ -265,6 +301,15 @@ const History = () => {
               pageSize={10}
               scroll={{ x: 1200 }}
               loading={loading}
+            />
+            <ApplicationDetailModal
+              visible={detailModalVisible}
+              onClose={handleCloseDetailModal}
+              applicationDetail={selectedApplication}
+              loading={detailLoading}
+              onVerify={handleVerify}
+              onReject={handleReject}
+              role={role}
             />
           </div>
         </div>
