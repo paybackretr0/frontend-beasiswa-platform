@@ -1,7 +1,9 @@
 import { useState } from "react";
 import Button from "../../../../components/Button";
+import useAlert from "../../../../hooks/useAlert";
 
 const StepOne = ({ onNext, initialData = {} }) => {
+  const { warning } = useAlert();
   const [formData, setFormData] = useState({
     name: initialData.name || "",
     organizer: initialData.organizer || "",
@@ -83,7 +85,10 @@ const StepOne = ({ onNext, initialData = {} }) => {
       !formData.description ||
       !formData.year
     ) {
-      alert("Mohon lengkapi semua field yang wajib diisi!");
+      warning(
+        "Data Belum Lengkap",
+        "Mohon lengkapi semua field yang wajib diisi sebelum melanjutkan"
+      );
       return;
     }
 
@@ -96,7 +101,10 @@ const StepOne = ({ onNext, initialData = {} }) => {
     });
 
     if (validRequirements.length === 0) {
-      alert("Mohon tambahkan minimal satu syarat dan ketentuan!");
+      warning(
+        "Syarat Ketentuan Kosong",
+        "Mohon tambahkan minimal satu syarat dan ketentuan untuk beasiswa"
+      );
       return;
     }
 

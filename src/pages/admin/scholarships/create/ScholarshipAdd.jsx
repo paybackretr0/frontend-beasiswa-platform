@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import StepThree from "./StepThree";
 import { createScholarship } from "../../../../services/scholarshipService";
+import useAlert from "../../../../hooks/useAlert";
 
 const ScholarshipAdd = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const { success, error } = useAlert();
 
   const [scholarshipData, setScholarshipData] = useState({
     name: "",
@@ -55,11 +57,46 @@ const ScholarshipAdd = () => {
     setLoading(true);
     try {
       await createScholarship(finalData);
-      message.success("Beasiswa berhasil dibuat!");
-      navigate("/admin/scholarship");
-    } catch (error) {
-      console.error("Error creating scholarship:", error);
-      message.error(error.message || "Gagal membuat beasiswa");
+      success(
+        "Beasiswa Berhasil Dibuat!",
+        `Beasiswa "${finalData.name}" telah berhasil ditambahkan ke sistem.`
+      );
+
+      setTimeout(() => {
+        navigate("/admin/scholarship");
+      }, 2000);
+    } catch (err) {
+      console.error("Error creating scholarship:", err);
+
+      let errorTitle = "Gagal Membuat Beasiswa";
+      let errorMessage = "Terjadi kesalahan saat membuat beasiswa";
+
+      if (err.response) {
+        const status = err.response.status;
+        const data = err.response.data;
+
+        if (status === 400) {
+          errorTitle = "Data Tidak Valid";
+          errorMessage =
+            data.message || "Mohon periksa kembali data yang diinput";
+        } else if (status === 413) {
+          errorTitle = "File Terlalu Besar";
+          errorMessage = "Ukuran file yang diupload melebihi batas maksimum";
+        } else if (status === 500) {
+          errorTitle = "Kesalahan Server";
+          errorMessage = "Terjadi kesalahan pada server. Silakan coba lagi";
+        } else {
+          errorMessage = data.message || `Error ${status}: ${err.message}`;
+        }
+      } else if (err.request) {
+        errorTitle = "Kesalahan Jaringan";
+        errorMessage =
+          "Tidak dapat terhubung ke server. Periksa koneksi internet Anda";
+      } else {
+        errorMessage = err.message || "Terjadi kesalahan yang tidak diketahui";
+      }
+
+      error(errorTitle, errorMessage);
     } finally {
       setLoading(false);
     }

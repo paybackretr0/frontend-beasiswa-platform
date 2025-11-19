@@ -5,6 +5,8 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import {
   fetchUsersByRole,
@@ -13,7 +15,6 @@ import {
   deactivateUser,
   activateUser,
 } from "../../../services/userService";
-import { message } from "antd";
 
 const Mahasiswa = () => {
   const [mahasiswaData, setMahasiswaData] = useState([]);
@@ -22,14 +23,19 @@ const Mahasiswa = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
+  const { alerts, success, error, warning, removeAlert } = useAlert();
+
   const fetchMahasiswa = async () => {
     setLoading(true);
     try {
       const data = await fetchUsersByRole("mahasiswa");
       setMahasiswaData(data);
-    } catch (error) {
-      console.error("Error fetching mahasiswa:", error);
-      message.error(error.message || "Gagal mengambil data mahasiswa");
+    } catch (err) {
+      console.error("Error fetching mahasiswa:", err);
+      error(
+        "Gagal Memuat Data",
+        err.message || "Gagal mengambil data mahasiswa"
+      );
     } finally {
       setLoading(false);
     }
@@ -44,12 +50,12 @@ const Mahasiswa = () => {
     setModalLoading(true);
     try {
       await addMahasiswa(values);
-      message.success("Mahasiswa berhasil ditambahkan");
+      success("Sukses", "Mahasiswa berhasil ditambahkan");
       setModalVisible(false);
       fetchMahasiswa();
-    } catch (error) {
-      console.error("Error adding mahasiswa:", error);
-      message.error(error.message || "Gagal menambahkan mahasiswa");
+    } catch (err) {
+      console.error("Error adding mahasiswa:", err);
+      error("Gagal", err.message || "Gagal menambahkan mahasiswa");
     } finally {
       setModalLoading(false);
     }
@@ -59,11 +65,11 @@ const Mahasiswa = () => {
     setLoading(true);
     try {
       await deactivateUser(id);
-      message.success("User berhasil dinonaktifkan");
+      success("Berhasil!", "User berhasil dinonaktifkan");
       fetchMahasiswa();
-    } catch (error) {
-      console.error("Error deactivating user:", error);
-      message.error(error.message || "Gagal menonaktifkan user");
+    } catch (err) {
+      console.error("Error deactivating user:", err);
+      error("Gagal", err.message || "Gagal menonaktifkan user");
     } finally {
       setLoading(false);
     }
@@ -73,11 +79,11 @@ const Mahasiswa = () => {
     setLoading(true);
     try {
       await activateUser(id);
-      message.success("User berhasil diaktifkan");
+      success("Sukses", "User berhasil diaktifkan");
       fetchMahasiswa();
-    } catch (error) {
-      console.error("Error activating user:", error);
-      message.error(error.message || "Gagal mengaktifkan user");
+    } catch (err) {
+      console.error("Error activating user:", err);
+      error("Gagal", err.message || "Gagal mengaktifkan user");
     } finally {
       setLoading(false);
     }
@@ -87,12 +93,12 @@ const Mahasiswa = () => {
     setModalLoading(true);
     try {
       await updateUser(id, values);
-      message.success("User berhasil diperbarui");
+      success("Sukses", "User berhasil diperbarui");
       setModalVisible(false);
       fetchMahasiswa();
-    } catch (error) {
-      console.error("Error updating user:", error);
-      message.error(error.message || "Gagal memperbarui user");
+    } catch (err) {
+      console.error("Error updating user:", err);
+      error("Gagal", err.message || "Gagal memperbarui user");
     } finally {
       setModalLoading(false);
     }
@@ -152,6 +158,11 @@ const Mahasiswa = () => {
 
   return (
     <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <UniversalTable
         title="Kelola Mahasiswa"
         data={mahasiswaData}

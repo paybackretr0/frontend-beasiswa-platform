@@ -5,6 +5,8 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import {
   fetchUsersByRole,
@@ -13,7 +15,6 @@ import {
   updateUser,
   activateUser,
 } from "../../../services/userService";
-import { message } from "antd";
 
 const Verifikator = () => {
   const [verifikatorData, setVerifikatorData] = useState([]);
@@ -22,15 +23,19 @@ const Verifikator = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
-  // Fungsi untuk mengambil data
+  const { alerts, success, error, warning, removeAlert } = useAlert();
+
   const fetchVerifikator = async () => {
     setLoading(true);
     try {
       const data = await fetchUsersByRole("verifikator");
       setVerifikatorData(data);
-    } catch (error) {
-      console.error("Error fetching Verifikator:", error);
-      message.error(error.message || "Gagal mengambil data Verifikator");
+    } catch (err) {
+      console.error("Error fetching Verifikator:", err);
+      error(
+        "Gagal Memuat Data",
+        err.message || "Gagal mengambil data Verifikator"
+      );
     } finally {
       setLoading(false);
     }
@@ -38,20 +43,19 @@ const Verifikator = () => {
 
   useEffect(() => {
     document.title = "Kelola Verifikator";
-    fetchVerifikator(); // Panggil saat komponen pertama kali dimuat
+    fetchVerifikator();
   }, []);
 
-  // Fungsi untuk menambahkan verifikator
   const handleAddVerifikator = async (values) => {
     setModalLoading(true);
     try {
-      await addUser({ ...values, role: "VERIFIKATOR" }); // Tambahkan user
-      message.success("Verifikator berhasil ditambahkan");
-      setModalVisible(false); // Tutup modal
-      await fetchVerifikator(); // Panggil ulang fungsi fetch untuk refresh data
-    } catch (error) {
-      console.error("Error adding verifikator:", error);
-      message.error(error.message || "Gagal menambahkan verifikator");
+      await addUser({ ...values, role: "VERIFIKATOR" });
+      success("Sukses", "Verifikator berhasil ditambahkan");
+      setModalVisible(false);
+      await fetchVerifikator();
+    } catch (err) {
+      console.error("Error adding verifikator:", err);
+      error("Gagal", err.message || "Gagal menambahkan verifikator");
     } finally {
       setModalLoading(false);
     }
@@ -61,11 +65,11 @@ const Verifikator = () => {
     setLoading(true);
     try {
       await deactivateUser(id);
-      message.success("User berhasil dinonaktifkan");
-      fetchVerifikator(); // Refresh data
-    } catch (error) {
-      console.error("Error deactivating user:", error);
-      message.error(error.message || "Gagal menonaktifkan user");
+      success("Berhasil!", "User berhasil dinonaktifkan");
+      fetchVerifikator();
+    } catch (err) {
+      console.error("Error deactivating user:", err);
+      error("Gagal", err.message || "Gagal menonaktifkan user");
     } finally {
       setLoading(false);
     }
@@ -75,11 +79,11 @@ const Verifikator = () => {
     setLoading(true);
     try {
       await activateUser(id);
-      message.success("User berhasil diaktifkan");
-      fetchVerifikator(); // Refresh data
-    } catch (error) {
-      console.error("Error activating user:", error);
-      message.error(error.message || "Gagal mengaktifkan user");
+      success("Sukses", "User berhasil diaktifkan");
+      fetchVerifikator();
+    } catch (err) {
+      console.error("Error activating user:", err);
+      error("Gagal", err.message || "Gagal mengaktifkan user");
     } finally {
       setLoading(false);
     }
@@ -89,12 +93,12 @@ const Verifikator = () => {
     setModalLoading(true);
     try {
       await updateUser(id, values);
-      message.success("User berhasil diperbarui");
+      success("Sukses", "User berhasil diperbarui");
       setModalVisible(false);
-      fetchVerifikator(); // Refresh data
-    } catch (error) {
-      console.error("Error updating user:", error);
-      message.error(error.message || "Gagal memperbarui user");
+      fetchVerifikator();
+    } catch (err) {
+      console.error("Error updating user:", err);
+      error("Gagal", err.message || "Gagal memperbarui user");
     } finally {
       setModalLoading(false);
     }
@@ -153,6 +157,11 @@ const Verifikator = () => {
 
   return (
     <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <UniversalTable
         title="Kelola Verifikator"
         data={verifikatorData}
@@ -191,7 +200,6 @@ const Verifikator = () => {
         fields={
           editingUser
             ? [
-                // Field untuk edit - hanya full_name dan phone_number
                 {
                   name: "full_name",
                   label: "Nama Lengkap",
@@ -206,7 +214,6 @@ const Verifikator = () => {
                 },
               ]
             : [
-                // Field untuk tambah verifikator baru
                 {
                   name: "full_name",
                   label: "Nama Lengkap",

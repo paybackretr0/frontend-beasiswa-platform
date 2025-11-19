@@ -15,6 +15,8 @@ import {
   deactivateDepartment,
 } from "../../../services/departmentService";
 import { getFaculties } from "../../../services/facultyService";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 
 const Departemen = () => {
   const [filteredDepartments, setFilteredDepartments] = useState([]);
@@ -25,6 +27,8 @@ const Departemen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState(null);
+
+  const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Departemen - Admin";
@@ -48,14 +52,16 @@ const Departemen = () => {
       setDepartments(formattedData);
       setFilteredDepartments(formattedData);
 
-      // Generate fakultas options for filter
       const uniqueFakultas = [
         ...new Set(formattedData.map((dept) => dept.fakultas)),
       ].filter((f) => f !== "-");
       setFakultasOptions(["Semua", ...uniqueFakultas]);
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-      message.error(error.message || "Gagal mengambil daftar departemen");
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      error(
+        "Gagal memuat data",
+        err.message || "Gagal mengambil daftar departemen"
+      );
     } finally {
       setLoading(false);
     }
@@ -65,9 +71,12 @@ const Departemen = () => {
     try {
       const data = await getFaculties();
       setFaculties(data);
-    } catch (error) {
-      console.error("Error fetching faculties:", error);
-      message.error("Gagal mengambil daftar fakultas");
+    } catch (err) {
+      console.error("Error fetching faculties:", err);
+      error(
+        "Gagal memuat data",
+        err.message || "Gagal mengambil daftar fakultas"
+      );
     }
   };
 
@@ -75,12 +84,12 @@ const Departemen = () => {
     setModalLoading(true);
     try {
       await addDepartment(values);
-      message.success("Departemen berhasil ditambahkan");
+      success("Berhasil!", "Departemen berhasil ditambahkan");
       setModalVisible(false);
       await fetchDepartments();
-    } catch (error) {
-      console.error("Error adding department:", error);
-      message.error(error.message || "Gagal menambahkan departemen");
+    } catch (err) {
+      console.error("Error adding department:", err);
+      error("Gagal", err.message || "Gagal menambahkan departemen");
     } finally {
       setModalLoading(false);
     }
@@ -90,13 +99,13 @@ const Departemen = () => {
     setModalLoading(true);
     try {
       await editDepartment(id, values);
-      message.success("Departemen berhasil diperbarui");
+      success("Berhasil!", "Departemen berhasil diperbarui");
       setModalVisible(false);
       setEditingDepartment(null);
       await fetchDepartments();
-    } catch (error) {
-      console.error("Error updating department:", error);
-      message.error(error.message || "Gagal memperbarui departemen");
+    } catch (err) {
+      console.error("Error updating department:", err);
+      error("Gagal", err.message || "Gagal memperbarui departemen");
     } finally {
       setModalLoading(false);
     }
@@ -106,11 +115,11 @@ const Departemen = () => {
     setLoading(true);
     try {
       await activateDepartment(id);
-      message.success("Departemen berhasil diaktifkan");
+      success("Berhasil!", "Departemen berhasil diaktifkan");
       await fetchDepartments();
-    } catch (error) {
-      console.error("Error activating department:", error);
-      message.error(error.message || "Gagal mengaktifkan departemen");
+    } catch (err) {
+      console.error("Error activating department:", err);
+      error("Gagal", err.message || "Gagal mengaktifkan departemen");
     } finally {
       setLoading(false);
     }
@@ -120,11 +129,11 @@ const Departemen = () => {
     setLoading(true);
     try {
       await deactivateDepartment(id);
-      message.success("Departemen berhasil dinonaktifkan");
+      success("Berhasil!", "Departemen berhasil dinonaktifkan");
       await fetchDepartments();
-    } catch (error) {
-      console.error("Error deactivating department:", error);
-      message.error(error.message || "Gagal menonaktifkan departemen");
+    } catch (err) {
+      console.error("Error deactivating department:", err);
+      error("Gagal", err.message || "Gagal menonaktifkan departemen");
     } finally {
       setLoading(false);
     }
@@ -232,6 +241,11 @@ const Departemen = () => {
 
   return (
     <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <UniversalTable
         title="Kelola Departemen"
         data={filteredDepartments}

@@ -14,6 +14,8 @@ import {
   activateFaculty,
   deactivateFaculty,
 } from "../../../services/facultyService";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 
 const Fakultas = () => {
   const [filteredFaculties, setFilteredFaculties] = useState([]);
@@ -23,6 +25,8 @@ const Fakultas = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState(null);
+
+  const { alerts, success, error, removeAlert, info } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Fakultas - Admin";
@@ -42,9 +46,9 @@ const Fakultas = () => {
       }));
       setFaculties(formattedData);
       setFilteredFaculties(formattedData);
-    } catch (error) {
-      console.error("Error fetching faculties:", error);
-      message.error(error.message || "Gagal mengambil daftar fakultas");
+    } catch (err) {
+      console.error("Error fetching faculties:", err);
+      error("Gagal!", err.message || "Gagal mengambil daftar fakultas");
     } finally {
       setLoading(false);
     }
@@ -54,12 +58,12 @@ const Fakultas = () => {
     setModalLoading(true);
     try {
       await addFaculty(values);
-      message.success("Fakultas berhasil ditambahkan");
+      success("Berhasil!", "Fakultas berhasil ditambahkan");
       setModalVisible(false);
       await fetchFaculties();
-    } catch (error) {
-      console.error("Error adding Fakultas:", error);
-      message.error(error.message || "Gagal menambahkan Fakultas");
+    } catch (err) {
+      console.error("Error adding Fakultas:", err);
+      error("Gagal", err.message || "Gagal menambahkan Fakultas");
     } finally {
       setModalLoading(false);
     }
@@ -69,12 +73,12 @@ const Fakultas = () => {
     setModalLoading(true);
     try {
       await editFaculty(id, values);
-      message.success("Fakultas berhasil diubah");
+      success("Berhasil!", "Fakultas berhasil diubah");
       setModalVisible(false);
       await fetchFaculties();
-    } catch (error) {
-      console.error("Error editing Fakultas:", error);
-      message.error(error.message || "Gagal mengubah Fakultas");
+    } catch (err) {
+      console.error("Error editing Fakultas:", err);
+      error("Gagal", err.message || "Gagal mengubah Fakultas");
     } finally {
       setModalLoading(false);
     }
@@ -84,11 +88,11 @@ const Fakultas = () => {
     setLoading(true);
     try {
       await activateFaculty(id);
-      message.success("Fakultas berhasil diaktifkan");
+      success("Berhasil!", "Fakultas berhasil diaktifkan");
       await fetchFaculties();
-    } catch (error) {
-      console.error("Error activating faculty:", error);
-      message.error(error.message || "Gagal mengaktifkan fakultas");
+    } catch (err) {
+      console.error("Error activating faculty:", err);
+      error("Gagal", err.message || "Gagal mengaktifkan fakultas");
     } finally {
       setLoading(false);
     }
@@ -98,11 +102,11 @@ const Fakultas = () => {
     setLoading(true);
     try {
       await deactivateFaculty(id);
-      message.success("Fakultas berhasil dinonaktifkan");
+      success("Berhasil!", "Fakultas berhasil dinonaktifkan");
       await fetchFaculties();
-    } catch (error) {
-      console.error("Error deactivating faculty:", error);
-      message.error(error.message || "Gagal menonaktifkan fakultas");
+    } catch (err) {
+      console.error("Error deactivating faculty:", err);
+      error("Gagal", err.message || "Gagal menonaktifkan fakultas");
     } finally {
       setLoading(false);
     }
@@ -180,6 +184,11 @@ const Fakultas = () => {
 
   return (
     <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <UniversalTable
         title="Kelola Fakultas"
         data={filteredFaculties}

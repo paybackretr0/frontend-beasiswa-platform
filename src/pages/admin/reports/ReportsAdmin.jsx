@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Select, message, Spin, Tag } from "antd";
+import { Select, Spin, Tag } from "antd";
 import {
   DownloadOutlined,
   EyeOutlined,
@@ -32,6 +32,8 @@ import {
   getTopPerformingFaculties,
   exportLaporanBeasiswa,
 } from "../../../services/analyticsService";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 
 const { Option } = Select;
 
@@ -60,6 +62,8 @@ const ReportsAdmin = () => {
   const [monthlyData, setMonthlyData] = useState([]);
   const [scholarshipPerformance, setScholarshipPerformance] = useState([]);
   const [topFaculties, setTopFaculties] = useState([]);
+
+  const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
 
   const [filters, setFilters] = useState({
     fakultas: "Semua",
@@ -108,9 +112,9 @@ const ReportsAdmin = () => {
         fetchPerformanceData(),
         fetchPendaftarData(),
       ]);
-    } catch (error) {
-      console.error("Error fetching all data:", error);
-      message.error("Gagal memuat data laporan");
+    } catch (err) {
+      console.error("Error fetching all data:", err);
+      error("Gagal", err.message || "Gagal memuat data laporan");
     } finally {
       setChartsLoading(false);
     }
@@ -142,8 +146,9 @@ const ReportsAdmin = () => {
         },
       ];
       setMainSummaryData(summary);
-    } catch (error) {
-      console.error("Error fetching main summary:", error);
+    } catch (err) {
+      console.error("Error fetching main summary:", err);
+      error("Gagal", err.message || "Gagal memuat ringkasan utama");
     }
   };
 
@@ -173,8 +178,9 @@ const ReportsAdmin = () => {
         },
       ];
       setSelectionSummaryData(summary);
-    } catch (error) {
-      console.error("Error fetching selection summary:", error);
+    } catch (err) {
+      console.error("Error fetching selection summary:", err);
+      error("Gagal", err.message || "Gagal memuat ringkasan seleksi");
     }
   };
 
@@ -193,8 +199,9 @@ const ReportsAdmin = () => {
       setTahunData(tahun || []);
       setGenderData(gender || []);
       setMonthlyData(monthly || []);
-    } catch (error) {
-      console.error("Error fetching chart data:", error);
+    } catch (err) {
+      console.error("Error fetching chart data:", err);
+      error("Gagal", err.message || "Gagal memuat data grafik");
     }
   };
 
@@ -206,8 +213,9 @@ const ReportsAdmin = () => {
       ]);
       setScholarshipPerformance(scholarshipData || []);
       setTopFaculties(facultyData || []);
-    } catch (error) {
-      console.error("Error fetching performance data:", error);
+    } catch (err) {
+      console.error("Error fetching performance data:", err);
+      error("Gagal", err.message || "Gagal memuat data performa");
     }
   };
 
@@ -235,8 +243,9 @@ const ReportsAdmin = () => {
 
       setPendaftarData(transformedData);
       setFilteredPendaftar(transformedData);
-    } catch (error) {
-      console.error("Error fetching pendaftar data:", error);
+    } catch (err) {
+      console.error("Error fetching pendaftar data:", err);
+      error("Gagal", err.message || "Gagal memuat data pendaftar");
     }
   };
 
@@ -258,25 +267,26 @@ const ReportsAdmin = () => {
         departments: departemenOptions,
         genders: genderOptions,
       });
-    } catch (error) {
-      console.error("Error fetching filter options:", error);
+    } catch (err) {
+      console.error("Error fetching filter options:", err);
+      error("Gagal", err.message || "Gagal memuat opsi filter");
     }
   };
 
   const handleYearChange = (year) => {
     setSelectedYear(year);
-    message.info(`Menampilkan data tahun ${year}`);
+    info("Memuat data untuk tahun " + year);
   };
 
   const handleExportReport = async () => {
     try {
-      message.loading("Sedang mengekspor laporan...", 0);
+      info("Ekspor Laporan", "Memproses ekspor laporan...");
       await exportLaporanBeasiswa(selectedYear);
-      message.destroy();
-      message.success("Laporan berhasil diexport!");
-    } catch (error) {
-      message.destroy();
-      message.error("Gagal mengekspor laporan: " + error.message);
+      clearAlerts();
+      success("Berhasil!", "Laporan berhasil diexport!");
+    } catch (err) {
+      clearAlerts();
+      error("Gagal", err.message || "Gagal mengekspor laporan");
     }
   };
 
@@ -307,9 +317,9 @@ const ReportsAdmin = () => {
 
         setFilteredPendaftar(transformedData);
       })
-      .catch((error) => {
-        console.error("Error applying filters:", error);
-        message.error("Gagal menerapkan filter");
+      .catch((err) => {
+        console.error("Error applying filters:", err);
+        error("Gagal", err.message || "Gagal menerapkan filter");
       });
   };
 
@@ -320,7 +330,7 @@ const ReportsAdmin = () => {
   const role = user?.role?.toUpperCase() || null;
 
   const handleDetail = (record) => {
-    message.info(`Detail pendaftar: ${record.nama}`);
+    info("Detail Pendaftar", `Detail pendaftar: ${record.nama}`);
   };
 
   const getStatusLabel = (status) => {
@@ -449,6 +459,11 @@ const ReportsAdmin = () => {
 
   return (
     <div className="space-y-6">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Select
@@ -732,9 +747,9 @@ const ReportsAdmin = () => {
 
                 setFilteredPendaftar(transformedData);
               })
-              .catch((error) => {
-                console.error("Error searching:", error);
-                message.error("Gagal mencari data");
+              .catch((err) => {
+                console.error("Error searching:", err);
+                error("Gagal", err.message || "Gagal melakukan pencarian");
               });
           }}
         />

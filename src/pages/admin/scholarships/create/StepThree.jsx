@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import Button from "../../../../components/Button";
 import { getFaculties } from "../../../../services/facultyService";
 import { getDepartments } from "../../../../services/departmentService";
-import { message } from "antd";
+import useAlert from "../../../../hooks/useAlert";
 
 const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
+  const { warning, error } = useAlert();
+
   const [formData, setFormData] = useState({
     contact_person_name: initialData.contact_person_name || "",
     contact_person_email: initialData.contact_person_email || "",
@@ -37,9 +39,9 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
     try {
       const data = await getFaculties();
       setFaculties(data);
-    } catch (error) {
-      console.error("Error fetching faculties:", error);
-      message.error("Gagal memuat data fakultas");
+    } catch (err) {
+      console.error("Error fetching faculties:", err);
+      error("Gagal Memuat Data", "Gagal memuat data fakultas");
     }
   };
 
@@ -47,9 +49,9 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
     try {
       const data = await getDepartments();
       setDepartments(data);
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-      message.error("Gagal memuat data departemen");
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      error("Gagal Memuat Data", "Gagal memuat data departemen");
     }
   };
 
@@ -88,13 +90,44 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
       !formData.scholarship_value ||
       !formData.duration_semesters
     ) {
-      alert("Mohon lengkapi semua field yang wajib diisi!");
+      warning(
+        "Data Belum Lengkap",
+        "Mohon lengkapi semua field yang wajib diisi sebelum menyimpan"
+      );
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.contact_person_email)) {
-      alert("Format email tidak valid!");
+      warning(
+        "Format Email Tidak Valid",
+        "Mohon masukkan alamat email yang valid untuk contact person"
+      );
+      return;
+    }
+
+    const phoneRegex = /^[0-9+\-\s()]+$/;
+    if (!phoneRegex.test(formData.contact_person_phone)) {
+      warning(
+        "Format Telepon Tidak Valid",
+        "Mohon masukkan nomor telepon yang valid"
+      );
+      return;
+    }
+
+    if (parseFloat(formData.scholarship_value) <= 0) {
+      warning(
+        "Nilai Beasiswa Tidak Valid",
+        "Nilai beasiswa harus lebih besar dari 0"
+      );
+      return;
+    }
+
+    if (parseInt(formData.duration_semesters) <= 0) {
+      warning(
+        "Durasi Tidak Valid",
+        "Durasi pemberian beasiswa harus lebih besar dari 0 semester"
+      );
       return;
     }
 

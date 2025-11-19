@@ -243,7 +243,9 @@ const DetailScholarship = () => {
                   <div className="text-2xl font-bold">
                     {scholarship.duration_semesters}
                   </div>
-                  <div className="text-sm opacity-80">Semester</div>
+                  <div className="text-sm opacity-80">
+                    Durasi Penerimaan (Semester)
+                  </div>
                 </div>
                 {scholarship.quota && (
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
