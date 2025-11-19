@@ -14,7 +14,6 @@ const AdminNavbar = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Tutup dropdown kalau klik di luar
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     setIsAuthenticated(!!token);
@@ -33,15 +32,12 @@ const AdminNavbar = () => {
 
   return (
     <nav className="w-full h-16 flex items-center justify-between px-6 bg-white border-b border-gray-200">
-      {/* Left: Logo / Title */}
       <div className="flex items-center gap-2">
         <img src="/unand.png" alt="Logo" className="w-8 h-8" />
         <span className="font-bold text-lg text-gray-700">Beasiswa</span>
       </div>
 
-      {/* Right: Notification + Profile */}
       <div className="flex items-center gap-6">
-        {/* Notification */}
         <button className="relative">
           <MdNotifications className="text-gray-600 text-2xl" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
@@ -49,7 +45,6 @@ const AdminNavbar = () => {
           </span>
         </button>
 
-        {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             className="flex items-center gap-2 focus:outline-none hover:cursor-pointer"

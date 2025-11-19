@@ -6,11 +6,12 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import Button from "../../../components/Button";
-import Card from "../../../components/Card";
 import {
   getAllActivityLogs,
   exportActivityLogs,
 } from "../../../services/extraService";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -39,6 +40,8 @@ const LogAdmin = () => {
   });
   const pageSize = 15;
 
+  const { alerts, success, error, removeAlert, clearAlerts, info } = useAlert();
+
   useEffect(() => {
     document.title = "Log Aktivitas - Admin";
     fetchActivityLogs();
@@ -60,9 +63,12 @@ const LogAdmin = () => {
       setLogData(response.logs);
       setTotalRecords(response.pagination.totalRecords);
       setTotalPages(response.pagination.totalPages);
-    } catch (error) {
-      console.error("Error fetching activity logs:", error);
-      message.error("Gagal memuat log aktivitas");
+    } catch (err) {
+      console.error("Error fetching activity logs:", err);
+      error(
+        "Gagal Memuat Log Aktivitas",
+        err.message || "Gagal memuat log aktivitas"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +76,7 @@ const LogAdmin = () => {
 
   const handleExportLog = async () => {
     setIsExporting(true);
-    message.loading("Sedang mengekspor log aktivitas...", 0);
+    info("Mengekspor Log Aktivitas", "Sedang mengekspor log aktivitas...");
 
     try {
       const exportFilters = {
@@ -82,19 +88,20 @@ const LogAdmin = () => {
 
       const result = await exportActivityLogs(exportFilters);
 
-      message.destroy();
-      message.success(
-        `Log aktivitas berhasil diekspor! (${result.totalRecords} records)`
+      clearAlerts();
+      success(
+        "Berhasil Mengekspor Log Aktivitas",
+        "Log aktivitas berhasil diekspor"
       );
 
       const downloadUrl = `${
         import.meta.env.VITE_IMAGE_URL || "http://localhost:5000"
       }/${result.filePath}`;
       window.open(downloadUrl, "_blank");
-    } catch (error) {
-      message.destroy();
-      message.error("Gagal mengekspor log aktivitas");
-      console.error("Error exporting logs:", error);
+    } catch (err) {
+      clearAlerts();
+      error("Gagal Mengekspor Log Aktivitas", "Gagal mengekspor log aktivitas");
+      console.error("Error exporting logs:", err);
     } finally {
       setIsExporting(false);
     }
@@ -142,6 +149,11 @@ const LogAdmin = () => {
 
   return (
     <div>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <div>

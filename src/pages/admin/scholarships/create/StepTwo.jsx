@@ -1,7 +1,9 @@
 import { useState } from "react";
 import Button from "../../../../components/Button";
+import useAlert from "../../../../hooks/useAlert";
 
 const StepTwo = ({ onNext, onBack, initialData = {} }) => {
+  const { warning } = useAlert();
   const defaultDocuments = [
     "KTP/Identitas",
     "Surat Keterangan Tidak Mampu",
@@ -135,7 +137,21 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
       !formData.end_date ||
       !formData.semester_minimum
     ) {
-      alert("Mohon lengkapi semua field yang wajib diisi!");
+      warning(
+        "Data Belum Lengkap",
+        "Mohon lengkapi semua field yang wajib diisi sebelum melanjutkan"
+      );
+      return;
+    }
+
+    const startDate = new Date(formData.start_date);
+    const endDate = new Date(formData.end_date);
+
+    if (endDate <= startDate) {
+      warning(
+        "Tanggal Tidak Valid",
+        "Tanggal selesai pendaftaran harus lebih besar dari tanggal mulai"
+      );
       return;
     }
 
@@ -143,12 +159,18 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
       stages.length === 0 ||
       stages.some((stage) => stage.name.trim() === "")
     ) {
-      alert("Mohon tambahkan minimal satu tahapan seleksi!");
+      warning(
+        "Tahapan Seleksi Kosong",
+        "Mohon tambahkan minimal satu tahapan seleksi yang valid"
+      );
       return;
     }
 
     if (selectedDocuments.length === 0) {
-      alert("Mohon pilih minimal satu dokumen wajib!");
+      warning(
+        "Dokumen Wajib Kosong",
+        "Mohon pilih minimal satu dokumen yang wajib diunggah mahasiswa"
+      );
       return;
     }
 

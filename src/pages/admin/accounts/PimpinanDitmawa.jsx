@@ -5,6 +5,8 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import {
   fetchUsersByRole,
@@ -13,7 +15,6 @@ import {
   deactivateUser,
   activateUser,
 } from "../../../services/userService";
-import { message } from "antd";
 
 const PimpinanDitmawa = () => {
   const [pimpinanDitmawaData, setPimpinanDitmawaData] = useState([]);
@@ -22,14 +23,19 @@ const PimpinanDitmawa = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
+  const { alerts, success, error, warning, removeAlert } = useAlert();
+
   const fetchPimpinanDitmawa = async () => {
     setLoading(true);
     try {
       const data = await fetchUsersByRole("pimpinan-ditmawa");
       setPimpinanDitmawaData(data);
-    } catch (error) {
-      console.error("Error fetching Pimpinan Ditmawa:", error);
-      message.error(error.message || "Gagal mengambil data Pimpinan Ditmawa");
+    } catch (err) {
+      console.error("Error fetching Pimpinan Ditmawa:", err);
+      error(
+        "Gagal Memuat Data",
+        err.message || "Gagal mengambil data Pimpinan Ditmawa"
+      );
     } finally {
       setLoading(false);
     }
@@ -37,19 +43,22 @@ const PimpinanDitmawa = () => {
 
   useEffect(() => {
     document.title = "Kelola Pimpinan Ditmawa";
-    fetchPimpinanDitmawa(); // Panggil saat komponen pertama kali dimuat
+    fetchPimpinanDitmawa();
   }, []);
 
   const handleAddPimpinanDitmawa = async (values) => {
     setModalLoading(true);
     try {
-      await addUser({ ...values, role: "PIMPINAN_DITMAWA" }); // Tambahkan user
-      message.success("Pimpinan Ditmawa berhasil ditambahkan");
-      setModalVisible(false); // Tutup modal
-      await fetchPimpinanDitmawa(); // Panggil ulang fungsi fetch untuk refresh data
-    } catch (error) {
-      console.error("Error adding Pimpinan Ditmawa:", error);
-      message.error(error.message || "Gagal menambahkan Pimpinan Ditmawa");
+      await addUser({ ...values, role: "PIMPINAN_DITMAWA" });
+      success("Berhasil!", "Pimpinan Ditmawa berhasil ditambahkan");
+      setModalVisible(false);
+      await fetchPimpinanDitmawa();
+    } catch (err) {
+      console.error("Error adding Pimpinan Ditmawa:", err);
+      error(
+        "Gagal Menambahkan",
+        err.message || "Gagal menambahkan Pimpinan Ditmawa"
+      );
     } finally {
       setModalLoading(false);
     }
@@ -59,12 +68,12 @@ const PimpinanDitmawa = () => {
     setModalLoading(true);
     try {
       await updateUser(id, values);
-      message.success("User berhasil diperbarui");
+      success("Berhasil!", "Data user berhasil diperbarui");
       setModalVisible(false);
-      fetchPimpinanDitmawa(); // Refresh data
-    } catch (error) {
-      console.error("Error updating user:", error);
-      message.error(error.message || "Gagal memperbarui user");
+      fetchPimpinanDitmawa();
+    } catch (err) {
+      console.error("Error updating user:", err);
+      error("Gagal Memperbarui", err.message || "Gagal memperbarui data user");
     } finally {
       setModalLoading(false);
     }
@@ -74,11 +83,11 @@ const PimpinanDitmawa = () => {
     setLoading(true);
     try {
       await deactivateUser(id);
-      message.success("User berhasil dinonaktifkan");
-      fetchPimpinanDitmawa(); // Refresh data
-    } catch (error) {
-      console.error("Error deactivating user:", error);
-      message.error(error.message || "Gagal menonaktifkan user");
+      success("Berhasil!", "User berhasil dinonaktifkan");
+      fetchPimpinanDitmawa();
+    } catch (err) {
+      console.error("Error deactivating user:", err);
+      error("Gagal Menonaktifkan", err.message || "Gagal menonaktifkan user");
     } finally {
       setLoading(false);
     }
@@ -88,11 +97,11 @@ const PimpinanDitmawa = () => {
     setLoading(true);
     try {
       await activateUser(id);
-      message.success("User berhasil diaktifkan");
-      fetchPimpinanDitmawa(); // Refresh data
-    } catch (error) {
-      console.error("Error activating user:", error);
-      message.error(error.message || "Gagal mengaktifkan user");
+      success("User Diaktifkan", "User berhasil diaktifkan");
+      fetchPimpinanDitmawa();
+    } catch (err) {
+      console.error("Error activating user:", err);
+      error("Gagal Mengaktifkan", err.message || "Gagal mengaktifkan user");
     } finally {
       setLoading(false);
     }
@@ -138,7 +147,7 @@ const PimpinanDitmawa = () => {
         label: (record) => (record.is_active ? "Nonaktifkan" : "Aktifkan"),
         icon: (record) =>
           record.is_active ? <DeleteOutlined /> : <CheckOutlined />,
-        danger: (record) => record.is_active, // kasih warna merah kalau aktif → mau dinonaktifkan
+        danger: (record) => record.is_active,
         onClick: (record) => {
           if (record.is_active) {
             handleDeactivateUser(record.id);
@@ -152,6 +161,11 @@ const PimpinanDitmawa = () => {
 
   return (
     <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <UniversalTable
         title="Kelola Pimpinan Ditmawa"
         data={pimpinanDitmawaData}
@@ -191,7 +205,6 @@ const PimpinanDitmawa = () => {
         fields={
           editingUser
             ? [
-                // Field untuk edit - hanya full_name dan phone_number
                 {
                   name: "full_name",
                   label: "Nama Lengkap",
@@ -206,7 +219,6 @@ const PimpinanDitmawa = () => {
                 },
               ]
             : [
-                // Field untuk tambah pimpinan ditmawa baru
                 {
                   name: "full_name",
                   label: "Nama Lengkap",

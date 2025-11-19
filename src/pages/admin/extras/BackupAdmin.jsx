@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { message, Pagination } from "antd";
+import { Pagination } from "antd";
 import {
   DownloadOutlined,
   DatabaseOutlined,
@@ -8,6 +8,8 @@ import {
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import UniversalModal from "../../../components/Modal";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 import { getAllBackups, createBackup } from "../../../services/extraService";
 
 const BackupAdmin = () => {
@@ -17,6 +19,8 @@ const BackupAdmin = () => {
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const pageSize = 6;
+
+  const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
 
   useEffect(() => {
     document.title = "Backup Data - Admin";
@@ -28,9 +32,9 @@ const BackupAdmin = () => {
     try {
       const data = await getAllBackups();
       setBackupData(data);
-    } catch (error) {
-      console.error("Error fetching backups:", error);
-      message.error("Gagal memuat data backup");
+    } catch (err) {
+      console.error("Error fetching backups:", err);
+      error("Gagal Memuat Data", err.message || "Gagal mengambil data backup");
     } finally {
       setIsLoading(false);
     }
@@ -39,19 +43,23 @@ const BackupAdmin = () => {
   const handleBackupSubmit = async (values) => {
     setIsCreatingBackup(true);
     const backupTypeText = values.backupType === "excel" ? "Excel" : "SQL";
-    message.loading(`Sedang membuat backup ${backupTypeText}...`, 0);
+
+    info("Membuat Backup", `Sedang membuat backup ${backupTypeText}...`);
 
     try {
       await createBackup(values.backupType);
-      message.destroy();
-      message.success(`Backup ${backupTypeText} berhasil dibuat!`);
+      clearAlerts();
+      success("Berhasil!", `Backup ${backupTypeText} berhasil dibuat`);
 
       setModalVisible(false);
       await fetchBackups();
-    } catch (error) {
-      message.destroy();
-      message.error(`Gagal membuat backup ${backupTypeText}`);
-      console.error("Error creating backup:", error);
+    } catch (err) {
+      console.error("Error creating backup:", err);
+      clearAlerts();
+      error(
+        "Gagal Membuat Backup",
+        err.message || `Gagal membuat backup ${backupTypeText}`
+      );
     } finally {
       setIsCreatingBackup(false);
     }
@@ -59,18 +67,20 @@ const BackupAdmin = () => {
 
   const handleDownload = (backup) => {
     if (!backup.file_path) {
-      message.error("File backup tidak tersedia");
+      error("File Tidak Tersedia", "File backup tidak dapat diunduh");
       return;
     }
 
-    message.loading(`Mengunduh ${getFileName(backup.file_path)}...`, 2);
+    const fileName = getFileName(backup.file_path);
+    info("Mengunduh File", `Memulai unduhan ${fileName}...`);
 
     const downloadUrl = `${import.meta.env.VITE_IMAGE_URL}/${backup.file_path}`;
-
     window.open(downloadUrl, "_blank");
 
+    clearAlerts();
+
     setTimeout(() => {
-      message.success(`${getFileName(backup.file_path)} berhasil diunduh!`);
+      success("Download Dimulai", `${fileName} sedang diunduh`);
     }, 1000);
   };
 
@@ -110,7 +120,12 @@ const BackupAdmin = () => {
 
   return (
     <div>
-      {/* Header Section */}
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Backup Data</h1>
@@ -128,7 +143,6 @@ const BackupAdmin = () => {
         </Button>
       </div>
 
-      {/* Backup History Cards */}
       <div className="space-y-4 mt-6">
         {isLoading ? (
           <div className="text-center py-12">
@@ -196,7 +210,6 @@ const BackupAdmin = () => {
           </div>
         )}
 
-        {/* Pagination */}
         {backupData.length > pageSize && (
           <div className="flex justify-center pt-6">
             <Pagination
@@ -214,7 +227,6 @@ const BackupAdmin = () => {
         )}
       </div>
 
-      {/* Modal Pilih Jenis Backup */}
       <UniversalModal
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
