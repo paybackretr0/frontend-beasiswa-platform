@@ -5,13 +5,14 @@ import StepTwo from "./StepTwo";
 import StepThree from "./StepThree";
 import { createScholarship } from "../../../../services/scholarshipService";
 import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const ScholarshipAdd = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { success, error } = useAlert();
+  const { success, error, alerts, removeAlert } = useAlert();
 
   const [scholarshipData, setScholarshipData] = useState({
     name: "",
@@ -58,7 +59,7 @@ const ScholarshipAdd = () => {
     try {
       await createScholarship(finalData);
       success(
-        "Beasiswa Berhasil Dibuat!",
+        "Berhasil!",
         `Beasiswa "${finalData.name}" telah berhasil ditambahkan ke sistem.`
       );
 
@@ -108,6 +109,11 @@ const ScholarshipAdd = () => {
 
   return (
     <div>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       {currentStep === 1 && (
         <StepOne onNext={handleNext} initialData={scholarshipData} />
       )}

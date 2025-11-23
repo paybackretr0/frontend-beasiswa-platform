@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../../../../components/Button";
+import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const EditStepOne = ({ onNext, initialData = {} }) => {
   const navigate = useNavigate();
@@ -18,6 +20,8 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
   const [logoFile, setLogoFile] = useState(null);
   const [existingLogo, setExistingLogo] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  const { warning, alerts, removeAlert } = useAlert();
 
   useEffect(() => {
     setFormData({
@@ -66,13 +70,16 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
     if (file) {
       const allowedTypes = ["image/png", "image/jpg", "image/jpeg"];
       if (!allowedTypes.includes(file.type)) {
-        alert("Format file tidak didukung. Gunakan PNG, JPG, atau JPEG.");
+        warning(
+          "Peringatan!",
+          "Format file tidak didukung. Gunakan PNG, JPG, atau JPEG."
+        );
         e.target.value = "";
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert("Ukuran file terlalu besar. Maksimal 5MB.");
+        warning("Peringatan!", "Ukuran file terlalu besar. Maksimal 5MB.");
         e.target.value = "";
         return;
       }
@@ -145,7 +152,7 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
       !formData.description ||
       !formData.year
     ) {
-      alert("Mohon lengkapi semua field yang wajib diisi!");
+      warning("Peringatan!", "Mohon lengkapi semua field yang wajib diisi!");
       return;
     }
 
@@ -158,7 +165,10 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
     });
 
     if (validRequirements.length === 0) {
-      alert("Mohon tambahkan minimal satu syarat dan ketentuan!");
+      warning(
+        "Peringatan!",
+        "Mohon tambahkan minimal satu syarat dan ketentuan!"
+      );
       return;
     }
 
@@ -188,6 +198,11 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="mb-6 flex items-center gap-2">
         <button
           className="text-gray-600 hover:text-blue-500 cursor-pointer"

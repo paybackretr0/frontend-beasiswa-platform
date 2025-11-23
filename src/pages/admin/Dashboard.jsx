@@ -61,7 +61,7 @@ const AdminDashboard = () => {
 
   const fetchRecentApplications = async () => {
     try {
-      const data = await getApplicationsList({ limit: 5 }); // Ambil 5 terakhir
+      const data = await getApplicationsList({ limit: 5 });
       setRecentApplications(data.slice(0, 5));
     } catch (error) {
       console.error("Error fetching recent applications:", error);

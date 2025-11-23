@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Breadcrumb } from "antd";
 import { useNavigate } from "react-router-dom";
 import Button from "../../../../components/Button";
+import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
   const [additionalBenefits, setAdditionalBenefits] = useState([]);
   const [stages, setStages] = useState([]);
 
+  const { warning, alerts, removeAlert } = useAlert();
+
   useEffect(() => {
     setFormData({
       start_date: initialData.start_date || "",
@@ -65,8 +68,6 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
       stage_name: stage.stage_name || "",
     }));
     setStages(stages.length > 0 ? stages : [{ id: 1, name: "ADMINISTRASI" }]);
-
-    console.log("Initial Stages:", initialData.stages);
   }, [initialData]);
 
   const handleInputChange = (field, value) => {
@@ -166,7 +167,7 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
       !formData.end_date ||
       !formData.semester_minimum
     ) {
-      alert("Mohon lengkapi semua field yang wajib diisi!");
+      warning("Peringatan!", "Mohon lengkapi semua field yang wajib diisi!");
       return;
     }
 
@@ -174,12 +175,12 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
       stages.length === 0 ||
       stages.some((stage) => stage.stage_name.trim() === "")
     ) {
-      alert("Mohon tambahkan minimal satu tahapan seleksi!");
+      warning("Peringatan!", "Mohon tambahkan minimal satu tahapan seleksi!");
       return;
     }
 
     if (selectedDocuments.length === 0) {
-      alert("Mohon pilih minimal satu dokumen wajib!");
+      warning("Peringatan!", "Mohon pilih minimal satu dokumen wajib!");
       return;
     }
 
@@ -202,6 +203,11 @@ const EditStepTwo = ({ onNext, onBack, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="mb-6">
         <p className="text-sm text-gray-500">
           Data Utama &gt;{" "}

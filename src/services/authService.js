@@ -164,8 +164,6 @@ export const resetPassword = async (data) => {
   return response;
 };
 
-// ===== FUNGSI VERIFIKASI EMAIL =====
-
 export const verifyEmail = async (data) => {
   const res = await fetch(`${API_BASE_URL}/auth/verify-email`, {
     method: "POST",
@@ -179,6 +177,24 @@ export const verifyEmail = async (data) => {
 
   if (!res.ok) {
     throw new Error(response.message || "Gagal memverifikasi email");
+  }
+
+  return response;
+};
+
+export const resendVerificationCode = async (email) => {
+  const res = await fetch(`${API_BASE_URL}/auth/resend-verification-code`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const response = await res.json();
+
+  if (!res.ok) {
+    throw new Error(response.message || "Gagal mengirim ulang kode verifikasi");
   }
 
   return response;

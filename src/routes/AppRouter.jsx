@@ -5,6 +5,8 @@ import Scholarship from "../pages/Scholarship";
 import Contact from "../pages/Contact";
 import Login from "../pages/auth/Login";
 import SignUp from "../pages/auth/SignUp";
+import VerifyCode from "../pages/auth/VerifyCode";
+
 import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin/Dashboard";
 import PimpinanDitmawa from "../pages/admin/accounts/PimpinanDitmawa";
@@ -57,6 +59,7 @@ const AppRouter = () => (
         }
       />
 
+      <Route path="/verify-code" element={<VerifyCode />} />
       <Route
         path="/login"
         element={
