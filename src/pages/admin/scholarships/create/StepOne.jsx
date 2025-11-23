@@ -1,9 +1,10 @@
 import { useState } from "react";
 import Button from "../../../../components/Button";
 import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const StepOne = ({ onNext, initialData = {} }) => {
-  const { warning } = useAlert();
+  const { warning, alerts, removeAlert } = useAlert();
   const [formData, setFormData] = useState({
     name: initialData.name || "",
     organizer: initialData.organizer || "",
@@ -26,13 +27,16 @@ const StepOne = ({ onNext, initialData = {} }) => {
     if (file) {
       const allowedTypes = ["image/png", "image/jpg", "image/jpeg"];
       if (!allowedTypes.includes(file.type)) {
-        alert("Format file tidak didukung. Gunakan PNG, JPG, atau JPEG.");
+        warning(
+          "Peringatan!",
+          "Format file tidak didukung. Gunakan PNG, JPG, atau JPEG."
+        );
         e.target.value = "";
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert("Ukuran file terlalu besar. Maksimal 5MB.");
+        warning("Peringatan!", "Ukuran file terlalu besar. Maksimal 5MB.");
         e.target.value = "";
         return;
       }
@@ -121,6 +125,11 @@ const StepOne = ({ onNext, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           Tambah Beasiswa Baru

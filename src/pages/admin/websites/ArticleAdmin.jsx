@@ -17,6 +17,8 @@ import {
   archiveInformation,
   getAllArticles,
 } from "../../../services/websiteService";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 
 const ArticleAdmin = () => {
   const [articleData, setArticleData] = useState([]);
@@ -26,6 +28,8 @@ const ArticleAdmin = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
   const [editingArticle, setEditingArticle] = useState(null);
+
+  const { alerts, success, error, removeAlert, warning } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Artikel - Admin";
@@ -37,9 +41,9 @@ const ArticleAdmin = () => {
     try {
       const data = await getAllArticles();
       setArticleData(data);
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-      message.error(error.message || "Gagal mengambil data artikel");
+    } catch (err) {
+      console.error("Error fetching articles:", err);
+      error("Gagal!", err.message || "Gagal mengambil data artikel");
     } finally {
       setLoading(false);
     }
@@ -49,13 +53,13 @@ const ArticleAdmin = () => {
     setModalLoading(true);
     try {
       if (!values.title || !values.content) {
-        message.error("Judul dan konten wajib diisi");
+        warning("Peringatan!", "Judul dan konten wajib diisi");
         setModalLoading(false);
         return;
       }
 
       if (!uploadedFile && !editingArticle?.cover_url) {
-        message.error("Gambar wajib diupload");
+        warning("Peringatan!", "Gambar wajib diupload");
         setModalLoading(false);
         return;
       }
@@ -86,19 +90,19 @@ const ArticleAdmin = () => {
 
       if (editingArticle) {
         await editInformation(editingArticle.id, formData);
-        message.success("Artikel berhasil diperbarui");
+        success("Berhasil!", "Artikel berhasil diperbarui");
       } else {
         await addInformation(formData);
-        message.success("Artikel berhasil ditambahkan");
+        success("Berhasil!", "Artikel berhasil ditambahkan");
       }
 
       setModalVisible(false);
       resetForm();
       setEditingArticle(null);
       fetchArticle();
-    } catch (error) {
-      console.error("Error saving article:", error);
-      message.error(error.message || "Gagal menyimpan artikel");
+    } catch (err) {
+      console.error("Error saving article:", err);
+      error("Gagal!", err.message || "Gagal menyimpan artikel");
     } finally {
       setModalLoading(false);
     }
@@ -113,11 +117,11 @@ const ArticleAdmin = () => {
     setLoading(true);
     try {
       await deleteInformation(id);
-      message.success("Artikel berhasil dihapus");
+      success("Berhasil!", "Artikel berhasil dihapus");
       fetchArticle();
-    } catch (error) {
-      console.error("Error deleting article:", error);
-      message.error(error.message || "Gagal menghapus artikel");
+    } catch (err) {
+      console.error("Error deleting article:", err);
+      error("Gagal!", err.message || "Gagal menghapus artikel");
     } finally {
       setLoading(false);
     }
@@ -127,11 +131,11 @@ const ArticleAdmin = () => {
     setLoading(true);
     try {
       await publishInformation(id);
-      message.success("Artikel berhasil dipublikasikan");
+      success("Berhasil!", "Artikel berhasil dipublikasikan");
       fetchArticle();
-    } catch (error) {
-      console.error("Error publishing article:", error);
-      message.error(error.message || "Gagal mempublikasikan artikel");
+    } catch (err) {
+      console.error("Error publishing article:", err);
+      error("Gagal!", err.message || "Gagal mempublikasikan artikel");
     } finally {
       setLoading(false);
     }
@@ -141,11 +145,11 @@ const ArticleAdmin = () => {
     setLoading(true);
     try {
       await archiveInformation(id);
-      message.success("Artikel berhasil diarsipkan");
+      success("Berhasil!", "Artikel berhasil diarsipkan");
       fetchArticle();
-    } catch (error) {
-      console.error("Error archiving article:", error);
-      message.error(error.message || "Gagal mengarsipkan artikel");
+    } catch (err) {
+      console.error("Error archiving article:", err);
+      error("Gagal!", err.message || "Gagal mengarsipkan artikel");
     } finally {
       setLoading(false);
     }
@@ -175,13 +179,13 @@ const ArticleAdmin = () => {
   const beforeUpload = (file) => {
     const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
     if (!isJpgOrPng) {
-      message.error("Hanya file JPG/PNG yang diperbolehkan!");
+      warning("Peringatan!", "Hanya file JPG/PNG yang diperbolehkan!");
       return false;
     }
 
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error("Ukuran gambar harus kurang dari 5MB!");
+      warning("Peringatan!", "Ukuran gambar harus kurang dari 5MB!");
       return false;
     }
 
@@ -298,6 +302,11 @@ const ArticleAdmin = () => {
 
   return (
     <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <UniversalTable
         title="Kelola Artikel"
         data={articleData}

@@ -16,7 +16,8 @@ import {
   deactivateScholarship,
   activateScholarship,
 } from "../../../services/scholarshipService";
-import { message } from "antd";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 import { useNavigate } from "react-router-dom";
 import { checkScholarshipForm } from "../../../services/formService";
 
@@ -24,6 +25,8 @@ const ScholarshipAdmin = () => {
   const [scholarships, setScholarships] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const { alerts, success, error, removeAlert } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Beasiswa - Admin";
@@ -53,9 +56,12 @@ const ScholarshipAdmin = () => {
         batasWaktu: formatDate(item.end_date),
       }));
       setScholarships(formattedData);
-    } catch (error) {
-      console.error("Error fetching scholarships:", error);
-      message.error("Gagal memuat data beasiswa");
+    } catch (err) {
+      console.error("Error fetching scholarships:", err);
+      error(
+        "Gagal Memuat Data",
+        err.message || "Gagal mengambil data beasiswa"
+      );
     } finally {
       setLoading(false);
     }
@@ -64,22 +70,28 @@ const ScholarshipAdmin = () => {
   const handleActivate = async (id) => {
     try {
       await activateScholarship(id);
-      message.success("Beasiswa diaktifkan");
+      success("Berhasil", "Beasiswa diaktifkan");
       fetchScholarships();
-    } catch (error) {
-      console.error("Error activating scholarship:", error);
-      message.error("Gagal mengaktifkan beasiswa");
+    } catch (err) {
+      console.error("Error activating scholarship:", err);
+      error(
+        "Gagal Mengaktifkan Beasiswa",
+        err.message || "Gagal mengaktifkan beasiswa"
+      );
     }
   };
 
   const handleDeactivate = async (id) => {
     try {
       await deactivateScholarship(id);
-      message.success("Beasiswa dinonaktifkan");
+      success("Berhasil", "Beasiswa dinonaktifkan");
       fetchScholarships();
-    } catch (error) {
-      console.error("Error deactivating scholarship:", error);
-      message.error("Gagal menonaktifkan beasiswa");
+    } catch (err) {
+      console.error("Error deactivating scholarship:", err);
+      error(
+        "Gagal Menonaktifkan Beasiswa",
+        err.message || "Gagal menonaktifkan beasiswa"
+      );
     }
   };
 
@@ -92,9 +104,12 @@ const ScholarshipAdmin = () => {
       } else {
         navigate(`/admin/scholarship/${scholarshipId}/form/create`);
       }
-    } catch (error) {
-      console.error("Error checking form status:", error);
-      message.error("Gagal memeriksa status form");
+    } catch (err) {
+      console.error("Error checking form status:", err);
+      error(
+        "Gagal Memeriksa Status Form",
+        err.message || "Gagal memeriksa status form"
+      );
     }
   };
 
@@ -162,16 +177,23 @@ const ScholarshipAdmin = () => {
   ];
 
   return (
-    <UniversalTable
-      title="Kelola Beasiswa"
-      data={scholarships}
-      columns={columns}
-      searchFields={["nama", "penyedia"]}
-      searchPlaceholder="Cari nama beasiswa atau penyedia..."
-      addButtonText="Tambah Beasiswa"
-      onAdd={() => navigate("/admin/scholarship/add")}
-      loading={loading}
-    />
+    <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
+      <UniversalTable
+        title="Kelola Beasiswa"
+        data={scholarships}
+        columns={columns}
+        searchFields={["nama", "penyedia"]}
+        searchPlaceholder="Cari nama beasiswa atau penyedia..."
+        addButtonText="Tambah Beasiswa"
+        onAdd={() => navigate("/admin/scholarship/add")}
+        loading={loading}
+      />
+    </>
   );
 };
 

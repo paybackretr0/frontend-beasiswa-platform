@@ -8,6 +8,8 @@ import {
   updateScholarship,
   getBeasiswaById,
 } from "../../../../services/scholarshipService";
+import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const ScholarshipEdit = () => {
   const { id } = useParams();
@@ -15,6 +17,8 @@ const ScholarshipEdit = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
+
+  const { success, error, alerts, removeAlert } = useAlert();
 
   const [scholarshipData, setScholarshipData] = useState({
     name: "",
@@ -87,9 +91,9 @@ const ScholarshipEdit = () => {
       };
 
       setScholarshipData(transformedData);
-    } catch (error) {
-      console.error("Error fetching scholarship data:", error);
-      message.error("Gagal memuat data beasiswa");
+    } catch (err) {
+      console.error("Error fetching scholarship data:", err);
+      error("Gagal!", "Gagal memuat data beasiswa");
       navigate("/admin/scholarship");
     } finally {
       setInitialLoading(false);
@@ -111,11 +115,14 @@ const ScholarshipEdit = () => {
     setLoading(true);
     try {
       await updateScholarship(id, finalData);
-      message.success("Beasiswa berhasil diperbarui!");
-      navigate("/admin/scholarship");
-    } catch (error) {
-      console.error("Error updating scholarship:", error);
-      message.error(error.message || "Gagal memperbarui beasiswa");
+      success("Berhasil!", "Beasiswa berhasil diperbarui!");
+
+      setTimeout(() => {
+        navigate("/admin/scholarship");
+      }, 1200);
+    } catch (err) {
+      console.error("Error updating scholarship:", err);
+      error("Gagal!", err.message || "Gagal memperbarui beasiswa");
     } finally {
       setLoading(false);
     }
@@ -134,6 +141,11 @@ const ScholarshipEdit = () => {
 
   return (
     <div>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       {currentStep === 1 && (
         <EditStepOne onNext={handleNext} initialData={scholarshipData} />
       )}

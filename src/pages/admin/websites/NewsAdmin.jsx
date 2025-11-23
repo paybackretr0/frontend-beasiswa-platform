@@ -17,6 +17,8 @@ import {
   publishInformation,
   archiveInformation,
 } from "../../../services/websiteService";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
 
 const NewsAdmin = () => {
   const [newsData, setNewsData] = useState([]);
@@ -26,6 +28,8 @@ const NewsAdmin = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
   const [editingNews, setEditingNews] = useState(null);
+
+  const { alerts, success, error, removeAlert, warning } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Berita - Admin";
@@ -37,9 +41,9 @@ const NewsAdmin = () => {
     try {
       const data = await getAllNews();
       setNewsData(data);
-    } catch (error) {
-      console.error("Error fetching news:", error);
-      message.error(error.message || "Gagal mengambil data berita");
+    } catch (err) {
+      console.error("Error fetching news:", err);
+      error("Gagal!", err.message || "Gagal mengambil data berita");
     } finally {
       setLoading(false);
     }
@@ -49,13 +53,13 @@ const NewsAdmin = () => {
     setModalLoading(true);
     try {
       if (!values.title || !values.content) {
-        message.error("Judul dan konten wajib diisi");
+        warning("Error!", "Judul dan konten wajib diisi");
         setModalLoading(false);
         return;
       }
 
       if (!uploadedFile && !editingNews?.cover_url) {
-        message.error("Gambar wajib diupload");
+        warning("Error!", "Gambar wajib diupload");
         setModalLoading(false);
         return;
       }
@@ -87,19 +91,19 @@ const NewsAdmin = () => {
 
       if (editingNews) {
         await editInformation(editingNews.id, formData);
-        message.success("Berita berhasil diperbarui");
+        success("Berhasil!", "Berita berhasil diperbarui");
       } else {
         await addInformation(formData);
-        message.success("Berita berhasil ditambahkan");
+        success("Berhasil!", "Berita berhasil ditambahkan");
       }
 
       setModalVisible(false);
       resetForm();
       setEditingNews(null);
       fetchNews();
-    } catch (error) {
-      console.error("Error saving news:", error);
-      message.error(error.message || "Gagal menyimpan berita");
+    } catch (err) {
+      console.error("Error saving news:", err);
+      error("Gagal!", err.message || "Gagal menyimpan berita");
     } finally {
       setModalLoading(false);
     }
@@ -114,11 +118,11 @@ const NewsAdmin = () => {
     setLoading(true);
     try {
       await deleteInformation(id);
-      message.success("Berita berhasil dihapus");
+      success("Berhasil!", "Berita berhasil dihapus");
       fetchNews();
-    } catch (error) {
-      console.error("Error deleting news:", error);
-      message.error(error.message || "Gagal menghapus berita");
+    } catch (err) {
+      console.error("Error deleting news:", err);
+      error("Gagal!", err.message || "Gagal menghapus berita");
     } finally {
       setLoading(false);
     }
@@ -128,11 +132,11 @@ const NewsAdmin = () => {
     setLoading(true);
     try {
       await publishInformation(id);
-      message.success("Berita berhasil dipublikasikan");
+      success("Berhasil!", "Berita berhasil dipublikasikan");
       fetchNews();
-    } catch (error) {
-      console.error("Error publishing news:", error);
-      message.error(error.message || "Gagal mempublikasikan berita");
+    } catch (err) {
+      console.error("Error publishing news:", err);
+      error("Gagal!", err.message || "Gagal mempublikasikan berita");
     } finally {
       setLoading(false);
     }
@@ -142,11 +146,11 @@ const NewsAdmin = () => {
     setLoading(true);
     try {
       await archiveInformation(id);
-      message.success("Berita berhasil diarsipkan");
+      success("Berhasil!", "Berita berhasil diarsipkan");
       fetchNews();
-    } catch (error) {
-      console.error("Error archiving news:", error);
-      message.error(error.message || "Gagal mengarsipkan berita");
+    } catch (err) {
+      console.error("Error archiving news:", err);
+      error("Gagal!", err.message || "Gagal mengarsipkan berita");
     } finally {
       setLoading(false);
     }
@@ -176,13 +180,13 @@ const NewsAdmin = () => {
   const beforeUpload = (file) => {
     const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
     if (!isJpgOrPng) {
-      message.error("Hanya file JPG/PNG yang diperbolehkan!");
+      warning("Peringatan!", "Hanya file JPG/PNG yang diperbolehkan!");
       return false;
     }
 
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error("Ukuran gambar harus kurang dari 5MB!");
+      warning("Peringatan!", "Ukuran gambar harus kurang dari 5MB!");
       return false;
     }
 
@@ -299,6 +303,11 @@ const NewsAdmin = () => {
 
   return (
     <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <UniversalTable
         title="Kelola Berita"
         data={newsData}
@@ -316,7 +325,7 @@ const NewsAdmin = () => {
         onCancel={() => {
           setModalVisible(false);
           resetForm();
-          setEditingNews(null); // Reset data edit
+          setEditingNews(null);
         }}
         onSubmit={handleAddNews}
         title={editingNews ? "Edit Berita" : "Tambah Berita"}

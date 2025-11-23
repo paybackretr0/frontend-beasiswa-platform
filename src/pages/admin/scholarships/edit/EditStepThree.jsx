@@ -3,7 +3,8 @@ import Button from "../../../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { getFaculties } from "../../../../services/facultyService";
 import { getDepartments } from "../../../../services/departmentService";
-import { message, Breadcrumb } from "antd";
+import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const EditStepThree = ({
   onBack,
@@ -26,6 +27,8 @@ const EditStepThree = ({
   const [departments, setDepartments] = useState([]);
   const [selectedFaculties, setSelectedFaculties] = useState([]);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
+
+  const { error, warning, alerts, removeAlert } = useAlert();
 
   useEffect(() => {
     // Set form data
@@ -55,9 +58,9 @@ const EditStepThree = ({
     try {
       const data = await getFaculties();
       setFaculties(data);
-    } catch (error) {
-      console.error("Error fetching faculties:", error);
-      message.error("Gagal memuat data fakultas");
+    } catch (err) {
+      console.error("Error fetching faculties:", err);
+      error("Gagal!", err.message || "Gagal memuat data fakultas");
     }
   };
 
@@ -65,9 +68,9 @@ const EditStepThree = ({
     try {
       const data = await getDepartments();
       setDepartments(data);
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-      message.error("Gagal memuat data departemen");
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      error("Gagal!", err.message || "Gagal memuat data departemen");
     }
   };
 
@@ -106,13 +109,13 @@ const EditStepThree = ({
       !formData.scholarship_value ||
       !formData.duration_semesters
     ) {
-      alert("Mohon lengkapi semua field yang wajib diisi!");
+      warning("Peringatan!", "Mohon lengkapi semua field yang wajib diisi!");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.contact_person_email)) {
-      alert("Format email tidak valid!");
+      warning("Peringatan!", "Format email tidak valid!");
       return;
     }
 
@@ -127,6 +130,11 @@ const EditStepThree = ({
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="mb-6">
         <p className="text-sm text-gray-500">
           Data Utama &gt; Data Teknis Pendaftaran &gt;{" "}

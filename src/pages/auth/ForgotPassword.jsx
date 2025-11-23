@@ -14,6 +14,8 @@ import {
   verifyResetCode,
   resetPassword,
 } from "../../services/authService";
+import useAlert from "../../hooks/useAlert";
+import AlertContainer from "../../components/AlertContainer";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -25,6 +27,8 @@ const ForgotPassword = () => {
     new_password: "",
     confirm_password: "",
   });
+
+  const { success, error, alerts, removeAlert } = useAlert();
 
   useEffect(() => {
     document.title = "Lupa Password - Beasiswa";
@@ -44,11 +48,11 @@ const ForgotPassword = () => {
 
     try {
       await forgotPassword({ email: formData.email });
-      message.success("Kode reset telah dikirim ke email Anda.");
+      success("Berhasil!", "Kode reset telah dikirim ke email Anda.");
       setStep(2);
-    } catch (error) {
-      console.error("Error sending reset email:", error);
-      message.error(error.message || "Gagal mengirim kode reset.");
+    } catch (err) {
+      console.error("Error sending reset email:", err);
+      error("Gagal!", err.message || "Gagal mengirim kode reset.");
     } finally {
       setLoading(false);
     }
@@ -60,11 +64,11 @@ const ForgotPassword = () => {
 
     try {
       await verifyResetCode({ email: formData.email, code: formData.code });
-      message.success("Kode reset valid. Silakan atur password baru.");
+      success("Berhasil!", "Kode reset valid. Silakan atur password baru.");
       setStep(3);
-    } catch (error) {
-      console.error("Error verifying reset code:", error);
-      message.error(error.message || "Kode reset salah atau sudah kadaluarsa.");
+    } catch (err) {
+      console.error("Error verifying reset code:", err);
+      error("Gagal!", err.message || "Kode reset salah atau sudah kadaluarsa.");
     } finally {
       setLoading(false);
     }
@@ -75,7 +79,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     if (formData.new_password !== formData.confirm_password) {
-      message.error("Password baru dan konfirmasi tidak cocok.");
+      error("Gagal!", "Password baru dan konfirmasi tidak cocok.");
       setLoading(false);
       return;
     }
@@ -86,17 +90,20 @@ const ForgotPassword = () => {
         code: formData.code,
         new_password: formData.new_password,
       });
-      message.success("Password berhasil direset. Silakan login.");
-      navigate("/login", { replace: true });
-      setFormData({
-        email: "",
-        code: "",
-        new_password: "",
-        confirm_password: "",
-      });
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      message.error(error.message || "Gagal mereset password.");
+      success("Berhasil!", "Password berhasil direset. Silakan login.");
+
+      setTimeout(() => {
+        navigate("/login", { replace: true });
+        setFormData({
+          email: "",
+          code: "",
+          new_password: "",
+          confirm_password: "",
+        });
+      }, 1200);
+    } catch (err) {
+      console.error("Error resetting password:", err);
+      error("Gagal!", err.message || "Gagal mereset password.");
     } finally {
       setLoading(false);
     }
@@ -110,6 +117,11 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       {/* Main Content */}
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">

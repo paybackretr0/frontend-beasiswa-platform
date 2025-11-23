@@ -3,9 +3,10 @@ import Button from "../../../../components/Button";
 import { getFaculties } from "../../../../services/facultyService";
 import { getDepartments } from "../../../../services/departmentService";
 import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
-  const { warning, error } = useAlert();
+  const { warning, error, alerts, removeAlert } = useAlert();
 
   const [formData, setFormData] = useState({
     contact_person_name: initialData.contact_person_name || "",
@@ -41,7 +42,7 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
       setFaculties(data);
     } catch (err) {
       console.error("Error fetching faculties:", err);
-      error("Gagal Memuat Data", "Gagal memuat data fakultas");
+      error("Gagal!", "Gagal memuat data fakultas");
     }
   };
 
@@ -51,7 +52,7 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
       setDepartments(data);
     } catch (err) {
       console.error("Error fetching departments:", err);
-      error("Gagal Memuat Data", "Gagal memuat data departemen");
+      error("Gagal!", "Gagal memuat data departemen");
     }
   };
 
@@ -142,6 +143,11 @@ const StepThree = ({ onBack, onSubmit, initialData = {}, loading = false }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="mb-6">
         <p className="text-sm text-gray-500">
           Data Utama &gt; Data Teknis Pendaftaran &gt;{" "}

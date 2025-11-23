@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { changePassword } from "../../services/authService";
 import Button from "../../components/Button";
+import useAlert from "../../hooks/useAlert";
+import AlertContainer from "../../components/AlertContainer";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -12,6 +14,8 @@ const ChangePassword = () => {
     confirm_password: "",
   });
   const [loading, setLoading] = useState(false);
+
+  const { success, error, alerts, removeAlert } = useAlert();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -26,7 +30,7 @@ const ChangePassword = () => {
     setLoading(true);
 
     if (formData.new_password !== formData.confirm_password) {
-      message.error("Password baru dan konfirmasi tidak cocok.");
+      error("Gagal!", "Password baru dan konfirmasi tidak cocok.");
       setLoading(false);
       return;
     }
@@ -37,11 +41,14 @@ const ChangePassword = () => {
         new_password: formData.new_password,
         new_password_confirmation: formData.confirm_password,
       });
-      message.success("Password berhasil diubah!");
-      navigate(-1);
-    } catch (error) {
-      console.error("Error changing password:", error);
-      message.error(error.message || "Gagal mengubah password.");
+      success("Berhasil!", "Password berhasil diubah!");
+
+      setTimeout(() => {
+        navigate(-1);
+      }, 1200);
+    } catch (err) {
+      console.error("Error changing password:", err);
+      error("Gagal!", err.message || "Gagal mengubah password.");
     } finally {
       setLoading(false);
     }
@@ -49,6 +56,11 @@ const ChangePassword = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
           Ubah Password

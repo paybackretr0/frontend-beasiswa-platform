@@ -1,9 +1,10 @@
 import { useState } from "react";
 import Button from "../../../../components/Button";
 import useAlert from "../../../../hooks/useAlert";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const StepTwo = ({ onNext, onBack, initialData = {} }) => {
-  const { warning } = useAlert();
+  const { warning, alerts, removeAlert } = useAlert();
   const defaultDocuments = [
     "KTP/Identitas",
     "Surat Keterangan Tidak Mampu",
@@ -195,6 +196,11 @@ const StepTwo = ({ onNext, onBack, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="mb-6">
         <p className="text-sm text-gray-500">
           Data Utama &gt;{" "}
