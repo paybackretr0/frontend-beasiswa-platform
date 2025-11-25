@@ -28,7 +28,7 @@ const Departemen = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState(null);
 
-  const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
+  const { alerts, success, error, removeAlert } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Departemen - Admin";

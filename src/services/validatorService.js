@@ -22,3 +22,21 @@ export const validateApplication = async (applicationId, notes = "") => {
 
   return data.data;
 };
+
+export const rejectApplicationByValidator = async (applicationId, notes) => {
+  const token = localStorage.getItem("access_token");
+
+  const response = await authFetch(
+    `${API_BASE_URL}/validator/applications/${applicationId}/reject`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ notes }),
+    }
+  );
+
+  return response.data;
+};

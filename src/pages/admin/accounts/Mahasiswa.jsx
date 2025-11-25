@@ -195,6 +195,7 @@ const Mahasiswa = () => {
             ? {
                 full_name: editingUser.full_name,
                 phone_number: editingUser.phone_number,
+                email: editingUser.email,
               }
             : {}
         }
@@ -212,6 +213,15 @@ const Mahasiswa = () => {
                   name: "phone_number",
                   label: "Nomor Telepon",
                   rules: [{ required: false }],
+                },
+                {
+                  name: "email",
+                  label: "Email",
+                  type: "email",
+                  rules: [
+                    { required: true, message: "Email wajib diisi" },
+                    { type: "email", message: "Format email tidak valid" },
+                  ],
                 },
               ]
             : [

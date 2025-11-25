@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
 import { changePassword } from "../../services/authService";
 import Button from "../../components/Button";
 import useAlert from "../../hooks/useAlert";

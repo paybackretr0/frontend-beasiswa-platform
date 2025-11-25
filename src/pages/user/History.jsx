@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Select, DatePicker, Tag, message } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined, EditOutlined, FormOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import UniversalTable, {
   createNumberColumn,
   createActionColumn,
@@ -10,11 +11,14 @@ import Card from "../../components/Card";
 import { getUserApplications } from "../../services/historyService";
 import ApplicationDetailModal from "../../components/ApplicationDetailModal";
 import { getApplicationDetailUser } from "../../services/applicationService";
+import AlertContainer from "../../components/AlertContainer";
+import useAlert from "../../hooks/useAlert";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const History = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +26,8 @@ const History = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const { alerts, success, error, removeAlert } = useAlert();
 
   let user = null;
   try {
@@ -40,9 +46,9 @@ const History = () => {
       const data = await getUserApplications();
       setApplications(data || []);
       setFilteredData(data || []);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      message.error("Gagal memuat data riwayat pendaftaran");
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      error("Gagal!", "Gagal memuat data riwayat pendaftaran");
       setApplications([]);
       setFilteredData([]);
     } finally {
@@ -57,9 +63,9 @@ const History = () => {
 
       const detail = await getApplicationDetailUser(record.id);
       setSelectedApplication(detail);
-    } catch (error) {
-      console.error("Error fetching application detail:", error);
-      message.error("Gagal memuat detail pendaftaran");
+    } catch (err) {
+      console.error("Error fetching application detail:", err);
+      error("Gagal!", "Gagal memuat detail pendaftaran");
     } finally {
       setDetailLoading(false);
     }
@@ -70,12 +76,17 @@ const History = () => {
     setSelectedApplication(null);
   };
 
-  const handleVerify = async (record) => {
-    message.info("Fitur verifikasi hanya tersedia di halaman admin");
-  };
+  // TAMBAHAN: Fungsi untuk melengkapi pendaftaran draft
+  const handleCompleteDraft = (record) => {
+    success(
+      "Mengalihkan...",
+      `Mengarahkan ke form pendaftaran ${record.beasiswa}`
+    );
 
-  const handleReject = async (record) => {
-    message.info("Fitur penolakan hanya tersedia di halaman admin");
+    // Redirect ke form aplikasi dengan scholarship_id
+    setTimeout(() => {
+      navigate(`/scholarship/${record.scholarship_id}/apply`);
+    }, 1000);
   };
 
   const createStatusColumn = () => ({
@@ -87,9 +98,8 @@ const History = () => {
         VALIDATED: { color: "green", text: "Divalidasi" },
         REJECTED: { color: "red", text: "Ditolak" },
         MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
-        MENUNGGU_VALIDASI: { color: "orange", text: "Menunggu Validasi" },
-        VERIFIED: { color: "cyan", text: "Terverifikasi" },
-        DRAFT: { color: "gray", text: "Draft" },
+        VERIFIED: { color: "cyan", text: "Terverifikasi - Menunggu Validasi" },
+        DRAFT: { color: "orange", text: "Draft" }, // Update warna untuk draft
       };
 
       const config = statusConfig[status] || { color: "default", text: status };
@@ -99,8 +109,7 @@ const History = () => {
       { text: "Divalidasi", value: "VALIDATED" },
       { text: "Ditolak", value: "REJECTED" },
       { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
-      { text: "Menunggu Validasi", value: "MENUNGGU_VALIDASI" },
-      { text: "Terverifikasi", value: "VERIFIED" },
+      { text: "Terverifikasi - Menunggu Validasi", value: "VERIFIED" },
       { text: "Draft", value: "DRAFT" },
     ],
     onFilter: (value, record) => record.status === value,
@@ -150,6 +159,7 @@ const History = () => {
       key: "tahapan",
       render: () => <Tag color="default">-</Tag>,
     },
+    // PERBAIKAN: Update action column dengan conditional buttons
     createActionColumn([
       {
         key: "detail",
@@ -157,6 +167,20 @@ const History = () => {
         icon: <EyeOutlined />,
         type: "default",
         onClick: handleDetail,
+      },
+      {
+        key: "complete",
+        label: "Lengkapi Pendaftaran",
+        icon: <FormOutlined />,
+        type: "primary",
+        // TAMBAHAN: Hanya tampil untuk status DRAFT
+        hidden: (record) => record.status !== "DRAFT",
+        onClick: handleCompleteDraft,
+        style: {
+          backgroundColor: "#f59e0b",
+          borderColor: "#f59e0b",
+          color: "white",
+        },
       },
     ]),
   ];
@@ -181,7 +205,6 @@ const History = () => {
         <Option value="VALIDATED">Divalidasi</Option>
         <Option value="REJECTED">Ditolak</Option>
         <Option value="MENUNGGU_VERIFIKASI">Menunggu Verifikasi</Option>
-        <Option value="MENUNGGU_VALIDASI">Menunggu Validasi</Option>
         <Option value="VERIFIED">Terverifikasi</Option>
         <Option value="DRAFT">Draft</Option>
       </Select>
@@ -212,7 +235,11 @@ const History = () => {
     (item) => item.status === "VALIDATED"
   ).length;
   const inProgressCount = applications.filter(
-    (item) => !["VALIDATED", "REJECTED"].includes(item.status)
+    (item) => !["VALIDATED", "REJECTED", "DRAFT"].includes(item.status)
+  ).length;
+  // TAMBAHAN: Hitung draft count
+  const draftCount = applications.filter(
+    (item) => item.status === "DRAFT"
   ).length;
   const totalValue = applications
     .filter((item) => item.status === "VALIDATED")
@@ -232,89 +259,112 @@ const History = () => {
   }
 
   return (
-    <GuestLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Riwayat Pendaftaran Beasiswa
-            </h1>
-            <p className="text-gray-600">
-              Data lengkap pendaftaran beasiswa yang pernah Anda lakukan
-            </p>
-          </div>
+    <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
+      <GuestLayout>
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                Riwayat Pendaftaran Beasiswa
+              </h1>
+              <p className="text-gray-600">
+                Data lengkap pendaftaran beasiswa yang pernah Anda lakukan
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card className="text-center bg-white">
-              <div className="p-4">
-                <div className="text-2xl font-bold text-blue-600 mb-1">
-                  {totalApplications}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <Card className="text-center bg-white">
+                <div className="p-4">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                    {totalApplications}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">
+                    Total Pendaftaran
+                  </div>
                 </div>
-                <div className="text-xs text-gray-600 font-medium">
-                  Total Pendaftaran
+              </Card>
+
+              <Card className="text-center bg-white">
+                <div className="p-4">
+                  <div className="text-2xl font-bold text-green-600 mb-1">
+                    {validatedCount}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">
+                    Divalidasi
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="text-center bg-white">
+                <div className="p-4">
+                  <div className="text-2xl font-bold text-blue-500 mb-1">
+                    {inProgressCount}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">
+                    Dalam Proses
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="text-center bg-white">
+                <div className="p-4">
+                  <div className="text-2xl font-bold text-orange-600 mb-1">
+                    {draftCount}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">
+                    Draft Belum Selesai
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {draftCount > 0 && (
+              <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center">
+                  <FormOutlined className="text-orange-600 mr-2 text-lg" />
+                  <div>
+                    <h4 className="font-semibold text-orange-800">
+                      Anda memiliki {draftCount} pendaftaran yang belum selesai
+                    </h4>
+                    <p className="text-orange-700 text-sm">
+                      Klik tombol "Lengkapi Pendaftaran" pada tabel di bawah
+                      untuk melanjutkan pendaftaran yang tersimpan sebagai
+                      draft.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </Card>
+            )}
 
-            <Card className="text-center bg-white">
-              <div className="p-4">
-                <div className="text-2xl font-bold text-green-600 mb-1">
-                  {validatedCount}
-                </div>
-                <div className="text-xs text-gray-600 font-medium">
-                  Divalidasi
-                </div>
-              </div>
-            </Card>
-
-            <Card className="text-center bg-white">
-              <div className="p-4">
-                <div className="text-2xl font-bold text-orange-600 mb-1">
-                  {inProgressCount}
-                </div>
-                <div className="text-xs text-gray-600 font-medium">
-                  Dalam Proses
-                </div>
-              </div>
-            </Card>
-
-            <Card className="text-center bg-white">
-              <div className="p-4">
-                <div className="text-lg font-bold text-purple-600 mb-1">
-                  Rp {totalValue.toLocaleString("id-ID")}
-                </div>
-                <div className="text-xs text-gray-600 font-medium">
-                  Total Nilai Bantuan Diterima
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm">
-            <UniversalTable
-              title="Riwayat Pendaftaran Beasiswa"
-              data={filteredData}
-              columns={columns}
-              searchFields={["beasiswa", "organizer"]}
-              searchPlaceholder="Cari nama beasiswa atau penyelenggara..."
-              customFilters={customFilters}
-              pageSize={10}
-              scroll={{ x: 1200 }}
-              loading={loading}
-            />
-            <ApplicationDetailModal
-              visible={detailModalVisible}
-              onClose={handleCloseDetailModal}
-              applicationDetail={selectedApplication}
-              loading={detailLoading}
-              onVerify={handleVerify}
-              onReject={handleReject}
-              role={role}
-            />
+            <div className="bg-white rounded-lg shadow-sm">
+              <UniversalTable
+                title="Riwayat Pendaftaran Beasiswa"
+                data={filteredData}
+                columns={columns}
+                searchFields={["beasiswa", "organizer"]}
+                searchPlaceholder="Cari nama beasiswa atau penyelenggara..."
+                customFilters={customFilters}
+                pageSize={10}
+                scroll={{ x: 1200 }}
+                loading={loading}
+              />
+              <ApplicationDetailModal
+                visible={detailModalVisible}
+                onClose={handleCloseDetailModal}
+                applicationDetail={selectedApplication}
+                loading={detailLoading}
+                role={role}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </GuestLayout>
+      </GuestLayout>
+    </>
   );
 };
 
