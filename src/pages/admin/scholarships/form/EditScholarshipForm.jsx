@@ -51,6 +51,8 @@ import {
   getFormFields,
   updateFormField,
 } from "../../../../services/formService";
+import AlertContainer from "../../../../components/AlertContainer";
+import useAlert from "../../../../hooks/useAlert";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -234,6 +236,8 @@ const EditScholarshipForm = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
+  const { alerts, success, warning, info, error, removeAlert } = useAlert();
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -283,9 +287,9 @@ const EditScholarshipForm = () => {
               },
             ]
       );
-    } catch (error) {
-      console.error("Error fetching form fields:", error);
-      message.error("Gagal memuat form yang sudah ada");
+    } catch (err) {
+      console.error("Error fetching form fields:", err);
+      error("Gagal!", "Gagal memuat form yang sudah ada");
       setFormFields([
         {
           id: `field-${Date.now()}`,
@@ -309,17 +313,15 @@ const EditScholarshipForm = () => {
       options: [],
     };
     setFormFields([...formFields, newField]);
-    message.success("Field baru ditambahkan");
   };
 
   const handleRemoveField = (index) => {
     if (formFields.length === 1) {
-      message.warning("Minimal harus ada satu field");
+      warning("Peringatan!", "Minimal harus ada satu field");
       return;
     }
     const updatedFields = formFields.filter((_, i) => i !== index);
     setFormFields(updatedFields);
-    message.info("Field dihapus");
   };
 
   const handleFieldChange = (index, field, value) => {
@@ -356,7 +358,7 @@ const EditScholarshipForm = () => {
   const handleRemoveOption = (fieldIndex, optionIndex) => {
     const updatedFields = [...formFields];
     if (updatedFields[fieldIndex].options.length === 1) {
-      message.warning("Minimal harus ada satu opsi untuk dropdown");
+      warning("Peringatan!", "Minimal harus ada satu opsi untuk dropdown");
       return;
     }
     updatedFields[fieldIndex].options.splice(optionIndex, 1);
@@ -367,11 +369,12 @@ const EditScholarshipForm = () => {
     for (let i = 0; i < formFields.length; i++) {
       const field = formFields[i];
       if (!field.label.trim()) {
-        message.error(`Label field ${i + 1} tidak boleh kosong`);
+        warning("Peringatan!", `Label field ${i + 1} tidak boleh kosong`);
         return false;
       }
       if (field.type === "SELECT" && field.options.length === 0) {
-        message.error(
+        warning(
+          "Peringatan!",
           `Field dropdown "${field.label}" harus memiliki minimal satu opsi`
         );
         return false;
@@ -379,7 +382,8 @@ const EditScholarshipForm = () => {
       if (field.type === "SELECT") {
         for (let j = 0; j < field.options.length; j++) {
           if (!field.options[j].trim()) {
-            message.error(
+            warning(
+              "Peringatan!",
               `Opsi ${j + 1} pada field "${field.label}" tidak boleh kosong`
             );
             return false;
@@ -404,11 +408,13 @@ const EditScholarshipForm = () => {
       }));
 
       await updateFormField(scholarshipId, fieldsToSend);
-      message.success("Form berhasil diupdate!");
-      navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
+      success("Berhasil!", "Form berhasil diupdate!");
+      setTimeout(() => {
+        navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
+      }, 2000);
     } catch (error) {
       console.error("Error updating form:", error);
-      message.error("Gagal mengupdate form");
+      error("Gagal!", "Gagal mengupdate form");
     } finally {
       setLoading(false);
     }
@@ -436,175 +442,186 @@ const EditScholarshipForm = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <Card className="mb-6 border-0 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate(-1)}
-              type="text"
-              className="flex items-center"
-            />
-            <div>
-              <Title level={3} className="!mb-1 flex items-center">
-                Edit Form Beasiswa
-              </Title>
-              <Text type="secondary">
-                Ubah formulir pendaftaran untuk beasiswa ini
-              </Text>
-            </div>
-          </div>
-          <Space>
-            <Button
-              onClick={() =>
-                navigate(`/admin/scholarship/${scholarshipId}/form/preview`)
-              }
-            >
-              Lihat Preview
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={loading}
-              onClick={handleSubmit}
-              size="large"
-              className="bg-green-500 hover:bg-green-600 border-green-500"
-            >
-              Update Form
-            </Button>
-          </Space>
-        </div>
-      </Card>
-
-      <Row gutter={[24, 24]}>
-        <Col xs={24} lg={16}>
-          <Card
-            title={
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <SettingOutlined className="mr-2" />
-                  Form Builder
-                </div>
-                <Tag color="blue">{formFields.length} Field</Tag>
+    <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <Card className="mb-6 border-0 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate(-1)}
+                type="text"
+                className="flex items-center"
+              />
+              <div>
+                <Title level={3} className="!mb-1 flex items-center">
+                  Edit Form Beasiswa
+                </Title>
+                <Text type="secondary">
+                  Ubah formulir pendaftaran untuk beasiswa ini
+                </Text>
               </div>
-            }
-            className="shadow-sm top-6"
-          >
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={formFields.map((field) => field.id)}
-                strategy={verticalListSortingStrategy}
+            </div>
+            <Space>
+              <Button
+                onClick={() =>
+                  navigate(`/admin/scholarship/${scholarshipId}/form/preview`)
+                }
               >
-                <Space direction="vertical" size="large" className="w-full">
-                  {formFields.map((field, index) => (
-                    <SortableEditFieldItem
-                      key={field.id}
-                      field={field}
-                      index={index}
-                      onFieldChange={handleFieldChange}
-                      onRemoveField={handleRemoveField}
-                      onAddOption={handleAddOption}
-                      onOptionChange={handleOptionChange}
-                      onRemoveOption={handleRemoveOption}
-                      typeIcons={typeIcons}
-                      formFieldsLength={formFields.length}
-                    />
-                  ))}
-                </Space>
-              </SortableContext>
-            </DndContext>
+                Lihat Preview
+              </Button>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                loading={loading}
+                onClick={handleSubmit}
+                size="large"
+                className="bg-green-500 hover:bg-green-600 border-green-500"
+              >
+                Update Form
+              </Button>
+            </Space>
+          </div>
+        </Card>
 
-            <Button
-              type="dashed"
-              icon={<PlusOutlined />}
-              onClick={handleAddField}
-              block
-              size="large"
-              className="h-16 text-lg mt-6"
+        <Row gutter={[24, 24]}>
+          <Col xs={24} lg={16}>
+            <Card
+              title={
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <SettingOutlined className="mr-2" />
+                    Form Builder
+                  </div>
+                  <Tag color="blue">{formFields.length} Field</Tag>
+                </div>
+              }
+              className="shadow-sm top-6"
             >
-              Tambah Field Baru
-            </Button>
-          </Card>
-        </Col>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={formFields.map((field) => field.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <Space direction="vertical" size="large" className="w-full">
+                    {formFields.map((field, index) => (
+                      <SortableEditFieldItem
+                        key={field.id}
+                        field={field}
+                        index={index}
+                        onFieldChange={handleFieldChange}
+                        onRemoveField={handleRemoveField}
+                        onAddOption={handleAddOption}
+                        onOptionChange={handleOptionChange}
+                        onRemoveOption={handleRemoveOption}
+                        typeIcons={typeIcons}
+                        formFieldsLength={formFields.length}
+                      />
+                    ))}
+                  </Space>
+                </SortableContext>
+              </DndContext>
 
-        <Col xs={24} lg={8}>
-          <Card
-            title={
-              <div className="flex items-center">
-                <FormOutlined className="mr-2" />
-                Preview Form
-              </div>
-            }
-            className="shadow-sm sticky top-6"
-          >
-            <div className="space-y-4">
-              <Text type="secondary" className="block">
-                Preview bagaimana form akan terlihat untuk mahasiswa:
-              </Text>
+              <Button
+                type="dashed"
+                icon={<PlusOutlined />}
+                onClick={handleAddField}
+                block
+                size="large"
+                className="h-16 text-lg mt-6"
+              >
+                Tambah Field Baru
+              </Button>
+            </Card>
+          </Col>
 
-              <Divider />
+          <Col xs={24} lg={8}>
+            <Card
+              title={
+                <div className="flex items-center">
+                  <FormOutlined className="mr-2" />
+                  Preview Form
+                </div>
+              }
+              className="shadow-sm sticky top-6"
+            >
+              <div className="space-y-4">
+                <Text type="secondary" className="block">
+                  Preview bagaimana form akan terlihat untuk mahasiswa:
+                </Text>
 
-              {formFields.map((field, index) => (
-                <div key={field.id} className="space-y-2">
-                  <Text strong className="flex items-center">
-                    {field.label || `Field ${index + 1}`}
-                    {field.is_required && (
-                      <span className="text-red-500 ml-1">*</span>
+                <Divider />
+
+                {formFields.map((field, index) => (
+                  <div key={field.id} className="space-y-2">
+                    <Text strong className="flex items-center">
+                      {field.label || `Field ${index + 1}`}
+                      {field.is_required && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
+                    </Text>
+
+                    {field.type === "TEXT" && (
+                      <Input placeholder="Input text" disabled />
                     )}
-                  </Text>
+                    {field.type === "NUMBER" && (
+                      <Input
+                        type="number"
+                        placeholder="Input number"
+                        disabled
+                      />
+                    )}
+                    {field.type === "DATE" && <Input type="date" disabled />}
+                    {field.type === "TEXTAREA" && (
+                      <Input.TextArea
+                        rows={3}
+                        placeholder="Input textarea"
+                        disabled
+                      />
+                    )}
+                    {field.type === "FILE" && (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-gray-400">
+                        Klik untuk upload file
+                      </div>
+                    )}
+                    {field.type === "SELECT" && (
+                      <Select
+                        placeholder="Pilih opsi"
+                        disabled
+                        className="w-full"
+                      >
+                        {field.options.map((option, optionIndex) => (
+                          <Option key={optionIndex} value={option}>
+                            {option || `Opsi ${optionIndex + 1}`}
+                          </Option>
+                        ))}
+                      </Select>
+                    )}
+                  </div>
+                ))}
 
-                  {field.type === "TEXT" && (
-                    <Input placeholder="Input text" disabled />
-                  )}
-                  {field.type === "NUMBER" && (
-                    <Input type="number" placeholder="Input number" disabled />
-                  )}
-                  {field.type === "DATE" && <Input type="date" disabled />}
-                  {field.type === "TEXTAREA" && (
-                    <Input.TextArea
-                      rows={3}
-                      placeholder="Input textarea"
-                      disabled
-                    />
-                  )}
-                  {field.type === "FILE" && (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-gray-400">
-                      Klik untuk upload file
-                    </div>
-                  )}
-                  {field.type === "SELECT" && (
-                    <Select
-                      placeholder="Pilih opsi"
-                      disabled
-                      className="w-full"
-                    >
-                      {field.options.map((option, optionIndex) => (
-                        <Option key={optionIndex} value={option}>
-                          {option || `Opsi ${optionIndex + 1}`}
-                        </Option>
-                      ))}
-                    </Select>
-                  )}
-                </div>
-              ))}
-
-              {formFields.length === 0 && (
-                <div className="text-center py-8 text-gray-400">
-                  <FormOutlined className="text-4xl mb-4" />
-                  <div>Form masih kosong</div>
-                  <div>Tambahkan field untuk melihat preview</div>
-                </div>
-              )}
-            </div>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+                {formFields.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <FormOutlined className="text-4xl mb-4" />
+                    <div>Form masih kosong</div>
+                    <div>Tambahkan field untuk melihat preview</div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    </>
   );
 };
 

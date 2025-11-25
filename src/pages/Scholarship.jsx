@@ -10,6 +10,7 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 import { fetchActiveScholarships } from "../services/scholarshipService";
 import { Link } from "react-router-dom";
+import EmptyInformation from "../assets/empty-state-news.svg";
 
 const Scholarship = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -197,14 +198,35 @@ const Scholarship = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-10 text-center">
             Daftar Beasiswa
           </h1>
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-lg mb-4">
-              📚 Belum ada beasiswa aktif saat ini
+
+          <div className="flex flex-col items-center justify-center">
+            <div className="max-w-md w-full text-center">
+              <img
+                src={EmptyInformation}
+                alt="Tidak ada beasiswa"
+                className="w-50 h-50 mx-auto opacity-80"
+              />
+
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Belum Ada Beasiswa
+                </h3>
+
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  Saat ini belum ada beasiswa yang tersedia. Pantau terus
+                  halaman ini untuk mendapatkan informasi beasiswa terbaru.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                  <Button
+                    onClick={loadScholarships}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
+                  >
+                    Muat Ulang
+                  </Button>
+                </div>
+              </div>
             </div>
-            <p className="text-gray-400 mb-6">
-              Silakan kembali lagi nanti untuk melihat beasiswa terbaru
-            </p>
-            <Button onClick={loadScholarships}>Muat Ulang</Button>
           </div>
         </div>
       </GuestLayout>

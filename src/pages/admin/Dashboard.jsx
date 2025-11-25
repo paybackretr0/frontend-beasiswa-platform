@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { message, Spin } from "antd";
+import { Spin } from "antd";
 import Card from "../../components/Card";
 import {
   LineChart,
@@ -17,6 +17,8 @@ import {
   getActivities,
   getApplicationsList,
 } from "../../services/analyticsService";
+import AlertContainer from "../../components/AlertContainer";
+import useAlert from "../../hooks/useAlert";
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,8 @@ const AdminDashboard = () => {
 
   const [recentApplications, setRecentApplications] = useState([]);
 
+  const { alert, error, removeAlert } = useAlert();
+
   useEffect(() => {
     document.title = "Dashboard - Admin";
     fetchAllData();
@@ -46,8 +50,8 @@ const AdminDashboard = () => {
       setLoading(false);
 
       await Promise.all([fetchChartData(), fetchStatusAndActivities()]);
-    } catch (error) {
-      message.error("Gagal memuat data dashboard");
+    } catch (err) {
+      error("Gagal!", "Gagal memuat data dashboard");
     } finally {
       setChartsLoading(false);
     }
@@ -63,8 +67,8 @@ const AdminDashboard = () => {
     try {
       const data = await getApplicationsList({ limit: 5 });
       setRecentApplications(data.slice(0, 5));
-    } catch (error) {
-      console.error("Error fetching recent applications:", error);
+    } catch (err) {
+      error("Gagal!", "Gagal memuat data aplikasi terbaru");
     }
   };
 
@@ -90,8 +94,8 @@ const AdminDashboard = () => {
         },
       ];
       setSummaryData(summary);
-    } catch (error) {
-      console.error("Error fetching summary data:", error);
+    } catch (err) {
+      error("Gagal!", "Gagal memuat data ringkasan");
     }
   };
 
@@ -120,8 +124,8 @@ const AdminDashboard = () => {
       setDepartemenData(departemen || []);
       setTahunData(tahun || []);
       setGenderData(mergedGenderData);
-    } catch (error) {
-      console.error("Error fetching chart data:", error);
+    } catch (err) {
+      error("Gagal!", "Gagal memuat data grafik");
     }
   };
 
@@ -132,7 +136,6 @@ const AdminDashboard = () => {
       if (role === "SUPERADMIN") {
         promises.push(getActivities());
       } else {
-        // Panggil fetchRecentApplications untuk role selain SUPERADMIN
         await fetchRecentApplications();
       }
 
@@ -143,8 +146,8 @@ const AdminDashboard = () => {
       if (role === "SUPERADMIN") {
         setActivities(results[1] || []);
       }
-    } catch (error) {
-      console.error("Error fetching status and activities:", error);
+    } catch (err) {
+      error("Gagal!", "Gagal memuat data status dan aktivitas");
     }
   };
 
@@ -158,6 +161,11 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
+      <AlertContainer
+        alerts={alert}
+        removeAlert={removeAlert}
+        position="top-right"
+      />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {summaryData.map((item, idx) => (
           <Card key={idx}>

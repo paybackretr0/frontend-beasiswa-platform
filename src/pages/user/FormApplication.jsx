@@ -32,6 +32,8 @@ import {
   submitApplication,
   saveDraft,
 } from "../../services/pendaftaranService";
+import AlertContainer from "../../components/AlertContainer";
+import useAlert from "../../hooks/useAlert";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -39,20 +41,16 @@ const { Option } = Select;
 const statusApplications = {
   DRAFT: "DRAFT",
   MENUNGGU_VERIFIKASI: "MENUNGGU VERIFIKASI",
-  VERIFIED: "TERVERIFIKASI",
-  MENUNGGU_VALIDASI: "MENUNGGU VALIDASI",
+  VERIFIED: "TERVERIFIKASI - MENUNGGU VALIDASI",
   REJECTED: "DITOLAK",
   VALIDATED: "DISETUJUI",
 };
 
-// Helper function to clean file name
 const getCleanFileName = (filePath) => {
   if (!filePath) return "Unknown file";
 
-  // Ambil nama file dari path
-  const fullFileName = filePath.split("\\").pop(); // Untuk Windows (gunakan "/" jika di Linux/Unix)
+  const fullFileName = filePath.split("\\").pop();
 
-  // Hilangkan timestamp (format: timestamp-filename.extension)
   const match = fullFileName.match(/^\d+-(.+)$/);
   return match ? match[1] : fullFileName;
 };
@@ -69,6 +67,8 @@ const FormApplication = () => {
   const [existingStatus, setExistingStatus] = useState(null);
   const [errors, setErrors] = useState({});
   const [helpModalVisible, setHelpModalVisible] = useState(false);
+
+  const { alerts, success, warning, error, removeAlert } = useAlert();
 
   const typeIcons = {
     TEXT: <FileTextOutlined className="text-blue-500" />,
@@ -101,7 +101,7 @@ const FormApplication = () => {
           if (field.type === "FILE") {
             initialAnswers[field.id] = existingAnswer.file_path
               ? {
-                  name: getCleanFileName(existingAnswer.file_path), // Bersihkan nama file
+                  name: getCleanFileName(existingAnswer.file_path),
                   path: existingAnswer.file_path,
                 }
               : null;
@@ -115,9 +115,11 @@ const FormApplication = () => {
 
       setAnswers(initialAnswers);
       document.title = `Daftar ${data.scholarship.name} - UNAND`;
-    } catch (error) {
-      message.error(error.message);
-      navigate("/scholarship");
+    } catch (err) {
+      error("Gagal!", err.message || "Gagal memuat form pendaftaran.");
+      setTimeout(() => {
+        navigate("/scholarship");
+      }, 1200);
     } finally {
       setLoading(false);
     }
@@ -160,7 +162,7 @@ const FormApplication = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
-      message.error("Mohon lengkapi semua field yang wajib diisi");
+      warning("Peringatan!", "Mohon lengkapi semua field yang wajib diisi");
       return false;
     }
 
@@ -171,9 +173,9 @@ const FormApplication = () => {
     try {
       setSubmitting(true);
       await saveDraft(scholarshipId, answers);
-      message.success("Draft berhasil disimpan");
-    } catch (error) {
-      message.error(error.message);
+      success("Berhasil!", "Draft berhasil disimpan");
+    } catch (err) {
+      error("Gagal!", err.message || "Gagal menyimpan draft.");
     } finally {
       setSubmitting(false);
     }
@@ -185,10 +187,12 @@ const FormApplication = () => {
     try {
       setSubmitting(true);
       await submitApplication(scholarshipId, answers, false);
-      message.success("Aplikasi berhasil disubmit!");
-      navigate("/history");
-    } catch (error) {
-      message.error(error.message);
+      success("Berhasil!", "Aplikasi berhasil disubmit!");
+      setTimeout(() => {
+        navigate("/history");
+      }, 1200);
+    } catch (err) {
+      error("Gagal!", err.message || "Gagal mengirim aplikasi.");
     } finally {
       setSubmitting(false);
     }
@@ -448,117 +452,124 @@ const FormApplication = () => {
   }
 
   return (
-    <GuestLayout>
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(`/scholarship/${scholarshipId}`)}
-            className="mb-4"
-          >
-            Kembali ke Detail Beasiswa
-          </Button>
-        </div>
+    <>
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
+      <GuestLayout>
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="mb-6">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(`/scholarship/${scholarshipId}`)}
+              className="mb-4"
+            >
+              Kembali ke Detail Beasiswa
+            </Button>
+          </div>
 
-        <Card>
-          <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                  Formulir Pendaftaran Beasiswa
-                </h1>
-                <div className="text-gray-700">
-                  <div className="font-semibold text-lg text-blue-700 mb-1">
-                    {scholarship?.name}
+          <Card>
+            <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                    Formulir Pendaftaran Beasiswa
+                  </h1>
+                  <div className="text-gray-700">
+                    <div className="font-semibold text-lg text-blue-700 mb-1">
+                      {scholarship?.name}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-2">
+                      Penyelenggara: {scholarship?.organizer}
+                    </div>
+                    {scholarship?.end_date && (
+                      <div className="text-sm text-orange-600 font-medium">
+                        Batas Pendaftaran:{" "}
+                        {new Date(scholarship.end_date).toLocaleDateString(
+                          "id-ID",
+                          {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Penyelenggara: {scholarship?.organizer}
-                  </div>
-                  {scholarship?.end_date && (
-                    <div className="text-sm text-orange-600 font-medium">
-                      Batas Pendaftaran:{" "}
-                      {new Date(scholarship.end_date).toLocaleDateString(
-                        "id-ID",
-                        {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
+                </div>
+                <Button
+                  icon={<InfoCircleOutlined />}
+                  onClick={() => setHelpModalVisible(true)}
+                  type="dashed"
+                >
+                  Petunjuk
+                </Button>
+              </div>
+            </div>
+
+            <form className="space-y-6">
+              {formFields.map((field, index) => (
+                <div key={field.id} className="space-y-2">
+                  <label className="flex items-center text-sm font-medium text-gray-700">
+                    <span className="mr-2">{typeIcons[field.type]}</span>
+                    <span>{field.label}</span>
+                    {field.is_required && (
+                      <span className="text-red-500 ml-1 text-base">*</span>
+                    )}
+                  </label>
+
+                  {renderField(field)}
+
+                  {errors[field.id] && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {errors[field.id]}
+                    </div>
+                  )}
+
+                  {field.type === "FILE" && (
+                    <div className="text-xs text-gray-500">
+                      Format: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 5MB)
                     </div>
                   )}
                 </div>
+              ))}
+            </form>
+
+            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+              <div className="text-sm text-gray-500">
+                <span className="text-red-500">*</span> Field wajib diisi
               </div>
-              <Button
-                icon={<InfoCircleOutlined />}
-                onClick={() => setHelpModalVisible(true)}
-                type="dashed"
-              >
-                Petunjuk
-              </Button>
-            </div>
-          </div>
 
-          <form className="space-y-6">
-            {formFields.map((field, index) => (
-              <div key={field.id} className="space-y-2">
-                <label className="flex items-center text-sm font-medium text-gray-700">
-                  <span className="mr-2">{typeIcons[field.type]}</span>
-                  <span>{field.label}</span>
-                  {field.is_required && (
-                    <span className="text-red-500 ml-1 text-base">*</span>
-                  )}
-                </label>
+              <div className="space-x-4">
+                <Button
+                  icon={<SaveOutlined />}
+                  onClick={handleSaveDraft}
+                  loading={submitting}
+                  disabled={submitting}
+                >
+                  {submitting ? "Menyimpan..." : "Simpan Draft"}
+                </Button>
 
-                {renderField(field)}
-
-                {errors[field.id] && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {errors[field.id]}
-                  </div>
-                )}
-
-                {field.type === "FILE" && (
-                  <div className="text-xs text-gray-500">
-                    Format: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 5MB)
-                  </div>
-                )}
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={handleSubmit}
+                  loading={submitting}
+                  disabled={submitting}
+                >
+                  {submitting ? "Mengirim..." : "Submit Aplikasi"}
+                </Button>
               </div>
-            ))}
-          </form>
-
-          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-            <div className="text-sm text-gray-500">
-              <span className="text-red-500">*</span> Field wajib diisi
             </div>
+          </Card>
 
-            <div className="space-x-4">
-              <Button
-                icon={<SaveOutlined />}
-                onClick={handleSaveDraft}
-                loading={submitting}
-                disabled={submitting}
-              >
-                {submitting ? "Menyimpan..." : "Simpan Draft"}
-              </Button>
-
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                onClick={handleSubmit}
-                loading={submitting}
-                disabled={submitting}
-              >
-                {submitting ? "Mengirim..." : "Submit Aplikasi"}
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        <HelpModal />
-      </div>
-    </GuestLayout>
+          <HelpModal />
+        </div>
+      </GuestLayout>
+    </>
   );
 };
 

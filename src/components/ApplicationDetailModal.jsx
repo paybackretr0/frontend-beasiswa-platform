@@ -1,5 +1,12 @@
-import { Modal, Tabs, Descriptions, Tag, Button, Space } from "antd";
-import { FileOutlined, EyeOutlined } from "@ant-design/icons";
+import { Modal, Tabs, Descriptions, Tag, Button, Space, Timeline } from "antd";
+import {
+  FileOutlined,
+  EyeOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 
 const ApplicationDetailModal = ({
   visible,
@@ -16,7 +23,6 @@ const ApplicationDetailModal = ({
     const colorMap = {
       MENUNGGU_VERIFIKASI: "orange",
       VERIFIED: "blue",
-      MENUNGGU_VALIDASI: "gold",
       VALIDATED: "green",
       REJECTED: "red",
     };
@@ -26,12 +32,122 @@ const ApplicationDetailModal = ({
   const getStatusLabel = (status) => {
     const statusMap = {
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
-      VERIFIED: "Terverifikasi",
-      MENUNGGU_VALIDASI: "Menunggu Validasi",
+      VERIFIED: "Terverifikasi - Menunggu Validasi",
       VALIDATED: "Disetujui",
       REJECTED: "Dikembalikan",
     };
     return statusMap[status] || status;
+  };
+
+  const renderProcessHistory = () => {
+    const history = [];
+
+    const dateTimeOptions = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Jakarta",
+    };
+
+    if (applicationDetail.submitted_at) {
+      history.push({
+        color: "blue",
+        dot: <ClockCircleOutlined />,
+        children: (
+          <div>
+            <div className="font-medium">Pendaftaran Disubmit</div>
+            <div className="text-sm text-gray-600">
+              oleh: {applicationDetail.student.nama}
+            </div>
+            <div className="text-xs text-gray-400">
+              {new Date(applicationDetail.submitted_at).toLocaleDateString(
+                "id-ID",
+                dateTimeOptions
+              )}
+            </div>
+          </div>
+        ),
+      });
+    }
+
+    if (applicationDetail.verified_at && applicationDetail.verificator) {
+      history.push({
+        color: "green",
+        dot: <CheckCircleOutlined />,
+        children: (
+          <div>
+            <div className="font-medium">Diverifikasi</div>
+            <div className="text-sm text-gray-600">
+              oleh: {applicationDetail.verificator.full_name}
+            </div>
+            <div className="text-xs text-gray-400">
+              {new Date(applicationDetail.verified_at).toLocaleDateString(
+                "id-ID",
+                dateTimeOptions
+              )}
+            </div>
+          </div>
+        ),
+      });
+    }
+
+    if (applicationDetail.validated_at && applicationDetail.validator) {
+      history.push({
+        color: "green",
+        dot: <CheckCircleOutlined />,
+        children: (
+          <div>
+            <div className="font-medium">Divalidasi & Disetujui</div>
+            <div className="text-sm text-gray-600">
+              oleh: {applicationDetail.validator.full_name}
+            </div>
+            <div className="text-xs text-gray-400">
+              {new Date(applicationDetail.validated_at).toLocaleDateString(
+                "id-ID",
+                dateTimeOptions
+              )}
+            </div>
+          </div>
+        ),
+      });
+    }
+
+    if (applicationDetail.rejected_at && applicationDetail.rejector) {
+      history.push({
+        color: "red",
+        dot: <CloseCircleOutlined />,
+        children: (
+          <div>
+            <div className="font-medium">Ditolak</div>
+            <div className="text-sm text-gray-600">
+              oleh: {applicationDetail.rejector.full_name}
+            </div>
+            {applicationDetail.notes && (
+              <div className="text-sm text-red-600 mt-1 p-2 bg-red-50 rounded">
+                <strong>Alasan:</strong> {applicationDetail.notes}
+              </div>
+            )}
+            <div className="text-xs text-gray-400">
+              {new Date(applicationDetail.rejected_at).toLocaleDateString(
+                "id-ID",
+                dateTimeOptions
+              )}
+            </div>
+          </div>
+        ),
+      });
+    }
+
+    return history.length > 0 ? (
+      <Timeline mode="left" items={history} className="mt-4" />
+    ) : (
+      <div className="text-center py-8 text-gray-500">
+        Belum ada riwayat proses
+      </div>
+    );
   };
 
   const renderActionButtons = () => {
@@ -62,10 +178,7 @@ const ApplicationDetailModal = ({
       );
     }
 
-    if (
-      (status === "VERIFIED" || status === "MENUNGGU_VALIDASI") &&
-      role === "PIMPINAN_DITMAWA"
-    ) {
+    if (status === "VERIFIED" && role === "PIMPINAN_DITMAWA") {
       buttons.push(
         <Button key="reject" danger onClick={() => onReject(applicationDetail)}>
           Tolak
@@ -134,30 +247,104 @@ const ApplicationDetailModal = ({
             <Descriptions.Item label="Tanggal Daftar">
               {applicationDetail.submitted_at
                 ? new Date(applicationDetail.submitted_at).toLocaleDateString(
-                    "id-ID"
+                    "id-ID",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                      timeZone: "Asia/Jakarta",
+                    }
                   )
                 : "-"}
             </Descriptions.Item>
             <Descriptions.Item label="Tanggal Verifikasi">
               {applicationDetail.verified_at
                 ? new Date(applicationDetail.verified_at).toLocaleDateString(
-                    "id-ID"
+                    "id-ID",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                      timeZone: "Asia/Jakarta",
+                    }
                   )
                 : "-"}
             </Descriptions.Item>
-            <Descriptions.Item label="Catatan" span={3}>
-              {applicationDetail.notes || "-"}
+            <Descriptions.Item label="Tanggal Validasi">
+              {applicationDetail.validated_at
+                ? new Date(applicationDetail.validated_at).toLocaleDateString(
+                    "id-ID",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                      timeZone: "Asia/Jakarta",
+                    }
+                  )
+                : "-"}
             </Descriptions.Item>
+            {applicationDetail.rejected_at && (
+              <Descriptions.Item label="Tanggal Penolakan">
+                {new Date(applicationDetail.rejected_at).toLocaleDateString(
+                  "id-ID",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                    timeZone: "Asia/Jakarta",
+                  }
+                )}
+              </Descriptions.Item>
+            )}
+            {applicationDetail.notes && (
+              <Descriptions.Item label="Catatan" span={3}>
+                <div className="p-3 bg-red-50 border border-red-200 rounded">
+                  {applicationDetail.notes}
+                </div>
+              </Descriptions.Item>
+            )}
           </Descriptions>
         </div>
       ),
     },
     {
       key: "2",
+      label: "Riwayat Proses",
+      children: (
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2 flex items-center">
+              <UserOutlined className="mr-2" />
+              Timeline Proses Pendaftaran
+            </h4>
+            <p className="text-sm text-gray-600 mb-4">
+              Berikut adalah riwayat lengkap proses pendaftaran mulai dari
+              pengajuan hingga keputusan akhir.
+            </p>
+          </div>
+          {renderProcessHistory()}
+        </div>
+      ),
+    },
+    {
+      key: "3",
       label: "Dokumen",
       children: (
         <div className="space-y-4">
-          {applicationDetail.documents.length === 0 ? (
+          {!applicationDetail.documents ||
+          applicationDetail.documents.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               Belum ada dokumen yang diupload
             </div>
@@ -175,7 +362,18 @@ const ApplicationDetailModal = ({
                         </div>
                         <div className="text-xs text-gray-400">
                           Upload:{" "}
-                          {new Date(doc.uploadedAt).toLocaleDateString("id-ID")}
+                          {new Date(doc.uploadedAt).toLocaleDateString(
+                            "id-ID",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                              timeZone: "Asia/Jakarta",
+                            }
+                          )}
                         </div>
                       </div>
                     </div>
@@ -202,7 +400,7 @@ const ApplicationDetailModal = ({
       ),
     },
     {
-      key: "3",
+      key: "4",
       label: "Beasiswa",
       children: (
         <div className="space-y-4">
@@ -232,7 +430,7 @@ const ApplicationDetailModal = ({
       ),
     },
     {
-      key: "4",
+      key: "5",
       label: "Formulir",
       children: (
         <div className="space-y-4">

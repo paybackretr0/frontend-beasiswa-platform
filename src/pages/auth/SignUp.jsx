@@ -15,6 +15,10 @@ const SignUp = () => {
     email: "",
     password: "",
     password_confirmation: "",
+    birth_date: "",
+    birth_place: "",
+    gender: "",
+    phone_number: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +27,14 @@ const SignUp = () => {
   }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Format tanggal lahir
+    if (name === "birth_date") {
+      setForm({ ...form, [name]: value });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const validateForm = () => {
@@ -59,6 +70,55 @@ const SignUp = () => {
       return false;
     }
 
+    // Validasi tanggal lahir
+    if (!form.birth_date) {
+      error("Data Tidak Lengkap", "Tanggal lahir harus diisi");
+      return false;
+    }
+
+    // Validasi umur (minimal 17 tahun)
+    const birthDate = new Date(form.birth_date);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    if (age < 17) {
+      error("Umur Tidak Valid", "Usia minimal 17 tahun untuk mendaftar");
+      return false;
+    }
+
+    if (!form.birth_place.trim()) {
+      error("Data Tidak Lengkap", "Tempat lahir harus diisi");
+      return false;
+    }
+
+    if (!form.gender) {
+      error("Data Tidak Lengkap", "Jenis kelamin harus dipilih");
+      return false;
+    }
+
+    if (!form.phone_number.trim()) {
+      error("Data Tidak Lengkap", "Nomor telepon harus diisi");
+      return false;
+    }
+
+    // Validasi format nomor telepon Indonesia
+    const phoneRegex = /^(08|628|\+628)[0-9]{8,12}$/;
+    if (!phoneRegex.test(form.phone_number.replace(/\D/g, ""))) {
+      error(
+        "Format Tidak Valid",
+        "Format nomor telepon tidak valid (contoh: 08123456789)"
+      );
+      return false;
+    }
+
     return true;
   };
 
@@ -79,7 +139,6 @@ const SignUp = () => {
           "Silakan cek email untuk verifikasi akun Anda"
         );
 
-        // Redirect ke halaman verifikasi dengan email
         setTimeout(() => {
           navigate("/verify-code", {
             state: {
@@ -109,8 +168,9 @@ const SignUp = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
       {/* Left: Background Image with Gradient */}
-      <div className="hidden md:block w-0 md:w-[70%] relative">
+      <div className="hidden lg:block w-0 lg:w-[60%] relative">
         <img
           src={AuthImg}
           alt="Auth Illustration"
@@ -120,16 +180,17 @@ const SignUp = () => {
       </div>
 
       {/* Right: SignUp Form */}
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-lg bg-white rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
             Buat Akun Baru
           </h2>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Nama Lengkap */}
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
-                Nama Lengkap
+                Nama Lengkap <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -137,14 +198,15 @@ const SignUp = () => {
                 value={form.full_name}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
-                placeholder="Masukkan Nama Lengkap"
+                placeholder="Masukkan nama lengkap"
                 required
               />
             </div>
 
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
-                Email Student Unand
+                Email Student Unand <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -152,14 +214,82 @@ const SignUp = () => {
                 value={form.email}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
-                placeholder="Masukkan email student unand"
+                placeholder="Masukkan email student Unand"
                 required
               />
             </div>
 
+            {/* Tempat dan Tanggal Lahir */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">
+                  Tempat Lahir <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="birth_place"
+                  value={form.birth_place}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                  placeholder="Kota kelahiran"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">
+                  Tanggal Lahir <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="birth_date"
+                  value={form.birth_date}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Jenis Kelamin dan Nomor Telepon */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">
+                  Jenis Kelamin <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="gender"
+                  value={form.gender}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF] bg-white"
+                  required
+                >
+                  <option value="">Pilih jenis kelamin</option>
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">
+                  Nomor Telepon <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  value={form.phone_number}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                  placeholder="08123456789"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password */}
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
-                Kata Sandi
+                Kata Sandi <span className="text-red-500">*</span>
               </label>
               <input
                 type="password"
@@ -167,15 +297,16 @@ const SignUp = () => {
                 value={form.password}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
-                placeholder="Masukkan kata sandi"
+                placeholder="Minimal 6 karakter"
                 required
                 minLength="6"
               />
             </div>
 
+            {/* Konfirmasi Password */}
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
-                Konfirmasi Kata Sandi
+                Konfirmasi Kata Sandi <span className="text-red-500">*</span>
               </label>
               <input
                 type="password"
@@ -188,11 +319,15 @@ const SignUp = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Memproses..." : "Daftar"}
-            </Button>
+            {/* Submit Button */}
+            <div className="pt-4">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Memproses..." : "Daftar"}
+              </Button>
+            </div>
           </form>
 
+          {/* Login Link */}
           <div className="mt-6 text-center text-sm">
             Sudah punya akun?{" "}
             <button

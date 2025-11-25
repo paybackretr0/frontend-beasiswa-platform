@@ -26,7 +26,7 @@ const Fakultas = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState(null);
 
-  const { alerts, success, error, removeAlert, info } = useAlert();
+  const { alerts, success, error, removeAlert } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Fakultas - Admin";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { message, Spin, Tag, Modal, Input } from "antd";
+import { Spin, Tag } from "antd";
 import UniversalTable, {
   createNumberColumn,
   createActionColumn,
@@ -15,8 +15,14 @@ import {
   verifyApplication,
   rejectApplication,
 } from "../../../services/verifikatorService";
-import { validateApplication } from "../../../services/validatorService";
+import {
+  validateApplication,
+  rejectApplicationByValidator,
+} from "../../../services/validatorService";
 import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
+import AlertContainer from "../../../components/AlertContainer";
+import useAlert from "../../../hooks/useAlert";
+import UniversalModal from "../../../components/Modal";
 
 const ApplicationsAdmin = () => {
   const [applications, setApplications] = useState([]);
@@ -28,6 +34,15 @@ const ApplicationsAdmin = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  // State untuk modal reject
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [selectedApplicationForReject, setSelectedApplicationForReject] =
+    useState(null);
+  const [rejectLoading, setRejectLoading] = useState(false);
+
+  const { alerts, success, error, removeAlert, clearAlerts, warning } =
+    useAlert();
+
   let user = null;
   try {
     user = JSON.parse(localStorage.getItem("user"));
@@ -36,6 +51,7 @@ const ApplicationsAdmin = () => {
 
   useEffect(() => {
     document.title = "Kelola Pendaftaran - Admin";
+    clearAlerts();
     fetchApplications();
     fetchSummary();
   }, []);
@@ -58,9 +74,9 @@ const ApplicationsAdmin = () => {
         student_id: item.student_id,
       }));
       setApplications(transformedData);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      message.error("Gagal memuat data pendaftaran");
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      error("Gagal!", err.message || "Gagal memuat data pendaftaran");
     } finally {
       setLoading(false);
     }
@@ -82,7 +98,7 @@ const ApplicationsAdmin = () => {
           color: "text-orange-600",
         },
         {
-          title: "Menunggu Validasi",
+          title: "Terverifikasi - Menunggu Validasi",
           value: data.menunggu_validasi,
           color: "text-yellow-600",
         },
@@ -93,9 +109,9 @@ const ApplicationsAdmin = () => {
         },
       ];
       setSummaryData(summary);
-    } catch (error) {
-      console.error("Error fetching summary:", error);
-      message.error("Gagal memuat ringkasan data");
+    } catch (err) {
+      console.error("Error fetching summary:", err);
+      error("Gagal!", err.message || "Gagal memuat ringkasan data");
     } finally {
       setSummaryLoading(false);
     }
@@ -104,8 +120,7 @@ const ApplicationsAdmin = () => {
   const getStatusLabel = (status) => {
     const statusMap = {
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
-      VERIFIED: "Terverifikasi",
-      MENUNGGU_VALIDASI: "Menunggu Validasi",
+      VERIFIED: "Terverifikasi - Menunggu Validasi",
       REJECTED: "Dikembalikan",
       VALIDATED: "Disetujui",
     };
@@ -115,8 +130,7 @@ const ApplicationsAdmin = () => {
   const getStatusColor = (status) => {
     const colorMap = {
       "Menunggu Verifikasi": "orange",
-      Terverifikasi: "blue",
-      "Menunggu Validasi": "gold",
+      "Terverifikasi - Menunggu Validasi": "blue",
       Dikembalikan: "red",
       Disetujui: "green",
     };
@@ -130,9 +144,9 @@ const ApplicationsAdmin = () => {
 
       const detail = await getApplicationDetail(record.id);
       setSelectedApplication(detail);
-    } catch (error) {
-      console.error("Error fetching application detail:", error);
-      message.error("Gagal memuat detail pendaftaran");
+    } catch (err) {
+      console.error("Error fetching application detail:", err);
+      error("Gagal!", err.message || "Gagal memuat detail pendaftaran");
     } finally {
       setDetailLoading(false);
     }
@@ -146,7 +160,8 @@ const ApplicationsAdmin = () => {
   const handleVerify = async (record) => {
     try {
       await verifyApplication(record.id, "");
-      message.success(
+      success(
+        "Berhasil!",
         `Pendaftaran ${
           record.nama || record.student?.nama
         } berhasil diverifikasi`
@@ -159,16 +174,17 @@ const ApplicationsAdmin = () => {
         setDetailModalVisible(false);
         setSelectedApplication(null);
       }
-    } catch (error) {
-      console.error("Error verifying application:", error);
-      message.error("Gagal memverifikasi pendaftaran");
+    } catch (err) {
+      console.error("Error verifying application:", err);
+      error("Gagal!", err.message || "Gagal memverifikasi pendaftaran");
     }
   };
 
   const handleValidate = async (record) => {
     try {
       await validateApplication(record.id, "");
-      message.success(
+      success(
+        "Berhasil!",
         `Pendaftaran ${record.nama || record.student?.nama} berhasil divalidasi`
       );
 
@@ -179,29 +195,54 @@ const ApplicationsAdmin = () => {
         setDetailModalVisible(false);
         setSelectedApplication(null);
       }
-    } catch (error) {
-      console.error("Error validating application:", error);
-      message.error("Gagal memvalidasi pendaftaran");
+    } catch (err) {
+      console.error("Error validating application:", err);
+      error("Gagal!", err.message || "Gagal memvalidasi pendaftaran");
     }
   };
 
   const handleReject = async (record) => {
+    setSelectedApplicationForReject(record);
+    setRejectModalVisible(true);
+  };
+
+  const handleCloseRejectModal = () => {
+    setRejectModalVisible(false);
+    setSelectedApplicationForReject(null);
+  };
+
+  const handleSubmitReject = async (values) => {
+    const { notes } = values;
+    const record = selectedApplicationForReject;
+
+    if (!notes || !notes.trim()) {
+      warning("Gagal!", "Alasan penolakan harus diisi");
+      return;
+    }
+
     try {
-      const notes = prompt(
-        `Alasan penolakan untuk ${record.nama || record.student?.nama}:`
-      );
+      setRejectLoading(true);
 
-      if (notes === null) {
+      if (
+        role === "VERIFIKATOR" &&
+        record.rawStatus === "MENUNGGU_VERIFIKASI"
+      ) {
+        await rejectApplication(record.id, notes);
+      } else if (
+        role === "PIMPINAN_DITMAWA" &&
+        record.rawStatus === "VERIFIED"
+      ) {
+        await rejectApplicationByValidator(record.id, notes);
+      } else {
+        warning(
+          "Gagal!",
+          "Anda tidak memiliki akses untuk menolak pendaftaran ini"
+        );
         return;
       }
 
-      if (!notes.trim()) {
-        message.error("Alasan penolakan harus diisi");
-        return;
-      }
-
-      await rejectApplication(record.id, notes);
-      message.success(
+      success(
+        "Berhasil!",
         `Pendaftaran ${record.nama || record.student?.nama} berhasil ditolak`
       );
 
@@ -212,11 +253,30 @@ const ApplicationsAdmin = () => {
         setDetailModalVisible(false);
         setSelectedApplication(null);
       }
-    } catch (error) {
-      console.error("Error rejecting application:", error);
-      message.error("Gagal menolak pendaftaran");
+
+      handleCloseRejectModal();
+    } catch (err) {
+      console.error("Error rejecting application:", err);
+      warning("Gagal!", err.message || "Gagal menolak pendaftaran");
+    } finally {
+      setRejectLoading(false);
     }
   };
+
+  const rejectModalFields = [
+    {
+      name: "notes",
+      label: "Alasan Penolakan",
+      type: "textarea",
+      placeholder: "Masukkan alasan penolakan...",
+      rows: 5,
+      maxLength: 500,
+      rules: [
+        { required: true, message: "Alasan penolakan harus diisi" },
+        { min: 10, message: "Alasan penolakan minimal 10 karakter" },
+      ],
+    },
+  ];
 
   const columns = [
     createNumberColumn(),
@@ -262,8 +322,10 @@ const ApplicationsAdmin = () => {
       },
       filters: [
         { text: "Menunggu Verifikasi", value: "Menunggu Verifikasi" },
-        { text: "Terverifikasi", value: "Terverifikasi" },
-        { text: "Menunggu Validasi", value: "Menunggu Validasi" },
+        {
+          text: "Terverifikasi - Menunggu Validasi",
+          value: "Terverifikasi - Menunggu Validasi",
+        },
         { text: "Dikembalikan", value: "Dikembalikan" },
         { text: "Disetujui", value: "Disetujui" },
       ],
@@ -291,10 +353,7 @@ const ApplicationsAdmin = () => {
         label: "Validasi",
         icon: <CheckOutlined />,
         hidden: (record) =>
-          !(
-            role === "PIMPINAN_DITMAWA" &&
-            ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus)
-          ),
+          !(role === "PIMPINAN_DITMAWA" && record.rawStatus === "VERIFIED"),
         onClick: handleValidate,
       },
       {
@@ -302,13 +361,17 @@ const ApplicationsAdmin = () => {
         label: "Tolak",
         icon: <CloseOutlined />,
         danger: true,
-        hidden: (record) =>
-          !(
-            (role === "VERIFIKATOR" &&
-              record.rawStatus === "MENUNGGU_VERIFIKASI") ||
-            (role === "PIMPINAN_DITMAWA" &&
-              ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus))
-          ),
+        hidden: (record) => {
+          if (role === "VERIFIKATOR") {
+            return record.rawStatus !== "MENUNGGU_VERIFIKASI";
+          }
+
+          if (role === "PIMPINAN_DITMAWA") {
+            return record.rawStatus !== "VERIFIED";
+          }
+
+          return true;
+        },
         onClick: handleReject,
       },
     ]),
@@ -324,6 +387,11 @@ const ApplicationsAdmin = () => {
 
   return (
     <div className="space-y-6">
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {summaryLoading
           ? Array.from({ length: 4 }).map((_, idx) => (
@@ -365,6 +433,17 @@ const ApplicationsAdmin = () => {
         onVerify={handleVerify}
         onReject={handleReject}
         role={role}
+      />
+
+      <UniversalModal
+        visible={rejectModalVisible}
+        onCancel={handleCloseRejectModal}
+        onSubmit={handleSubmitReject}
+        title={`Tolak Pendaftaran - ${
+          selectedApplicationForReject?.nama || "Unknown"
+        }`}
+        fields={rejectModalFields}
+        loading={rejectLoading}
       />
     </div>
   );
