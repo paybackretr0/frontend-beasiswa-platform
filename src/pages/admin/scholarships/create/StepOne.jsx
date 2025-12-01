@@ -10,6 +10,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
     organizer: initialData.organizer || "",
     year: initialData.year || new Date().getFullYear(),
     description: initialData.description || "",
+    is_external: initialData.is_external || false,
   });
 
   const [requirements, setRequirements] = useState([
@@ -147,6 +148,69 @@ const StepOne = ({ onNext, initialData = {} }) => {
           <h2 className="text-lg font-semibold text-gray-700">Data Utama</h2>
         </div>
         <hr className="border-gray-300 mb-6" />
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Jenis Beasiswa <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                !formData.is_external
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+              onClick={() => handleInputChange("is_external", false)}
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="scholarshipType"
+                  checked={!formData.is_external}
+                  onChange={() => handleInputChange("is_external", false)}
+                  className="text-blue-500"
+                />
+                <div>
+                  <h3 className="font-medium text-gray-800">
+                    Beasiswa Internal
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Beasiswa yang proses pendaftarannya dikelola oleh admin.
+                    Mahasiswa mendaftar langsung di sistem ini.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                formData.is_external
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+              onClick={() => handleInputChange("is_external", true)}
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="scholarshipType"
+                  checked={formData.is_external}
+                  onChange={() => handleInputChange("is_external", true)}
+                  className="text-blue-500"
+                />
+                <div>
+                  <h3 className="font-medium text-gray-800">
+                    Beasiswa Eksternal
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Beasiswa dari yang hanya ditampilkan sebagai informasi.
+                    Pendaftaran dilakukan di website penyedia.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>

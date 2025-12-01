@@ -70,6 +70,7 @@ const menus = [
     submenu: [
       { label: "Fakultas", to: "/admin/reference/fakultas" },
       { label: "Departemen", to: "/admin/reference/departemen" },
+      { label: "Program Studi", to: "/admin/reference/program-studi" },
     ],
   },
   {

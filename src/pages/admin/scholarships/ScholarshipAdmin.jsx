@@ -54,6 +54,8 @@ const ScholarshipAdmin = () => {
         penyedia: item.organizer || "Tidak Diketahui",
         status: item.is_active ? "Aktif" : "Nonaktif",
         batasWaktu: formatDate(item.end_date),
+        is_external: item.is_external, // Tambahkan field is_external
+        jenis: item.is_external ? "Eksternal" : "Internal", // Tambahkan kolom jenis untuk ditampilkan
       }));
       setScholarships(formattedData);
     } catch (err) {
@@ -120,60 +122,92 @@ const ScholarshipAdmin = () => {
       dataIndex: "nama",
       key: "nama",
       sorter: (a, b) => a.nama.localeCompare(b.nama),
+      width: "30%",
     },
     {
       title: "Penyedia",
       dataIndex: "penyedia",
       key: "penyedia",
+      width: "20%",
     },
-    createStatusColumn({
-      Aktif: { color: "green" },
-      Nonaktif: { color: "red" },
-      "Segera Berakhir": { color: "orange" },
-    }),
+    {
+      title: "Jenis",
+      dataIndex: "jenis",
+      key: "jenis",
+      width: "12%",
+      filters: [
+        { text: "Internal", value: "Internal" },
+        { text: "Eksternal", value: "Eksternal" },
+      ],
+      onFilter: (value, record) => record.jenis === value,
+      render: (jenis) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            jenis === "Eksternal"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
+          {jenis}
+        </span>
+      ),
+    },
+    createStatusColumn(
+      {
+        Aktif: { color: "green" },
+        Nonaktif: { color: "red" },
+        "Segera Berakhir": { color: "orange" },
+      },
+      "12%"
+    ),
     {
       title: "Batas Waktu",
       dataIndex: "batasWaktu",
       key: "batasWaktu",
+      width: "15%",
     },
-    createActionColumn([
-      {
-        key: "detail",
-        label: "Detail",
-        icon: <EyeOutlined />,
-        onClick: (record) => navigate(`/admin/scholarship/${record.id}`),
-      },
-      {
-        key: "form",
-        label: "Kelola Form",
-        icon: <AlignLeftOutlined />,
-        onClick: (record) => handleFormNavigation(record.id),
-      },
-      {
-        key: "edit",
-        label: "Edit",
-        icon: <EditOutlined />,
-        onClick: (record) => navigate(`/admin/scholarship/edit/${record.id}`),
-      },
-      {
-        key: "activate",
-        label: "Aktifkan",
-        icon: <CheckOutlined />,
-        onClick: (record) => {
-          handleActivate(record.id);
+    createActionColumn(
+      [
+        {
+          key: "detail",
+          label: "Detail",
+          icon: <EyeOutlined />,
+          onClick: (record) => navigate(`/admin/scholarship/${record.id}`),
         },
-        hidden: (record) => record.status === "Aktif",
-      },
-      {
-        key: "deactivate",
-        label: "Nonaktifkan",
-        icon: <DeleteOutlined />,
-        onClick: (record) => {
-          handleDeactivate(record.id);
+        {
+          key: "form",
+          label: "Kelola Form",
+          icon: <AlignLeftOutlined />,
+          onClick: (record) => handleFormNavigation(record.id),
+          hidden: (record) => record.is_external, // Sembunyikan untuk beasiswa eksternal
         },
-        hidden: (record) => record.status === "Nonaktif",
-      },
-    ]),
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <EditOutlined />,
+          onClick: (record) => navigate(`/admin/scholarship/edit/${record.id}`),
+        },
+        {
+          key: "activate",
+          label: "Aktifkan",
+          icon: <CheckOutlined />,
+          onClick: (record) => {
+            handleActivate(record.id);
+          },
+          hidden: (record) => record.status === "Aktif",
+        },
+        {
+          key: "deactivate",
+          label: "Nonaktifkan",
+          icon: <DeleteOutlined />,
+          onClick: (record) => {
+            handleDeactivate(record.id);
+          },
+          hidden: (record) => record.status === "Nonaktif",
+        },
+      ],
+      "15%"
+    ),
   ];
 
   return (
@@ -187,11 +221,12 @@ const ScholarshipAdmin = () => {
         title="Kelola Beasiswa"
         data={scholarships}
         columns={columns}
-        searchFields={["nama", "penyedia"]}
-        searchPlaceholder="Cari nama beasiswa atau penyedia..."
+        searchFields={["nama", "penyedia", "jenis"]}
+        searchPlaceholder="Cari nama beasiswa, penyedia, atau jenis..."
         addButtonText="Tambah Beasiswa"
         onAdd={() => navigate("/admin/scholarship/add")}
         loading={loading}
+        pageSize={10}
       />
     </>
   );

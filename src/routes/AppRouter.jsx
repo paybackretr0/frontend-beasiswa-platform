@@ -20,6 +20,7 @@ import NewsAdmin from "../pages/admin/websites/NewsAdmin";
 import ArticleAdmin from "../pages/admin/websites/ArticleAdmin";
 import Fakultas from "../pages/admin/references/Fakultas";
 import Departemen from "../pages/admin/references/Departemen";
+import ProgramStudi from "../pages/admin/references/ProgramStudi";
 import BackupAdmin from "../pages/admin/extras/BackupAdmin";
 import LogAdmin from "../pages/admin/extras/LogAdmin";
 import Profile from "../pages/user/Profile";
@@ -146,6 +147,7 @@ const AppRouter = () => (
         <Route path="website/artikel" element={<ArticleAdmin />} />
         <Route path="reference/fakultas" element={<Fakultas />} />
         <Route path="reference/departemen" element={<Departemen />} />
+        <Route path="reference/program-studi" element={<ProgramStudi />} />
         <Route path="extra/backup-data" element={<BackupAdmin />} />
         <Route path="extra/log-aktivitas" element={<LogAdmin />} />
       </Route>
