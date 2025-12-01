@@ -19,6 +19,7 @@ const ScholarshipAdd = () => {
     organizer: "",
     year: new Date().getFullYear(),
     description: "",
+    is_external: false,
     terms_type: "TEXT",
     terms_content: "",
     requirements: [],
@@ -40,6 +41,7 @@ const ScholarshipAdd = () => {
     website_url: "",
     faculties: [],
     departments: [],
+    study_programs: [],
     stages: [],
   });
 

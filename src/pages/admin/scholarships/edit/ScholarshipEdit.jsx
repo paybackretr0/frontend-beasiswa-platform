@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { message } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import EditStepOne from "./EditStepOne";
 import EditStepTwo from "./EditStepTwo";
@@ -25,6 +24,7 @@ const ScholarshipEdit = () => {
     organizer: "",
     year: new Date().getFullYear(),
     description: "",
+    is_external: false,
     requirements: [],
     start_date: "",
     end_date: "",
@@ -42,6 +42,7 @@ const ScholarshipEdit = () => {
     website_url: "",
     faculties: [],
     departments: [],
+    study_programs: [],
   });
 
   useEffect(() => {
@@ -60,6 +61,7 @@ const ScholarshipEdit = () => {
         organizer: data.organizer,
         year: data.year,
         description: data.description,
+        is_external: data.is_external || false,
         requirements: data.requirements || [],
         start_date: data.start_date,
         end_date: data.end_date,
@@ -78,6 +80,7 @@ const ScholarshipEdit = () => {
         website_url: data.website_url,
         faculties: data.faculties?.map((faculty) => faculty.id) || [],
         departments: data.departments?.map((dept) => dept.id) || [],
+        study_programs: data.study_programs?.map((prog) => prog.id) || [],
         existingLogo: data.logo_path,
         existingRequirementFiles:
           data.requirements?.filter((req) => req.requirement_type === "FILE") ||

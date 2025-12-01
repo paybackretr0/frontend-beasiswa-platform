@@ -44,7 +44,6 @@ const Departemen = () => {
         key: department.id,
         nama: department.name,
         kode: department.code,
-        jenjang: department.degree,
         fakultas: department.faculty ? department.faculty.name : "-",
         fakultasId: department.faculty ? department.faculty.id : null,
         status: department.is_active ? "Aktif" : "Nonaktif",
@@ -164,8 +163,7 @@ const Departemen = () => {
         (item) =>
           item.nama?.toLowerCase().includes(searchValue.toLowerCase()) ||
           item.fakultas?.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.kode?.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.jenjang?.toLowerCase().includes(searchValue.toLowerCase())
+          item.kode?.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
@@ -187,19 +185,6 @@ const Departemen = () => {
       key: "nama",
       sorter: (a, b) => a.nama.localeCompare(b.nama),
       width: "30%",
-    },
-    {
-      title: "Jenjang",
-      dataIndex: "jenjang",
-      key: "jenjang",
-      width: "15%",
-      filters: [
-        { text: "D3", value: "D3" },
-        { text: "S1", value: "S1" },
-        { text: "S2", value: "S2" },
-        { text: "S3", value: "S3" },
-      ],
-      onFilter: (value, record) => record.jenjang === value,
     },
     {
       title: "Fakultas",
@@ -250,8 +235,8 @@ const Departemen = () => {
         title="Kelola Departemen"
         data={filteredDepartments}
         columns={departmentColumns}
-        searchFields={["nama", "fakultas", "kode", "jenjang"]}
-        searchPlaceholder="Cari nama departemen, fakultas, kode, atau jenjang..."
+        searchFields={["nama", "fakultas", "kode"]}
+        searchPlaceholder="Cari nama departemen, fakultas, atau kode..."
         addButtonText="Tambah Departemen"
         onAdd={handleAdd}
         loading={loading}
@@ -278,7 +263,6 @@ const Departemen = () => {
             ? {
                 name: editingDepartment.nama,
                 code: editingDepartment.kode,
-                degree: editingDepartment.jenjang,
                 faculty_id: editingDepartment.fakultasId,
               }
             : {}
@@ -299,18 +283,6 @@ const Departemen = () => {
                 message: "Kode departemen maksimal 5 karakter",
               },
             ],
-          },
-          {
-            name: "degree",
-            label: "Jenjang",
-            type: "select",
-            options: [
-              { label: "D3", value: "D3" },
-              { label: "S1", value: "S1" },
-              { label: "S2", value: "S2" },
-              { label: "S3", value: "S3" },
-            ],
-            rules: [{ required: true, message: "Jenjang wajib dipilih" }],
           },
           {
             name: "faculty_id",

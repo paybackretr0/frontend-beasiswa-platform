@@ -36,6 +36,7 @@ export const createScholarship = async (scholarshipData) => {
       key === "benefits" ||
       key === "faculties" ||
       key === "departments" ||
+      key === "study_programs" ||
       key === "stages"
     ) {
       formData.append(key, JSON.stringify(scholarshipData[key]));
@@ -124,6 +125,7 @@ export const updateScholarship = async (id, scholarshipData) => {
       key === "benefits" ||
       key === "faculties" ||
       key === "departments" ||
+      key === "study_programs" ||
       key === "stages"
     ) {
       formData.append(key, JSON.stringify(scholarshipData[key]));
