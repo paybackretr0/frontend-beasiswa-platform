@@ -21,6 +21,15 @@ import {
 } from "../../services/authService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
+import RequireEmailVerification from "../../components/RequireEmailVerification";
+
+const ProfileWithVerification = () => {
+  return (
+    <RequireEmailVerification>
+      <Profile />
+    </RequireEmailVerification>
+  );
+};
 
 const Profile = () => {
   const [passwordData, setPasswordData] = useState({
@@ -43,6 +52,7 @@ const Profile = () => {
     birth_place: "",
     faculty: "",
     department: "",
+    study_program: "",
   });
 
   const [originalFormData, setOriginalFormData] = useState({});
@@ -72,10 +82,12 @@ const Profile = () => {
           birth_place: user.birth_place || "",
           faculty: user.faculty?.name || "N/A",
           department: user.department?.name || "N/A",
+          study_program:
+            `${user.study_program?.degree} - ${user.department?.name}` || "N/A",
         };
 
         setFormData(userData);
-        setOriginalFormData(userData); // PERBAIKAN: Simpan data original
+        setOriginalFormData(userData);
       } else {
         error("Gagal!", "Gagal memuat profil");
       }
@@ -175,7 +187,7 @@ const Profile = () => {
         new_password: "",
         new_password_confirmation: "",
       });
-      setPasswordErrors({}); // Clear errors
+      setPasswordErrors({});
     } catch (err) {
       console.error("Error changing password:", err);
       error("Gagal!", err.message || "Gagal mengubah password");
@@ -209,15 +221,11 @@ const Profile = () => {
         const updatedUser = { ...currentUser, ...response.data };
         localStorage.setItem("user", JSON.stringify(updatedUser));
 
-        // PERBAIKAN: Update original data dan tutup edit mode
         const updatedFormData = { ...formData, ...response.data };
         setOriginalFormData(updatedFormData);
         setFormData(updatedFormData);
         setIsEditing(false);
-        setErrors({}); // Clear errors
-
-        // PERBAIKAN: Tidak perlu reload profile lagi
-        // await loadUserProfile(); // HAPUS INI
+        setErrors({});
       } else {
         error("Gagal!", response.message || "Gagal memperbarui profil");
       }
@@ -229,20 +237,15 @@ const Profile = () => {
     }
   };
 
-  // PERBAIKAN: Simplify cancel logic
   const handleCancel = () => {
-    setFormData({ ...originalFormData }); // Reset ke data original
+    setFormData({ ...originalFormData });
     setIsEditing(false);
     setErrors({});
-    // PERBAIKAN: Tidak perlu reload data
-    // loadUserProfile(); // HAPUS INI
   };
 
-  // PERBAIKAN: Simplify edit mode
   const handleStartEdit = () => {
     setIsEditing(true);
     setErrors({});
-    // PERBAIKAN: Tidak perlu clear alerts saat mulai edit
   };
 
   const formatDate = (dateString) => {
@@ -535,8 +538,8 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {/* Fakultas & Program Studi */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-200">
+                    {/* Fakultas, Departemen & Program Studi */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Fakultas
@@ -553,12 +556,26 @@ const Profile = () => {
 
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Program Studi
+                          Departemen
                         </label>
                         <input
                           type="text"
                           name="department"
                           value={formData.department}
+                          disabled={true}
+                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          placeholder="Departemen berdasarkan NIM"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Program Studi
+                        </label>
+                        <input
+                          type="text"
+                          name="study_program"
+                          value={formData.study_program}
                           disabled={true}
                           className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
                           placeholder="Program studi berdasarkan NIM"
@@ -690,4 +707,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default ProfileWithVerification;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Select, DatePicker, Tag, message } from "antd";
-import { EyeOutlined, EditOutlined, FormOutlined } from "@ant-design/icons";
+import { Select, DatePicker, Tag } from "antd";
+import { EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import UniversalTable, {
   createNumberColumn,
@@ -13,9 +13,18 @@ import ApplicationDetailModal from "../../components/ApplicationDetailModal";
 import { getApplicationDetailUser } from "../../services/applicationService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
+import RequireEmailVerification from "../../components/RequireEmailVerification";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+
+const HistoryWithVerification = () => {
+  return (
+    <RequireEmailVerification>
+      <History />
+    </RequireEmailVerification>
+  );
+};
 
 const History = () => {
   const navigate = useNavigate();
@@ -368,4 +377,4 @@ const History = () => {
   );
 };
 
-export default History;
+export default HistoryWithVerification;
