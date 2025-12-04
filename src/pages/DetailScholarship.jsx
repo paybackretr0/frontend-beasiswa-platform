@@ -24,6 +24,8 @@ import {
   getScholarshipByIdPublic,
   getOtherScholarships,
 } from "../services/scholarshipService";
+import useAlert from "../hooks/useAlert";
+import AlertContainer from "../components/AlertContainer";
 
 const DetailScholarship = () => {
   const { id } = useParams();
@@ -32,6 +34,8 @@ const DetailScholarship = () => {
   const [otherScholarships, setOtherScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const { alert, setAlert, warning, error: alertError } = useAlert();
 
   useEffect(() => {
     loadScholarshipDetail();
@@ -47,6 +51,7 @@ const DetailScholarship = () => {
       document.title = `${data.name} - Detail Beasiswa`;
     } catch (error) {
       setError(error.message || "Gagal memuat detail beasiswa");
+      alertError(error.message || "Gagal memuat detail beasiswa");
     } finally {
       setLoading(false);
     }
@@ -57,7 +62,7 @@ const DetailScholarship = () => {
       const data = await getOtherScholarships(id, 5);
       setOtherScholarships(data);
     } catch (error) {
-      // ignore
+      alertError(error.message || "Gagal memuat beasiswa lainnya");
     }
   };
 
@@ -85,6 +90,25 @@ const DetailScholarship = () => {
         : `${import.meta.env.VITE_IMAGE_URL}/${logoPath}`;
     }
     return "https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=400&q=80";
+  };
+
+  const handleExternalApplication = (websiteUrl) => {
+    if (!websiteUrl) {
+      warning("Oops!", "URL website tidak tersedia");
+      return;
+    }
+
+    let url = websiteUrl;
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    try {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Error opening external URL:", error);
+      alertError("Gagal!", "Gagal membuka website penyedia");
+    }
   };
 
   const getStatusTag = (isActive, endDate) => {
@@ -131,6 +155,11 @@ const DetailScholarship = () => {
   if (loading) {
     return (
       <GuestLayout>
+        <AlertContainer
+          alert={alert}
+          setAlert={setAlert}
+          position="top-right"
+        />
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
           <div className="flex justify-center items-center min-h-96">
             <Spin size="large" tip="Memuat detail beasiswa...">
@@ -145,6 +174,11 @@ const DetailScholarship = () => {
   if (error && !scholarship) {
     return (
       <GuestLayout>
+        <AlertContainer
+          alert={alert}
+          setAlert={setAlert}
+          position="top-right"
+        />
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
           <div className="flex justify-center items-center min-h-96">
             <div className="text-center max-w-md">
@@ -187,6 +221,7 @@ const DetailScholarship = () => {
 
   return (
     <GuestLayout>
+      <AlertContainer alert={alert} setAlert={setAlert} position="top-right" />
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
@@ -488,26 +523,56 @@ const DetailScholarship = () => {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-20 space-y-6">
-              {/* Action Card */}
               {scholarship.is_active &&
                 new Date() <= new Date(scholarship.end_date) && (
                   <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">
                       Siap untuk mendaftar?
                     </h3>
-                    <p className="text-gray-600 text-sm mb-6">
-                      Pastikan Anda memenuhi semua persyaratan sebelum
-                      mendaftar.
-                    </p>
-                    <Button
-                      className="w-full"
-                      onClick={() => navigate(`/scholarship/${id}/apply`)}
-                    >
-                      Daftar Sekarang
-                    </Button>
+                    {scholarship.is_external ? (
+                      <>
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-start space-x-2">
+                            <ExclamationCircleOutlined className="text-blue-500 mt-0.5 flex-shrink-0" />
+                            <div className="text-sm text-blue-800">
+                              <div>
+                                Pendaftaran dilakukan melalui website penyedia
+                                beasiswa. Pastikan Anda membaca persyaratan
+                                dengan teliti.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <Button
+                            className="w-full bg-green-600 hover:bg-green-700"
+                            onClick={() =>
+                              handleExternalApplication(scholarship.website_url)
+                            }
+                          >
+                            <span className="flex items-center justify-center space-x-2">
+                              <span>Daftar di Website Penyedia</span>
+                            </span>
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-gray-600 text-sm mb-6">
+                          Pastikan Anda memenuhi semua persyaratan sebelum
+                          mendaftar.
+                        </p>
+                        <Button
+                          className="w-full"
+                          onClick={() => navigate(`/scholarship/${id}/apply`)}
+                        >
+                          Daftar Sekarang
+                        </Button>
+                      </>
+                    )}
                   </Card>
                 )}
-
               {/* Other Scholarships Card */}
               <Card>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">

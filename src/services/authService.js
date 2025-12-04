@@ -49,6 +49,18 @@ export const getProfile = async () => {
   return data;
 };
 
+export const getBasicProfile = async () => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(`${API_BASE_URL}/auth/basic-profile`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return data;
+};
+
 export const updateProfile = async (data) => {
   const token = localStorage.getItem("access_token");
   const response = await authFetch(`${API_BASE_URL}/auth/profile`, {

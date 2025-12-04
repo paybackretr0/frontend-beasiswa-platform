@@ -10,6 +10,7 @@ import {
   Alert,
   Button,
   Modal,
+  Form,
 } from "antd";
 import {
   UploadOutlined,
@@ -34,9 +35,18 @@ import {
 } from "../../services/pendaftaranService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
+import RequireEmailVerification from "../../components/RequireEmailVerification";
 
 const { TextArea } = Input;
 const { Option } = Select;
+
+const FormApplicationWithVerification = () => {
+  return (
+    <RequireEmailVerification>
+      <FormApplication />
+    </RequireEmailVerification>
+  );
+};
 
 const statusApplications = {
   DRAFT: "DRAFT",
@@ -573,4 +583,4 @@ const FormApplication = () => {
   );
 };
 
-export default FormApplication;
+export default FormApplicationWithVerification;
