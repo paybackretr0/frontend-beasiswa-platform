@@ -34,7 +34,6 @@ const ApplicationsAdmin = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // State untuk modal reject
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [selectedApplicationForReject, setSelectedApplicationForReject] =
     useState(null);
@@ -223,15 +222,11 @@ const ApplicationsAdmin = () => {
     try {
       setRejectLoading(true);
 
-      if (
-        role === "VERIFIKATOR" &&
-        record.rawStatus === "MENUNGGU_VERIFIKASI"
-      ) {
+      const currentStatus = record.status || record.rawStatus;
+
+      if (role === "VERIFIKATOR" && currentStatus === "MENUNGGU_VERIFIKASI") {
         await rejectApplication(record.id, notes);
-      } else if (
-        role === "PIMPINAN_DITMAWA" &&
-        record.rawStatus === "VERIFIED"
-      ) {
+      } else if (role === "PIMPINAN_DITMAWA" && currentStatus === "VERIFIED") {
         await rejectApplicationByValidator(record.id, notes);
       } else {
         warning(
@@ -431,6 +426,7 @@ const ApplicationsAdmin = () => {
         applicationDetail={selectedApplication}
         loading={detailLoading}
         onVerify={handleVerify}
+        onValidate={handleValidate}
         onReject={handleReject}
         role={role}
       />

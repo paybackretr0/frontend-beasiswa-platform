@@ -14,6 +14,7 @@ const ApplicationDetailModal = ({
   applicationDetail,
   loading,
   onVerify,
+  onValidate,
   onReject,
   role,
 }) => {
@@ -158,10 +159,7 @@ const ApplicationDetailModal = ({
       return buttons;
     }
 
-    if (
-      status === "MENUNGGU_VERIFIKASI" &&
-      (role === "SUPERADMIN" || role === "VERIFIKATOR")
-    ) {
+    if (status === "MENUNGGU_VERIFIKASI" && role === "VERIFIKATOR") {
       buttons.push(
         <Button key="reject" danger onClick={() => onReject(applicationDetail)}>
           Tolak
@@ -188,7 +186,7 @@ const ApplicationDetailModal = ({
         <Button
           key="validate"
           type="primary"
-          onClick={() => onVerify(applicationDetail)}
+          onClick={() => onValidate(applicationDetail)}
         >
           Validasi
         </Button>
