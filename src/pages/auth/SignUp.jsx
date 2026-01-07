@@ -79,7 +79,7 @@ const SignUp = () => {
     // Validasi umur (minimal 17 tahun)
     const birthDate = new Date(form.birth_date);
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
+    let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
 
     if (

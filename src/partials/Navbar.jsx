@@ -160,16 +160,6 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              {/* Notification */}
-              <button className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
-                <MdNotifications className="text-xl" />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </button>
-
               {/* Profile Dropdown - Hidden on mobile */}
               <div className="hidden lg:block relative" ref={dropdownRef}>
                 <button

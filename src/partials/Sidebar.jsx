@@ -11,6 +11,8 @@ import {
   MdMoreHoriz,
   MdExpandMore,
   MdExpandLess,
+  MdInfo,
+  MdChat,
 } from "react-icons/md";
 
 const roleAccess = {
@@ -25,8 +27,14 @@ const roleAccess = {
     "Tambahan",
   ],
   VERIFIKATOR: ["Dashboard", "Pendaftaran"],
-  PIMPINAN_DITMAWA: ["Dashboard", "Pendaftaran", "Pelaporan"],
-  PIMPINAN_FAKULTAS: ["Dashboard", "Pelaporan"],
+  PIMPINAN_DITMAWA: [
+    "Dashboard",
+    "Pendaftaran",
+    "Pelaporan",
+    "Informasi Beasiswa",
+    "Chat",
+  ],
+  PIMPINAN_FAKULTAS: ["Dashboard", "Pelaporan", "Informasi Beasiswa"],
   MAHASISWA: [],
 };
 
@@ -54,6 +62,11 @@ const menus = [
     icon: <MdAssignment size={20} />,
   },
   { label: "Pelaporan", to: "/admin/report", icon: <MdBarChart size={20} /> },
+  {
+    label: "Informasi Beasiswa",
+    to: "/admin/informasi-beasiswa",
+    icon: <MdInfo size={20} />,
+  },
   {
     label: "Website",
     to: "/admin/website",

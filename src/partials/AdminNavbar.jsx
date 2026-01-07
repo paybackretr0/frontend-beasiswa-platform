@@ -38,13 +38,6 @@ const AdminNavbar = () => {
       </div>
 
       <div className="flex items-center gap-6">
-        <button className="relative">
-          <MdNotifications className="text-gray-600 text-2xl" />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
-            3
-          </span>
-        </button>
-
         <div className="relative" ref={dropdownRef}>
           <button
             className="flex items-center gap-2 focus:outline-none hover:cursor-pointer"
