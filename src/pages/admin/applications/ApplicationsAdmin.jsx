@@ -224,9 +224,12 @@ const ApplicationsAdmin = () => {
 
       const currentStatus = record.status || record.rawStatus;
 
-      if (role === "VERIFIKATOR" && currentStatus === "MENUNGGU_VERIFIKASI") {
+      if (role === "VERIFIKATOR" && currentStatus === "Menunggu Verifikasi") {
         await rejectApplication(record.id, notes);
-      } else if (role === "PIMPINAN_DITMAWA" && currentStatus === "VERIFIED") {
+      } else if (
+        role === "PIMPINAN_DITMAWA" &&
+        currentStatus === "Terverifikasi - Menunggu Validasi"
+      ) {
         await rejectApplicationByValidator(record.id, notes);
       } else {
         warning(

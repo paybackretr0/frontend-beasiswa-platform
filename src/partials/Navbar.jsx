@@ -76,7 +76,7 @@ const Navbar = () => {
               >
                 Beranda
               </NavLink>
-              <NavLink
+              {/* <NavLink
                 to="/contact"
                 className={({ isActive }) =>
                   isActive
@@ -85,7 +85,7 @@ const Navbar = () => {
                 }
               >
                 Kontak
-              </NavLink>
+              </NavLink> */}
               <NavLink
                 to="/scholarship"
                 className={({ isActive }) =>
@@ -132,7 +132,7 @@ const Navbar = () => {
               >
                 Beranda
               </NavLink>
-              <NavLink
+              {/* <NavLink
                 to="/contact"
                 className={({ isActive }) =>
                   isActive
@@ -141,7 +141,7 @@ const Navbar = () => {
                 }
               >
                 Kontak
-              </NavLink>
+              </NavLink> */}
               <NavLink
                 to="/scholarship"
                 className={({ isActive }) =>

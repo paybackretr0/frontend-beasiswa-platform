@@ -64,22 +64,23 @@ const HorizontalBarChart = ({ data, title, description }) => {
 const LineChart = ({ data, title, description }) => {
   const [hovered, setHovered] = useState(null);
 
-  const hasData =
-    data && data.length > 0 && data.some((item) => item.value > 0);
-
-  if (!hasData) {
-    return (
-      <Card title={title} description={description}>
-        <ChartEmptyState message="Belum ada data tren untuk ditampilkan" />
-      </Card>
-    );
-  }
-
   const width = 400;
   const height = 200;
   const padding = 40;
 
-  const { points, areaPath, linePath, maxValue, yAxisLabels } = useMemo(() => {
+  const hasData =
+    data && data.length > 0 && data.some((item) => item.value > 0);
+
+  const { points, areaPath, linePath, yAxisLabels } = useMemo(() => {
+    if (!hasData) {
+      return {
+        points: [],
+        areaPath: "",
+        linePath: "",
+        yAxisLabels: [],
+      };
+    }
+
     const maxValue = Math.max(...data.map((d) => d.value));
     const minValue = Math.min(...data.map((d) => d.value));
     const range = maxValue - minValue || 1;
@@ -93,37 +94,35 @@ const LineChart = ({ data, title, description }) => {
       return { ...d, x, y };
     });
 
-    // Generate smooth curve
-    const line = (points) => {
-      return points.reduce((acc, point, i, arr) => {
-        if (i === 0) return `M ${point.x},${point.y}`;
+    const linePath = points.reduce((acc, p, i, arr) => {
+      if (i === 0) return `M ${p.x},${p.y}`;
+      const prev = arr[i - 1];
+      const cpx1 = prev.x + (p.x - prev.x) / 3;
+      const cpy1 = prev.y;
+      const cpx2 = p.x - (p.x - prev.x) / 3;
+      const cpy2 = p.y;
+      return `${acc} C ${cpx1},${cpy1} ${cpx2},${cpy2} ${p.x},${p.y}`;
+    }, "");
 
-        const prev = arr[i - 1];
-        const cpx1 = prev.x + (point.x - prev.x) / 3;
-        const cpy1 = prev.y;
-        const cpx2 = point.x - (point.x - prev.x) / 3;
-        const cpy2 = point.y;
-
-        return `${acc} C ${cpx1},${cpy1} ${cpx2},${cpy2} ${point.x},${point.y}`;
-      }, "");
-    };
-
-    const linePath = line(points);
-    const area = `${linePath} L ${points[points.length - 1].x},${
+    const areaPath = `${linePath} L ${points.at(-1).x},${
       height - padding
     } L ${padding},${height - padding} Z`;
 
-    // Y-axis labels
-    const yAxisLabels = Array.from({ length: 5 }, (_, i) => {
-      const value = minValue + (range * i) / 4;
-      return {
-        value: Math.round(value),
-        y: height - padding - ((height - 2 * padding) * i) / 4,
-      };
-    });
+    const yAxisLabels = Array.from({ length: 5 }, (_, i) => ({
+      value: Math.round(minValue + (range * i) / 4),
+      y: height - padding - ((height - 2 * padding) * i) / 4,
+    }));
 
-    return { points, areaPath: area, linePath, maxValue, yAxisLabels };
-  }, [data, width, height]);
+    return { points, areaPath, linePath, yAxisLabels };
+  }, [data, hasData]);
+
+  if (!hasData) {
+    return (
+      <Card title={title} description={description}>
+        <ChartEmptyState message="Belum ada data tren untuk ditampilkan" />
+      </Card>
+    );
+  }
 
   return (
     <Card title={title} description={description}>
