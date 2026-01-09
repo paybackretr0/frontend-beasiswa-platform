@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Spin } from "antd";
+import { Spin, Select } from "antd";
 import Card from "../../components/Card";
 import {
   LineChart,
@@ -17,12 +17,23 @@ import {
   getActivities,
   getApplicationsList,
 } from "../../services/analyticsService";
+import {
+  getGovernmentScholarshipSummary,
+  getGovernmentScholarshipDistribution,
+  getGovernmentScholarshipCategories,
+  getGovernmentScholarshipYearlyTrend,
+} from "../../services/governmentService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
+
+const { Option } = Select;
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [scholarshipType, setScholarshipType] = useState("NON-APBN");
 
   const [summaryData, setSummaryData] = useState([]);
   const [fakultasData, setFakultasData] = useState([]);
@@ -31,31 +42,14 @@ const AdminDashboard = () => {
   const [genderData, setGenderData] = useState([]);
   const [statusCounts, setStatusCounts] = useState([]);
   const [activities, setActivities] = useState([]);
-
   const [recentApplications, setRecentApplications] = useState([]);
 
-  const { alert, error, removeAlert } = useAlert();
+  const [govSummaryData, setGovSummaryData] = useState([]);
+  const [govDistributionData, setGovDistributionData] = useState([]);
+  const [govCategoriesData, setGovCategoriesData] = useState([]);
+  const [govYearlyData, setGovYearlyData] = useState([]);
 
-  useEffect(() => {
-    document.title = "Dashboard - Admin";
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
-    setLoading(true);
-    setChartsLoading(true);
-
-    try {
-      await fetchSummaryData();
-      setLoading(false);
-
-      await Promise.all([fetchChartData(), fetchStatusAndActivities()]);
-    } catch (err) {
-      error("Gagal!", "Gagal memuat data dashboard");
-    } finally {
-      setChartsLoading(false);
-    }
-  };
+  const { alerts, error, removeAlert } = useAlert();
 
   let user = null;
   try {
@@ -63,18 +57,86 @@ const AdminDashboard = () => {
   } catch (e) {}
   const role = user?.role?.toUpperCase() || null;
 
-  const fetchRecentApplications = async () => {
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from(
+    { length: currentYear - 2025 + 3 },
+    (_, i) => 2025 + i
+  );
+
+  useEffect(() => {
+    document.title = "Dashboard - Admin";
+    fetchAllData();
+  }, [selectedYear, scholarshipType]);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    setChartsLoading(true);
+
     try {
-      const data = await getApplicationsList({ limit: 5 });
-      setRecentApplications(data.slice(0, 5));
+      if (scholarshipType === "NON-APBN") {
+        await fetchNonAPBNData();
+      } else {
+        await fetchAPBNData();
+      }
     } catch (err) {
-      error("Gagal!", "Gagal memuat data aplikasi terbaru");
+      error("Gagal!", "Gagal memuat data dashboard");
+    } finally {
+      setLoading(false);
+      setChartsLoading(false);
+    }
+  };
+
+  const fetchNonAPBNData = async () => {
+    try {
+      await fetchSummaryData();
+      await Promise.all([fetchChartData(), fetchStatusAndActivities()]);
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const fetchAPBNData = async () => {
+    try {
+      const [summary, distribution, categories, yearly] = await Promise.all([
+        getGovernmentScholarshipSummary(selectedYear),
+        getGovernmentScholarshipDistribution(selectedYear),
+        getGovernmentScholarshipCategories(selectedYear),
+        getGovernmentScholarshipYearlyTrend(),
+      ]);
+
+      const govSummary = [
+        {
+          title: "Total Penerima",
+          value: summary.totalPenerima || 0,
+        },
+        {
+          title: "Total Mahasiswa Unik",
+          value: summary.totalMahasiswaUnik || 0,
+        },
+        {
+          title: "Total Program",
+          value: summary.totalProgram || 0,
+        },
+        {
+          title: "Total Nominal (Rp)",
+          value: summary.totalNominal
+            ? `${(summary.totalNominal / 1000000).toFixed(1)}M`
+            : 0,
+        },
+      ];
+
+      setGovSummaryData(govSummary);
+      setGovDistributionData(distribution || []);
+      setGovCategoriesData(categories || []);
+      setGovYearlyData(yearly || []);
+    } catch (err) {
+      throw err;
     }
   };
 
   const fetchSummaryData = async () => {
     try {
-      const data = await getSummary();
+      const data = await getSummary(selectedYear);
       const summary = [
         {
           title: "Jumlah Pendaftar",
@@ -102,15 +164,15 @@ const AdminDashboard = () => {
   const fetchChartData = async () => {
     try {
       const [fakultas, departemen, tahun, gender] = await Promise.all([
-        getFacultyDistribution(),
-        getDepartmentDistribution(),
+        getFacultyDistribution(selectedYear),
+        getDepartmentDistribution(selectedYear),
         getYearlyTrend(),
-        getGenderDistribution(),
+        getGenderDistribution(selectedYear),
       ]);
 
       const defaultGenderData = [
         { label: "Laki-laki", value: 0, color: "#2D60FF" },
-        { label: "Perempuan", value: 0, color: "#FF6384" },
+        { label: "Perempuan", value: 0, color: "#FF69B4" },
       ];
 
       const mergedGenderData = defaultGenderData.map((defaultItem) => {
@@ -131,20 +193,19 @@ const AdminDashboard = () => {
 
   const fetchStatusAndActivities = async () => {
     try {
-      const promises = [getStatusSummary()];
+      const [statusData, secondaryData] = await Promise.all([
+        getStatusSummary(selectedYear),
+        role === "SUPERADMIN"
+          ? getActivities()
+          : getApplicationsList({ limit: 5, year: selectedYear }),
+      ]);
+
+      setStatusCounts(statusData || []);
 
       if (role === "SUPERADMIN") {
-        promises.push(getActivities());
+        setActivities(secondaryData || []);
       } else {
-        await fetchRecentApplications();
-      }
-
-      const results = await Promise.all(promises);
-
-      setStatusCounts(results[0] || []);
-
-      if (role === "SUPERADMIN") {
-        setActivities(results[1] || []);
+        setRecentApplications(secondaryData?.slice(0, 5) || []);
       }
     } catch (err) {
       error("Gagal!", "Gagal memuat data status dan aktivitas");
@@ -162,145 +223,273 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-8">
       <AlertContainer
-        alerts={alert}
+        alerts={alerts}
         removeAlert={removeAlert}
         position="top-right"
       />
+
+      {/* Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          {/* Scholarship Type Toggle */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setScholarshipType("NON-APBN")}
+              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                scholarshipType === "NON-APBN"
+                  ? "bg-[#2D60FF] text-white shadow-md"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              Non-APBN
+            </button>
+            <button
+              onClick={() => setScholarshipType("APBN")}
+              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                scholarshipType === "APBN"
+                  ? "bg-[#2D60FF] text-white shadow-md"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              APBN
+            </button>
+          </div>
+
+          {/* Year Selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Tahun:</label>
+            <Select
+              value={selectedYear}
+              onChange={setSelectedYear}
+              style={{ width: 120 }}
+              className="rounded-lg"
+            >
+              {yearOptions.map((year) => (
+                <Option key={year} value={year}>
+                  {year}
+                </Option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        {/* Info Badge */}
+        <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
+          <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
+          <span className="text-sm text-blue-700 font-medium">
+            {scholarshipType === "NON-APBN"
+              ? "Beasiswa Non-APBN"
+              : "Beasiswa Pemerintah (APBN)"}
+          </span>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {summaryData.map((item, idx) => (
-          <Card key={idx}>
-            <div className="flex flex-col items-left py-6">
-              <span className="text-sm text-gray-700">{item.title}</span>
-              <span className="text-2xl font-bold text-gray-800 mt-2">
-                {item.value}
-              </span>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {chartsLoading ? (
-          <>
-            <Card
-              title="Pendaftar Berdasarkan Fakultas"
-              description="Distribusi pendaftar beasiswa per fakultas"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
+        {(scholarshipType === "NON-APBN" ? summaryData : govSummaryData).map(
+          (item, idx) => (
+            <Card key={idx}>
+              <div className="flex flex-col items-left py-6">
+                <span className="text-sm text-gray-700">{item.title}</span>
+                <span className="text-2xl font-bold text-gray-800 mt-2">
+                  {item.value}
+                </span>
               </div>
             </Card>
-            <Card
-              title="Pendaftar Berdasarkan Departemen"
-              description="Distribusi pendaftar beasiswa per departemen"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col h-full">
-              <HorizontalBarChart
-                data={fakultasData}
-                title="Pendaftar Berdasarkan Fakultas"
-                description="Distribusi pendaftar beasiswa per fakultas"
-              />
-            </div>
-            <div className="flex flex-col h-full">
-              <HorizontalBarChart
-                data={departemenData}
-                title="Pendaftar Berdasarkan Departemen"
-                description="Distribusi pendaftar beasiswa per departemen"
-              />
-            </div>
-          </>
+          )
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {chartsLoading ? (
-          <>
-            <Card
-              title="Penerima Tahun ke Tahun"
-              description="Perbandingan penerima beasiswa dari tahun ke tahun"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-            <Card
-              title="Pendaftar Berdasarkan Gender"
-              description="Distribusi pendaftar beasiswa berdasarkan gender"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-          </>
-        ) : (
-          <>
-            <LineChart
-              data={tahunData}
-              title="Pendaftar Tahun ke Tahun"
-              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
-            />
-            <PieChart
-              data={genderData}
-              title="Pendaftar Berdasarkan Gender"
-              description="Distribusi pendaftar beasiswa berdasarkan gender"
-            />
-          </>
-        )}
-      </div>
+      {/* Charts Section */}
+      {scholarshipType === "NON-APBN" ? (
+        <>
+          {/* Non-APBN Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {chartsLoading ? (
+              <>
+                <Card
+                  title="Pendaftar Berdasarkan Fakultas"
+                  description="Distribusi pendaftar beasiswa per fakultas"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+                <Card
+                  title="Pendaftar Berdasarkan Departemen"
+                  description="Distribusi pendaftar beasiswa per departemen"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col h-full">
+                  <HorizontalBarChart
+                    data={fakultasData}
+                    title="Pendaftar Berdasarkan Fakultas"
+                    description="Distribusi pendaftar beasiswa per fakultas"
+                  />
+                </div>
+                <div className="flex flex-col h-full">
+                  <HorizontalBarChart
+                    data={departemenData}
+                    title="Pendaftar Berdasarkan Departemen"
+                    description="Distribusi pendaftar beasiswa per departemen"
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {chartsLoading ? (
-          <>
-            {role === "SUPERADMIN" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {chartsLoading ? (
+              <>
+                <Card
+                  title="Pendaftar Tahun ke Tahun"
+                  description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+                <Card
+                  title="Pendaftar Berdasarkan Gender"
+                  description="Distribusi pendaftar beasiswa berdasarkan gender"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+              </>
+            ) : (
+              <>
+                <LineChart
+                  data={tahunData}
+                  title="Pendaftar Tahun ke Tahun"
+                  description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
+                />
+                <PieChart
+                  data={genderData}
+                  title="Pendaftar Berdasarkan Gender"
+                  description="Distribusi pendaftar beasiswa berdasarkan gender"
+                />
+              </>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {chartsLoading ? (
+              <>
+                {role === "SUPERADMIN" ? (
+                  <Card
+                    title="Aktivitas Terbaru"
+                    description="Aktivitas sistem dalam 24 jam terakhir"
+                  >
+                    <div className="flex justify-center items-center py-12">
+                      <Spin size="large" />
+                    </div>
+                  </Card>
+                ) : (
+                  <Card
+                    title="Pendaftaran Terbaru"
+                    description="5 pendaftaran beasiswa terbaru"
+                  >
+                    <div className="flex justify-center items-center py-12">
+                      <Spin size="large" />
+                    </div>
+                  </Card>
+                )}
+                <Card
+                  title="Status Pendaftaran"
+                  description="Ringkasan status pendaftaran beasiswa"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col h-full">
+                  {role === "SUPERADMIN" ? (
+                    <ActivityCard activities={activities} />
+                  ) : (
+                    <RecentApplicationsCard applications={recentApplications} />
+                  )}
+                </div>
+                <div className="flex flex-col h-full">
+                  <StatusSummary statusCounts={statusCounts} />
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* APBN Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {chartsLoading ? (
+              <>
+                <Card
+                  title="Distribusi Berdasarkan Program Studi"
+                  description="Distribusi penerima beasiswa APBN per program studi"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+                <Card
+                  title="Kategori Beasiswa"
+                  description="Distribusi berdasarkan kategori beasiswa"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col h-full">
+                  <HorizontalBarChart
+                    data={govDistributionData}
+                    title="Distribusi Berdasarkan Program Studi"
+                    description="Distribusi penerima beasiswa APBN per program studi"
+                  />
+                </div>
+                <div className="flex flex-col h-full">
+                  <PieChart
+                    data={govCategoriesData}
+                    title="Kategori Beasiswa"
+                    description="Distribusi berdasarkan kategori beasiswa"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            {chartsLoading ? (
               <Card
-                title="Aktivitas Terbaru"
-                description="Aktivitas sistem dalam 24 jam terakhir"
+                title="Tren Penerima Tahun ke Tahun"
+                description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
               >
                 <div className="flex justify-center items-center py-12">
                   <Spin size="large" />
                 </div>
               </Card>
             ) : (
-              <Card
-                title="Pendaftaran Terbaru"
-                description="5 pendaftaran beasiswa terbaru"
-              >
-                <div className="flex justify-center items-center py-12">
-                  <Spin size="large" />
-                </div>
-              </Card>
+              <LineChart
+                data={govYearlyData}
+                title="Tren Penerima Tahun ke Tahun"
+                description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
+              />
             )}
-            <Card
-              title="Status Pendaftaran"
-              description="Ringkasan status pendaftaran beasiswa"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col h-full">
-              {role === "SUPERADMIN" ? (
-                <ActivityCard activities={activities} />
-              ) : (
-                <RecentApplicationsCard applications={recentApplications} />
-              )}
-            </div>
-            <div className="flex flex-col h-full">
-              <StatusSummary statusCounts={statusCounts} />
-            </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

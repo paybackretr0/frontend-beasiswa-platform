@@ -14,15 +14,21 @@ import EmptyInformation from "../assets/empty-state-news.svg";
 
 const Scholarship = () => {
   const [scholarships, setScholarships] = useState([]);
+  const [displayedScholarships, setDisplayedScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const [displayCount, setDisplayCount] = useState(9);
+  const itemsPerLoad = 9;
 
   useEffect(() => {
     document.title = "Daftar Beasiswa - UNAND";
     loadScholarships();
   }, []);
+
+  useEffect(() => {
+    // Update displayed scholarships when displayCount changes
+    setDisplayedScholarships(scholarships.slice(0, displayCount));
+  }, [displayCount, scholarships]);
 
   const loadScholarships = async () => {
     try {
@@ -30,6 +36,7 @@ const Scholarship = () => {
       setError(null);
       const data = await fetchActiveScholarships();
       setScholarships(data);
+      setDisplayedScholarships(data.slice(0, displayCount));
     } catch (error) {
       console.error("Error fetching scholarships:", error);
       setError(error.message || "Gagal memuat daftar beasiswa");
@@ -38,19 +45,12 @@ const Scholarship = () => {
     }
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentScholarships = scholarships.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(scholarships.length / itemsPerPage);
-
   const handleLoadMore = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+    setDisplayCount((prevCount) => prevCount + itemsPerLoad);
   };
+
+  const remainingCount = scholarships.length - displayCount;
+  const hasMore = displayCount < scholarships.length;
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("id-ID", {
@@ -244,7 +244,7 @@ const Scholarship = () => {
           <p className="text-gray-600">
             Menampilkan{" "}
             <span className="font-semibold">
-              {Math.min(indexOfLastItem, scholarships.length)}
+              {displayedScholarships.length}
             </span>{" "}
             dari <span className="font-semibold">{scholarships.length}</span>{" "}
             beasiswa
@@ -252,7 +252,7 @@ const Scholarship = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          {currentScholarships.map((scholarship) => (
+          {displayedScholarships.map((scholarship) => (
             <Card
               key={scholarship.id}
               image={getImageSource(scholarship.logo_path)}
@@ -317,18 +317,28 @@ const Scholarship = () => {
           ))}
         </div>
 
-        {currentPage < totalPages && (
-          <div className="flex justify-center">
-            <Button onClick={handleLoadMore}>
-              Lihat Lebih Banyak ({scholarships.length - indexOfLastItem}{" "}
-              tersisa)
+        {hasMore && (
+          <div className="flex flex-col items-center gap-4">
+            <Button
+              onClick={handleLoadMore}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base"
+            >
+              Lihat Lebih Banyak
+              {remainingCount > 0 && ` (${remainingCount} tersisa)`}
             </Button>
+
+            <p className="text-sm text-gray-500">
+              Menampilkan {displayedScholarships.length} dari{" "}
+              {scholarships.length} beasiswa
+            </p>
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="text-center mt-6 text-sm text-gray-500">
-            Halaman {currentPage} dari {totalPages}
+        {!hasMore && scholarships.length > itemsPerLoad && (
+          <div className="text-center py-6">
+            <p className="text-gray-600 font-medium">
+              Semua beasiswa telah ditampilkan
+            </p>
           </div>
         )}
       </div>

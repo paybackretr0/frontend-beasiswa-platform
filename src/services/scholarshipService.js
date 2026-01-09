@@ -227,3 +227,21 @@ export const getOtherScholarships = async (id, limit = 5) => {
 
   return data.data;
 };
+
+export const fetchActiveScholarshipsForInfo = async () => {
+  const token = localStorage.getItem("access_token");
+
+  const data = await authFetch(`${API_BASE_URL}/beasiswa/info/active`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!data.success) {
+    throw new Error(data.message || `Gagal mengambil daftar beasiswa aktif`);
+  }
+
+  return data.data;
+};

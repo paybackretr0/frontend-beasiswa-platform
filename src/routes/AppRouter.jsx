@@ -37,6 +37,7 @@ import DetailScholarship from "../pages/DetailScholarship";
 import FormApplication from "../pages/user/FormApplication";
 import Information from "../pages/Information";
 import DetailInformation from "../pages/DetailInformation";
+import InfoScholarship from "../pages/admin/info-scholarships/InfoScholarship";
 
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
@@ -150,6 +151,8 @@ const AppRouter = () => (
         <Route path="reference/program-studi" element={<ProgramStudi />} />
         <Route path="extra/backup-data" element={<BackupAdmin />} />
         <Route path="extra/log-aktivitas" element={<LogAdmin />} />
+
+        <Route path="informasi-beasiswa" element={<InfoScholarship />} />
       </Route>
       <Route
         path="/admin/change-password"

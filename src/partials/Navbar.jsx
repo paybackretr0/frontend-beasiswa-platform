@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  MdNotifications,
   MdKeyboardArrowDown,
   MdPerson,
   MdLogout,
@@ -14,7 +13,6 @@ const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notificationCount] = useState(3);
   const dropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const navigate = useNavigate();
@@ -76,7 +74,7 @@ const Navbar = () => {
               >
                 Beranda
               </NavLink>
-              <NavLink
+              {/* <NavLink
                 to="/contact"
                 className={({ isActive }) =>
                   isActive
@@ -85,7 +83,7 @@ const Navbar = () => {
                 }
               >
                 Kontak
-              </NavLink>
+              </NavLink> */}
               <NavLink
                 to="/scholarship"
                 className={({ isActive }) =>
@@ -132,7 +130,7 @@ const Navbar = () => {
               >
                 Beranda
               </NavLink>
-              <NavLink
+              {/* <NavLink
                 to="/contact"
                 className={({ isActive }) =>
                   isActive
@@ -141,7 +139,7 @@ const Navbar = () => {
                 }
               >
                 Kontak
-              </NavLink>
+              </NavLink> */}
               <NavLink
                 to="/scholarship"
                 className={({ isActive }) =>
