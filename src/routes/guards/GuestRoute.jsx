@@ -5,13 +5,11 @@ const GuestRoute = ({ children }) => {
 
   if (token) {
     const user = JSON.parse(localStorage.getItem("user"));
-    const role = user?.role?.toUpperCase();
-
-    if (role === "MAHASISWA") {
-      return <Navigate to="/" replace />;
-    } else {
-      return <Navigate to="/admin/dashboard" replace />;
-    }
+    return user?.role === "MAHASISWA" ? (
+      <Navigate to="/" replace />
+    ) : (
+      <Navigate to="/admin/dashboard" replace />
+    );
   }
 
   return children;
