@@ -1,10 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import {
-  MdNotifications,
-  MdKeyboardArrowDown,
-  MdLockReset,
-  MdLogout,
-} from "react-icons/md";
+import { MdKeyboardArrowDown, MdLockReset, MdLogout } from "react-icons/md";
 import { logout } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
