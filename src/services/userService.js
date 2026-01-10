@@ -19,78 +19,6 @@ export const fetchUsersByRole = async (role) => {
   return data.data;
 };
 
-export const getMahasiswa = async () => {
-  const token = localStorage.getItem("access_token");
-
-  const data = await authFetch(`${API_BASE_URL}/users/mahasiswa`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!data.success) {
-    throw new Error(data.message || "Gagal mengambil daftar mahasiswa");
-  }
-
-  return data.data;
-};
-
-export const getPimpinanFakultas = async () => {
-  const token = localStorage.getItem("access_token");
-
-  const data = await authFetch(`${API_BASE_URL}/users/pimpinan-fakultas`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!data.success) {
-    throw new Error(data.message || "Gagal mengambil daftar pimpinan fakultas");
-  }
-
-  return data.data;
-};
-
-export const getPimpinanDitmawa = async () => {
-  const token = localStorage.getItem("access_token");
-
-  const data = await authFetch(`${API_BASE_URL}/users/pimpinan-ditmawa`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!data.success) {
-    throw new Error(data.message || "Gagal mengambil daftar pimpinan ditmawa");
-  }
-
-  return data.data;
-};
-
-export const getVerifikator = async () => {
-  const token = localStorage.getItem("access_token");
-
-  const data = await authFetch(`${API_BASE_URL}/users/verifikator`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!data.success) {
-    throw new Error(data.message || "Gagal mengambil daftar verifikator");
-  }
-
-  return data.data;
-};
-
 export const addUser = async (userData) => {
   const token = localStorage.getItem("access_token");
 
@@ -138,6 +66,38 @@ export const addPimpinanFakultas = async (userData) => {
   });
   if (!data.success) {
     throw new Error(data.message || "Gagal menambahkan pimpinan fakultas");
+  }
+  return data.data;
+};
+
+export const addVerifikator = async (userData) => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(`${API_BASE_URL}/users/verifikator`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!data.success) {
+    throw new Error(data.message || "Gagal menambahkan verifikator");
+  }
+  return data.data;
+};
+
+export const updateVerifikator = async (id, userData) => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(`${API_BASE_URL}/users/verifikator/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!data.success) {
+    throw new Error(data.message || "Gagal memperbarui verifikator");
   }
   return data.data;
 };

@@ -1,10 +1,10 @@
-import { Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import BackupAdmin from "../pages/admin/extras/BackupAdmin";
 import LogAdmin from "../pages/admin/extras/LogAdmin";
 import RoleRoute from "./guards/RoleRoute";
 
 const ExtraRoutes = () => (
-  <>
+  <Routes>
     <Route
       path="backup-data"
       element={
@@ -21,7 +21,7 @@ const ExtraRoutes = () => (
         </RoleRoute>
       }
     />
-  </>
+  </Routes>
 );
 
 export default ExtraRoutes;

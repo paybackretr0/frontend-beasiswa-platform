@@ -1,17 +1,18 @@
-import { Route } from "react-router-dom";
-import PimpinanDitmawa from "../pages/admin/accounts/PimpinanDitmawa";
-import PimpinanFakultas from "../pages/admin/accounts/PimpinanFakultas";
+import { Routes, Route } from "react-router-dom";
+import PimpinanDir from "../pages/admin/accounts/PimpinanDitmawa";
+import PimpinanFak from "../pages/admin/accounts/PimpinanFakultas";
 import Verifikator from "../pages/admin/accounts/Verifikator";
+import Validator from "../pages/admin/accounts/ValidatorDitmawa";
 import Mahasiswa from "../pages/admin/accounts/Mahasiswa";
 import RoleRoute from "./guards/RoleRoute";
 
 const AccountsRoutes = () => (
-  <>
+  <Routes>
     <Route
       path="pimpinan-dir"
       element={
         <RoleRoute access="accounts">
-          <PimpinanDitmawa />
+          <PimpinanDir />
         </RoleRoute>
       }
     />
@@ -19,7 +20,15 @@ const AccountsRoutes = () => (
       path="pimpinan-fak"
       element={
         <RoleRoute access="accounts">
-          <PimpinanFakultas />
+          <PimpinanFak />
+        </RoleRoute>
+      }
+    />
+    <Route
+      path="validator"
+      element={
+        <RoleRoute access="accounts">
+          <Validator />
         </RoleRoute>
       }
     />
@@ -39,7 +48,7 @@ const AccountsRoutes = () => (
         </RoleRoute>
       }
     />
-  </>
+  </Routes>
 );
 
 export default AccountsRoutes;

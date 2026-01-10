@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Tag } from "antd";
 import UniversalTable, {
   createNumberColumn,
   createStatusColumn,
@@ -10,20 +11,23 @@ import useAlert from "../../../hooks/useAlert";
 import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import {
   fetchUsersByRole,
-  addUser,
+  addVerifikator,
+  updateVerifikator,
   deactivateUser,
-  updateUser,
   activateUser,
 } from "../../../services/userService";
+import { getFaculties } from "../../../services/facultyService";
 
 const Verifikator = () => {
   const [verifikatorData, setVerifikatorData] = useState([]);
+  const [faculties, setFaculties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
 
-  const { alerts, success, error, warning, removeAlert } = useAlert();
+  const { alerts, success, error, removeAlert } = useAlert();
 
   const fetchVerifikator = async () => {
     setLoading(true);
@@ -41,17 +45,28 @@ const Verifikator = () => {
     }
   };
 
+  const fetchFacultyData = async () => {
+    try {
+      const data = await getFaculties();
+      setFaculties(data);
+    } catch (err) {
+      console.error("Error fetching faculties:", err);
+    }
+  };
+
   useEffect(() => {
     document.title = "Kelola Verifikator";
     fetchVerifikator();
+    fetchFacultyData();
   }, []);
 
   const handleAddVerifikator = async (values) => {
     setModalLoading(true);
     try {
-      await addUser({ ...values, role: "VERIFIKATOR" });
+      await addVerifikator(values);
       success("Sukses", "Verifikator berhasil ditambahkan");
       setModalVisible(false);
+      setSelectedRole(null);
       await fetchVerifikator();
     } catch (err) {
       console.error("Error adding verifikator:", err);
@@ -92,16 +107,27 @@ const Verifikator = () => {
   const handleEditUser = async (id, values) => {
     setModalLoading(true);
     try {
-      await updateUser(id, values);
-      success("Sukses", "User berhasil diperbarui");
+      await updateVerifikator(id, values);
+      success("Sukses", "Verifikator berhasil diperbarui");
       setModalVisible(false);
+      setEditingUser(null);
       fetchVerifikator();
     } catch (err) {
-      console.error("Error updating user:", err);
-      error("Gagal", err.message || "Gagal memperbarui user");
+      console.error("Error updating verifikator:", err);
+      error("Gagal", err.message || "Gagal memperbarui verifikator");
     } finally {
       setModalLoading(false);
     }
+  };
+
+  const getRoleTag = (role) => {
+    if (role === "VERIFIKATOR_FAKULTAS") {
+      return <Tag color="blue">Fakultas</Tag>;
+    }
+    if (role === "VERIFIKATOR_DITMAWA") {
+      return <Tag color="green">Ditmawa</Tag>;
+    }
+    return <Tag>{role}</Tag>;
   };
 
   const columns = [
@@ -116,6 +142,23 @@ const Verifikator = () => {
       title: "Email",
       dataIndex: "email",
       key: "email",
+    },
+    {
+      title: "Tipe",
+      dataIndex: "role",
+      key: "role",
+      render: (role) => getRoleTag(role),
+      filters: [
+        { text: "Verifikator Fakultas", value: "VERIFIKATOR_FAKULTAS" },
+        { text: "Verifikator Ditmawa", value: "VERIFIKATOR_DITMAWA" },
+      ],
+      onFilter: (value, record) => record.role === value,
+    },
+    {
+      title: "Fakultas/Unit",
+      dataIndex: ["faculty", "name"],
+      key: "faculty",
+      render: (_, record) => record.faculty?.name || "Ditmawa Unand",
     },
     {
       title: "Login Terakhir",
@@ -136,6 +179,7 @@ const Verifikator = () => {
         icon: <EditOutlined />,
         onClick: (record) => {
           setEditingUser(record);
+          setSelectedRole(record.role);
           setModalVisible(true);
         },
       },
@@ -154,6 +198,73 @@ const Verifikator = () => {
       },
     ]),
   ];
+
+  const getModalFields = () => {
+    const baseFields = editingUser
+      ? [
+          {
+            name: "full_name",
+            label: "Nama Lengkap",
+            rules: [{ required: true, message: "Nama lengkap wajib diisi" }],
+          },
+          {
+            name: "phone_number",
+            label: "Nomor Telepon",
+            rules: [{ required: false }],
+          },
+        ]
+      : [
+          {
+            name: "role",
+            label: "Tipe Verifikator",
+            type: "select",
+            options: [
+              { value: "VERIFIKATOR_FAKULTAS", label: "Verifikator Fakultas" },
+              { value: "VERIFIKATOR_DITMAWA", label: "Verifikator Ditmawa" },
+            ],
+            rules: [
+              { required: true, message: "Tipe verifikator wajib dipilih" },
+            ],
+            onChange: (value) => setSelectedRole(value),
+          },
+          {
+            name: "full_name",
+            label: "Nama Lengkap",
+            rules: [{ required: true, message: "Nama lengkap wajib diisi" }],
+          },
+          {
+            name: "email",
+            label: "Email",
+            type: "email",
+            rules: [
+              { required: true, message: "Email wajib diisi" },
+              { type: "email", message: "Format email tidak valid" },
+            ],
+          },
+          {
+            name: "password",
+            label: "Password",
+            type: "password",
+            rules: [{ required: true, message: "Password wajib diisi" }],
+          },
+        ];
+
+    const needsFaculty = editingUser
+      ? editingUser.role === "VERIFIKATOR_FAKULTAS"
+      : selectedRole === "VERIFIKATOR_FAKULTAS";
+
+    if (needsFaculty) {
+      baseFields.push({
+        name: "faculty_id",
+        label: "Fakultas",
+        type: "select",
+        options: faculties.map((f) => ({ value: f.id, label: f.name })),
+        rules: [{ required: true, message: "Fakultas wajib dipilih" }],
+      });
+    }
+
+    return baseFields;
+  };
 
   return (
     <>
@@ -179,6 +290,7 @@ const Verifikator = () => {
         onCancel={() => {
           setModalVisible(false);
           setEditingUser(null);
+          setSelectedRole(null);
         }}
         onSubmit={(values) => {
           if (editingUser) {
@@ -194,50 +306,11 @@ const Verifikator = () => {
             ? {
                 full_name: editingUser.full_name,
                 phone_number: editingUser.phone_number,
+                faculty_id: editingUser.faculty_id,
               }
             : {}
         }
-        fields={
-          editingUser
-            ? [
-                {
-                  name: "full_name",
-                  label: "Nama Lengkap",
-                  rules: [
-                    { required: true, message: "Nama lengkap wajib diisi" },
-                  ],
-                },
-                {
-                  name: "phone_number",
-                  label: "Nomor Telepon",
-                  rules: [{ required: false }],
-                },
-              ]
-            : [
-                {
-                  name: "full_name",
-                  label: "Nama Lengkap",
-                  rules: [
-                    { required: true, message: "Nama lengkap wajib diisi" },
-                  ],
-                },
-                {
-                  name: "email",
-                  label: "Email",
-                  type: "email",
-                  rules: [
-                    { required: true, message: "Email wajib diisi" },
-                    { type: "email", message: "Format email tidak valid" },
-                  ],
-                },
-                {
-                  name: "password",
-                  label: "Password",
-                  type: "password",
-                  rules: [{ required: true, message: "Password wajib diisi" }],
-                },
-              ]
-        }
+        fields={getModalFields()}
       />
     </>
   );

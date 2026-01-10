@@ -1,11 +1,11 @@
-import { Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Fakultas from "../pages/admin/references/Fakultas";
 import Departemen from "../pages/admin/references/Departemen";
 import ProgramStudi from "../pages/admin/references/ProgramStudi";
 import RoleRoute from "./guards/RoleRoute";
 
 const ReferenceRoutes = () => (
-  <>
+  <Routes>
     <Route
       path="fakultas"
       element={
@@ -30,7 +30,7 @@ const ReferenceRoutes = () => (
         </RoleRoute>
       }
     />
-  </>
+  </Routes>
 );
 
 export default ReferenceRoutes;

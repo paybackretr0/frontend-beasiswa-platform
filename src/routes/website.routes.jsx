@@ -1,10 +1,10 @@
-import { Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import NewsAdmin from "../pages/admin/websites/NewsAdmin";
 import ArticleAdmin from "../pages/admin/websites/ArticleAdmin";
 import RoleRoute from "./guards/RoleRoute";
 
 const WebsiteRoutes = () => (
-  <>
+  <Routes>
     <Route
       path="berita"
       element={
@@ -21,7 +21,7 @@ const WebsiteRoutes = () => (
         </RoleRoute>
       }
     />
-  </>
+  </Routes>
 );
 
 export default WebsiteRoutes;

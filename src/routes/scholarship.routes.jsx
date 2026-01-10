@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import ScholarshipAdmin from "../pages/admin/scholarships/ScholarshipAdmin";
 import ScholarshipAdd from "../pages/admin/scholarships/create/ScholarshipAdd";
 import ScholarshipDetail from "../pages/admin/scholarships/ScholarshipDetail";
@@ -9,7 +9,7 @@ import EditScholarshipForm from "../pages/admin/scholarships/form/EditScholarshi
 import RoleRoute from "./guards/RoleRoute";
 
 const ScholarshipRoutes = () => (
-  <>
+  <Routes>
     <Route
       path="/"
       element={
@@ -66,7 +66,7 @@ const ScholarshipRoutes = () => (
         </RoleRoute>
       }
     />
-  </>
+  </Routes>
 );
 
 export default ScholarshipRoutes;

@@ -46,7 +46,7 @@ const Sidebar = () => {
                     <button
                       type="button"
                       onClick={() => setOpenMenu(isOpen ? null : menu.key)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-r-md text-left transition ${
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-r-md text-left cursor-pointer transition ${
                         isMenuActive(menu)
                           ? "text-[#2D60FF] font-medium border-l-4 border-[#2D60FF] pl-6"
                           : "text-gray-700 hover:bg-gray-50 hover:text-[#2D60FF] pl-4"

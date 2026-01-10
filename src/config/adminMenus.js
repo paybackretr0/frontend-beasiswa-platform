@@ -19,6 +19,29 @@ export const ADMIN_MENUS = [
   },
 
   {
+    key: "scholarship",
+    label: "Beasiswa",
+    to: "/admin/scholarship",
+    icon: MdSchool,
+  },
+
+  {
+    key: "registration",
+    label: "Pendaftaran",
+    to: "/admin/registration",
+    icon: MdAssignment,
+  },
+
+  { key: "report", label: "Pelaporan", to: "/admin/report", icon: MdBarChart },
+
+  {
+    key: "infoScholarship",
+    label: "Informasi Beasiswa",
+    to: "/admin/informasi-beasiswa",
+    icon: MdInfo,
+  },
+
+  {
     key: "accounts",
     label: "Kelola Akun",
     to: "/admin/accounts",
@@ -26,29 +49,10 @@ export const ADMIN_MENUS = [
     submenu: [
       { label: "Pimpinan Dir.", to: "/admin/accounts/pimpinan-dir" },
       { label: "Pimpinan Fak.", to: "/admin/accounts/pimpinan-fak" },
+      { label: "Validator", to: "/admin/accounts/validator" },
       { label: "Verifikator", to: "/admin/accounts/verifikator" },
       { label: "Mahasiswa", to: "/admin/accounts/mahasiswa" },
     ],
-  },
-
-  {
-    key: "scholarship",
-    label: "Beasiswa",
-    to: "/admin/scholarship",
-    icon: MdSchool,
-  },
-  {
-    key: "registration",
-    label: "Pendaftaran",
-    to: "/admin/registration",
-    icon: MdAssignment,
-  },
-  { key: "report", label: "Pelaporan", to: "/admin/report", icon: MdBarChart },
-  {
-    key: "infoScholarship",
-    label: "Informasi Beasiswa",
-    to: "/admin/informasi-beasiswa",
-    icon: MdInfo,
   },
 
   {
