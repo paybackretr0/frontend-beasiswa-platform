@@ -33,30 +33,35 @@ const ScholarshipAdmin = () => {
     fetchScholarships();
   }, []);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "Belum ditentukan";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   const fetchScholarships = async () => {
     setLoading(true);
     try {
       const data = await fetchAllScholarships();
-      const formatDate = (dateStr) => {
-        if (!dateStr) return "Tidak Ada";
-        const d = new Date(dateStr);
-        if (isNaN(d)) return "Tidak Ada";
-        const day = String(d.getDate()).padStart(2, "0");
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const year = d.getFullYear();
-        return `${day}-${month}-${year}`;
-      };
 
       const formattedData = data.map((item) => ({
         key: item.id,
         id: item.id,
         nama: item.name,
         penyedia: item.organizer || "Tidak Diketahui",
+        tahun: item.year,
         status: item.is_active ? "Aktif" : "Nonaktif",
-        batasWaktu: formatDate(item.end_date),
-        is_external: item.is_external, // Tambahkan field is_external
-        jenis: item.is_external ? "Eksternal" : "Internal", // Tambahkan kolom jenis untuk ditampilkan
+        batasWaktu: item.end_date ? formatDate(item.end_date) : "Tidak Ada",
+        is_external: item.is_external,
+        jenis: item.is_external ? "Eksternal" : "Internal",
+        verification_level: item.verification_level,
+        schema_count: item.schema_count || 0,
+        active_schemas: item.active_schemas || 0,
       }));
+
       setScholarships(formattedData);
     } catch (err) {
       console.error("Error fetching scholarships:", err);
@@ -122,19 +127,38 @@ const ScholarshipAdmin = () => {
       dataIndex: "nama",
       key: "nama",
       sorter: (a, b) => a.nama.localeCompare(b.nama),
-      width: "30%",
+      width: "25%",
     },
     {
       title: "Penyedia",
       dataIndex: "penyedia",
       key: "penyedia",
-      width: "20%",
+      width: "15%",
+    },
+    {
+      title: "Tahun",
+      dataIndex: "tahun",
+      key: "tahun",
+      width: "8%",
+      sorter: (a, b) => a.tahun - b.tahun,
+    },
+    {
+      title: "Skema",
+      dataIndex: "schema_count",
+      key: "schema_count",
+      width: "10%",
+      render: (count, record) => (
+        <span className="text-sm">
+          {record.active_schemas}/{count}
+          <span className="text-xs text-gray-500 ml-1">aktif</span>
+        </span>
+      ),
     },
     {
       title: "Jenis",
       dataIndex: "jenis",
       key: "jenis",
-      width: "12%",
+      width: "10%",
       filters: [
         { text: "Internal", value: "Internal" },
         { text: "Eksternal", value: "Eksternal" },
@@ -179,7 +203,7 @@ const ScholarshipAdmin = () => {
           label: "Kelola Form",
           icon: <AlignLeftOutlined />,
           onClick: (record) => handleFormNavigation(record.id),
-          hidden: (record) => record.is_external, // Sembunyikan untuk beasiswa eksternal
+          hidden: (record) => record.is_external,
         },
         {
           key: "edit",
