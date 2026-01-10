@@ -95,13 +95,21 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     setRequirementType(firstType);
 
     setDocuments(data.documents || []);
-    setStages(
-      data.stages?.map((s, i) => ({
+
+    const sortedStages = (data.stages || [])
+      .sort((a, b) => (a.order_no || 0) - (b.order_no || 0))
+      .map((s, i) => ({
         id: s.id || Date.now() + i,
         name: s.name || s.stage_name,
         order_no: s.order_no || i + 1,
-      })) || [{ id: 1, name: "ADMINISTRASI", order_no: 1 }]
+      }));
+
+    setStages(
+      sortedStages.length > 0
+        ? sortedStages
+        : [{ id: 1, name: "ADMINISTRASI", order_no: 1 }]
     );
+
     setSelectedFaculties(data.faculties || []);
     setSelectedDepartments(data.departments || []);
     setSelectedStudyPrograms(data.study_programs || []);

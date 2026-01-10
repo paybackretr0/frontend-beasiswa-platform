@@ -4,7 +4,7 @@ import useAlert from "../../../../hooks/useAlert";
 import AlertContainer from "../../../../components/AlertContainer";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
-const StepFinalize = ({
+const EditStepFinalize = ({
   onBack,
   onSubmit,
   initialData = {},
@@ -382,11 +382,11 @@ const StepFinalize = ({
           Kembali
         </Button>
         <Button onClick={handleSubmit} disabled={loading}>
-          {loading ? "Menyimpan..." : "Simpan Beasiswa"}
+          {loading ? "Menyimpan..." : "Simpan Perubahan"}
         </Button>
       </div>
     </div>
   );
 };
 
-export default StepFinalize;
+export default EditStepFinalize;
