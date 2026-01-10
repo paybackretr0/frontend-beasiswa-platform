@@ -404,7 +404,7 @@ const CreateScholarshipForm = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <Card className="mb-6 border-0 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">

@@ -18,7 +18,7 @@ export const checkScholarshipForm = async (scholarshipId) => {
   return data.data;
 };
 
-export const createFormField = async (scholarshipId, fields) => {
+export const createFormField = async (scholarshipId, schemaId, fields) => {
   const token = localStorage.getItem("access_token");
   const response = await authFetch(`${API_BASE_URL}/forms/${scholarshipId}`, {
     method: "POST",
@@ -26,7 +26,7 @@ export const createFormField = async (scholarshipId, fields) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ fields }),
+    body: JSON.stringify({ schemaId, fields }),
   });
 
   if (!response.success) {
@@ -53,7 +53,7 @@ export const getFormFields = async (scholarshipId) => {
   return response.data;
 };
 
-export const updateFormField = async (scholarshipId, fields) => {
+export const updateFormField = async (scholarshipId, schemaId, fields) => {
   const token = localStorage.getItem("access_token");
   const response = await authFetch(`${API_BASE_URL}/forms/${scholarshipId}`, {
     method: "PUT",
@@ -61,7 +61,7 @@ export const updateFormField = async (scholarshipId, fields) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ fields }),
+    body: JSON.stringify({ schemaId, fields }),
   });
 
   if (!response.success) {
