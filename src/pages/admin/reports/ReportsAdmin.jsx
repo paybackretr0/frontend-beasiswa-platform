@@ -44,7 +44,7 @@ const years = Array.from(
 );
 
 const ReportsAdmin = () => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState("all");
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
 
@@ -154,11 +154,13 @@ const ReportsAdmin = () => {
 
   const fetchSelectionSummary = async () => {
     try {
-      const data = await getSelectionSummary(selectedYear);
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+      const data = await getSelectionSummary(yearParam);
+
       const summary = [
         {
-          title: "Jumlah Mahasiswa Diterima",
-          value: data.lolosSeleksiBerkas || 0,
+          title: "Divalidasi (Lolos)",
+          value: data.validated || 0,
           color: "text-green-600",
         },
         {
@@ -168,12 +170,17 @@ const ReportsAdmin = () => {
         },
         {
           title: "Menunggu Validasi",
-          value: data.menungguValidasi || 0,
+          value: data.verified || 0,
+          color: "text-blue-600",
+        },
+        {
+          title: "Perlu Revisi",
+          value: data.revisionNeeded || 0,
           color: "text-yellow-600",
         },
         {
-          title: "Tidak Lolos Seleksi",
-          value: data.tidakLolosSeleksi || 0,
+          title: "Ditolak",
+          value: data.rejected || 0,
           color: "text-red-600",
         },
       ];
@@ -335,22 +342,24 @@ const ReportsAdmin = () => {
 
   const getStatusLabel = (status) => {
     const statusMap = {
+      DRAFT: "Draft",
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
       VERIFIED: "Terverifikasi",
-      MENUNGGU_VALIDASI: "Menunggu Validasi",
-      REJECTED: "Dikembalikan",
-      VALIDATED: "Disetujui",
+      VALIDATED: "Divalidasi",
+      REJECTED: "Ditolak",
+      REVISION_NEEDED: "Perlu Revisi",
     };
     return statusMap[status] || status;
   };
 
   const getStatusColor = (status) => {
     const colorMap = {
+      Draft: "default",
       "Menunggu Verifikasi": "orange",
-      Terverifikasi: "blue",
-      "Menunggu Validasi": "gold",
-      Dikembalikan: "red",
-      Disetujui: "green",
+      "Menunggu Validasi": "blue",
+      Divalidasi: "green",
+      Ditolak: "red",
+      "Perlu Revisi": "gold",
     };
     return colorMap[status] || "default";
   };
@@ -391,10 +400,13 @@ const ReportsAdmin = () => {
       },
       filters: [
         { text: "Menunggu Verifikasi", value: "Menunggu Verifikasi" },
-        { text: "Terverifikasi", value: "Terverifikasi" },
-        { text: "Menunggu Validasi", value: "Menunggu Validasi" },
-        { text: "Dikembalikan", value: "Dikembalikan" },
-        { text: "Disetujui", value: "Disetujui" },
+        {
+          text: "Menunggu Validasi",
+          value: "Menunggu Validasi",
+        },
+        { text: "Divalidasi", value: "Divalidasi" },
+        { text: "Ditolak", value: "Ditolak" },
+        { text: "Perlu Revisi", value: "Perlu Revisi" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -417,20 +429,37 @@ const ReportsAdmin = () => {
         icon: <CheckOutlined />,
         hidden: (record) =>
           !(
-            role === "VERIFIKATOR" && record.rawStatus === "MENUNGGU_VERIFIKASI"
+            (role === "VERIFIKATOR_FAKULTAS" ||
+              role === "VERIFIKATOR_DITMAWA") &&
+            record.rawStatus === "MENUNGGU_VERIFIKASI"
           ),
-        onClick: {},
+        onClick: (record) => {
+          info("Verifikasi", `Verifikasi aplikasi: ${record.nama}`);
+        },
       },
       {
         key: "validate",
         label: "Validasi",
         icon: <CheckOutlined />,
         hidden: (record) =>
+          !(role === "VALIDATOR_DITMAWA" && record.rawStatus === "VERIFIED"),
+        onClick: (record) => {
+          info("Validasi", `Validasi aplikasi: ${record.nama}`);
+        },
+      },
+      {
+        key: "revise",
+        label: "Minta Revisi",
+        icon: <CloseOutlined />,
+        hidden: (record) =>
           !(
-            role === "PIMPINAN_DITMAWA" &&
-            ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus)
+            (role === "VERIFIKATOR_FAKULTAS" ||
+              role === "VERIFIKATOR_DITMAWA") &&
+            record.rawStatus === "MENUNGGU_VERIFIKASI"
           ),
-        onClick: {},
+        onClick: (record) => {
+          info("Revisi", `Minta revisi untuk: ${record.nama}`);
+        },
       },
       {
         key: "reject",
@@ -439,12 +468,14 @@ const ReportsAdmin = () => {
         danger: true,
         hidden: (record) =>
           !(
-            (role === "VERIFIKATOR" &&
+            ((role === "VERIFIKATOR_FAKULTAS" ||
+              role === "VERIFIKATOR_DITMAWA") &&
               record.rawStatus === "MENUNGGU_VERIFIKASI") ||
-            (role === "PIMPINAN_DITMAWA" &&
-              ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus))
+            (role === "VALIDATOR_DITMAWA" && record.rawStatus === "VERIFIED")
           ),
-        onClick: {},
+        onClick: (record) => {
+          info("Tolak", `Tolak aplikasi: ${record.nama}`);
+        },
       },
     ]),
   ];
@@ -469,9 +500,10 @@ const ReportsAdmin = () => {
           <Select
             value={selectedYear}
             onChange={handleYearChange}
-            style={{ width: 120 }}
+            style={{ width: 150 }}
             size="large"
           >
+            <Option value="all">Semua Tahun</Option>
             {years.map((year) => (
               <Option key={year} value={year}>
                 {year}
@@ -501,11 +533,14 @@ const ReportsAdmin = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {selectionSummaryData.map((item, idx) => (
           <Card key={idx}>
             <div className="flex flex-col items-center py-4">
-              <span className="text-sm text-gray-600 mb-2">{item.title}</span>
+              <span className="text-3xl mb-2">{item.icon}</span>
+              <span className="text-sm text-gray-600 mb-2 text-center">
+                {item.title}
+              </span>
               <span className={`text-2xl font-bold ${item.color}`}>
                 {item.value}
               </span>

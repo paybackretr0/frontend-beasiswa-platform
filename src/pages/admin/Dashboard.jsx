@@ -32,7 +32,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState("all");
   const [scholarshipType, setScholarshipType] = useState("NON-APBN");
 
   const [summaryData, setSummaryData] = useState([]);
@@ -58,10 +58,13 @@ const AdminDashboard = () => {
   const role = user?.role?.toUpperCase() || null;
 
   const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: currentYear - 2025 + 3 },
-    (_, i) => 2025 + i
-  );
+  const yearOptions = [
+    { value: "all", label: "Semua Tahun" },
+    ...Array.from({ length: currentYear - 2023 }, (_, i) => ({
+      value: 2024 + i,
+      label: (2024 + i).toString(),
+    })),
+  ];
 
   useEffect(() => {
     document.title = "Dashboard - Admin";
@@ -97,10 +100,12 @@ const AdminDashboard = () => {
 
   const fetchAPBNData = async () => {
     try {
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+
       const [summary, distribution, categories, yearly] = await Promise.all([
-        getGovernmentScholarshipSummary(selectedYear),
-        getGovernmentScholarshipDistribution(selectedYear),
-        getGovernmentScholarshipCategories(selectedYear),
+        getGovernmentScholarshipSummary(yearParam),
+        getGovernmentScholarshipDistribution(yearParam),
+        getGovernmentScholarshipCategories(yearParam),
         getGovernmentScholarshipYearlyTrend(),
       ]);
 
@@ -136,7 +141,8 @@ const AdminDashboard = () => {
 
   const fetchSummaryData = async () => {
     try {
-      const data = await getSummary(selectedYear);
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+      const data = await getSummary(yearParam);
       const summary = [
         {
           title: "Jumlah Pendaftar",
@@ -163,11 +169,12 @@ const AdminDashboard = () => {
 
   const fetchChartData = async () => {
     try {
+      const yearParam = selectedYear === "all" ? null : selectedYear;
       const [fakultas, departemen, tahun, gender] = await Promise.all([
-        getFacultyDistribution(selectedYear),
-        getDepartmentDistribution(selectedYear),
+        getFacultyDistribution(yearParam),
+        getDepartmentDistribution(yearParam),
         getYearlyTrend(),
-        getGenderDistribution(selectedYear),
+        getGenderDistribution(yearParam),
       ]);
 
       const defaultGenderData = [
@@ -193,11 +200,16 @@ const AdminDashboard = () => {
 
   const fetchStatusAndActivities = async () => {
     try {
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+
       const [statusData, secondaryData] = await Promise.all([
-        getStatusSummary(selectedYear),
+        getStatusSummary(yearParam),
         role === "SUPERADMIN"
           ? getActivities()
-          : getApplicationsList({ limit: 5, year: selectedYear }),
+          : getApplicationsList({
+              limit: 5,
+              year: yearParam || new Date().getFullYear(),
+            }),
       ]);
 
       setStatusCounts(statusData || []);
@@ -261,12 +273,12 @@ const AdminDashboard = () => {
             <Select
               value={selectedYear}
               onChange={setSelectedYear}
-              style={{ width: 120 }}
+              style={{ width: 150 }}
               className="rounded-lg"
             >
-              {yearOptions.map((year) => (
-                <Option key={year} value={year}>
-                  {year}
+              {yearOptions.map((option) => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
                 </Option>
               ))}
             </Select>
@@ -280,6 +292,8 @@ const AdminDashboard = () => {
             {scholarshipType === "NON-APBN"
               ? "Beasiswa Non-APBN"
               : "Beasiswa Pemerintah (APBN)"}
+            {" • "}
+            {selectedYear === "all" ? "Semua Tahun" : `Tahun ${selectedYear}`}
           </span>
         </div>
       </div>
