@@ -57,6 +57,18 @@ const AdminDashboard = () => {
   } catch (e) {}
   const role = user?.role?.toUpperCase() || null;
 
+  const canSeeAPBN = [
+    "SUPERADMIN",
+    "PIMPINAN_DITMAWA",
+    "PIMPINAN_FAKULTAS",
+  ].includes(role);
+
+  useEffect(() => {
+    if (!canSeeAPBN) {
+      setScholarshipType("NON-APBN");
+    }
+  }, [canSeeAPBN]);
+
   const currentYear = new Date().getFullYear();
   const yearOptions = [
     { value: "all", label: "Semua Tahun" },
@@ -240,34 +252,33 @@ const AdminDashboard = () => {
         position="top-right"
       />
 
-      {/* Filter Section */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          {/* Scholarship Type Toggle */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setScholarshipType("NON-APBN")}
-              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
-                scholarshipType === "NON-APBN"
-                  ? "bg-[#2D60FF] text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Non-APBN
-            </button>
-            <button
-              onClick={() => setScholarshipType("APBN")}
-              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
-                scholarshipType === "APBN"
-                  ? "bg-[#2D60FF] text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              APBN
-            </button>
-          </div>
+          {canSeeAPBN && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setScholarshipType("NON-APBN")}
+                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                  scholarshipType === "NON-APBN"
+                    ? "bg-[#2D60FF] text-white shadow-md"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Non-APBN
+              </button>
+              <button
+                onClick={() => setScholarshipType("APBN")}
+                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                  scholarshipType === "APBN"
+                    ? "bg-[#2D60FF] text-white shadow-md"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                APBN
+              </button>
+            </div>
+          )}
 
-          {/* Year Selector */}
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-700">Tahun:</label>
             <Select
@@ -285,11 +296,17 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Info Badge */}
         <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
           <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
           <span className="text-sm text-blue-700 font-medium">
-            {scholarshipType === "NON-APBN"
+            {!canSeeAPBN
+              ? `Beasiswa Non-APBN ${
+                  role === "VERIFIKATOR_FAKULTAS" ||
+                  role === "PIMPINAN_FAKULTAS"
+                    ? `(Fakultas ${user?.faculty?.name || ""})`
+                    : ""
+                }`
+              : scholarshipType === "NON-APBN"
               ? "Beasiswa Non-APBN"
               : "Beasiswa Pemerintah (APBN)"}
             {" • "}
@@ -298,7 +315,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {(scholarshipType === "NON-APBN" ? summaryData : govSummaryData).map(
           (item, idx) => (
@@ -314,10 +330,8 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Charts Section */}
       {scholarshipType === "NON-APBN" ? (
         <>
-          {/* Non-APBN Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {chartsLoading ? (
               <>
@@ -443,7 +457,6 @@ const AdminDashboard = () => {
         </>
       ) : (
         <>
-          {/* APBN Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {chartsLoading ? (
               <>

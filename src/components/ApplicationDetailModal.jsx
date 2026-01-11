@@ -156,43 +156,84 @@ const ApplicationDetailModal = ({
   const renderActionButtons = () => {
     const buttons = [];
     const status = applicationDetail.status;
+    const verificationLevel = applicationDetail.verification_level;
 
-    if (!role || role === "MAHASISWA") {
+    if (
+      !role ||
+      role === "MAHASISWA" ||
+      role === "SUPERADMIN" ||
+      role === "PIMPINAN_DITMAWA"
+    ) {
       return buttons;
     }
 
-    if (status === "MENUNGGU_VERIFIKASI" && role === "VERIFIKATOR") {
-      buttons.push(
-        <Button key="reject" danger onClick={() => onReject(applicationDetail)}>
-          Tolak
-        </Button>
-      );
-      buttons.push(
-        <Button
-          key="verify"
-          type="primary"
-          onClick={() => onVerify(applicationDetail)}
-        >
-          Verifikasi
-        </Button>
-      );
+    if (role === "VERIFIKATOR_FAKULTAS") {
+      if (status === "MENUNGGU_VERIFIKASI" && verificationLevel === "FACULTY") {
+        buttons.push(
+          <Button
+            key="reject"
+            danger
+            onClick={() => onReject(applicationDetail)}
+          >
+            Tolak
+          </Button>
+        );
+        buttons.push(
+          <Button
+            key="verify"
+            type="primary"
+            onClick={() => onVerify(applicationDetail)}
+          >
+            Verifikasi
+          </Button>
+        );
+      }
     }
 
-    if (status === "VERIFIED" && role === "PIMPINAN_DITMAWA") {
-      buttons.push(
-        <Button key="reject" danger onClick={() => onReject(applicationDetail)}>
-          Tolak
-        </Button>
-      );
-      buttons.push(
-        <Button
-          key="validate"
-          type="primary"
-          onClick={() => onValidate(applicationDetail)}
-        >
-          Validasi
-        </Button>
-      );
+    if (role === "VERIFIKATOR_DITMAWA") {
+      if (status === "MENUNGGU_VERIFIKASI") {
+        buttons.push(
+          <Button
+            key="reject"
+            danger
+            onClick={() => onReject(applicationDetail)}
+          >
+            Tolak
+          </Button>
+        );
+        buttons.push(
+          <Button
+            key="verify"
+            type="primary"
+            onClick={() => onVerify(applicationDetail)}
+          >
+            Verifikasi
+          </Button>
+        );
+      }
+    }
+
+    if (role === "VALIDATOR_DITMAWA") {
+      if (status === "VERIFIED") {
+        buttons.push(
+          <Button
+            key="reject"
+            danger
+            onClick={() => onReject(applicationDetail)}
+          >
+            Tolak
+          </Button>
+        );
+        buttons.push(
+          <Button
+            key="validate"
+            type="primary"
+            onClick={() => onValidate(applicationDetail)}
+          >
+            Validasi
+          </Button>
+        );
+      }
     }
 
     return buttons;
@@ -242,6 +283,19 @@ const ApplicationDetailModal = ({
             <Descriptions.Item label="Status">
               <Tag color={getStatusColor(applicationDetail.status)}>
                 {getStatusLabel(applicationDetail.status)}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Level Verifikasi">
+              <Tag
+                color={
+                  applicationDetail.verification_level === "FACULTY"
+                    ? "blue"
+                    : "purple"
+                }
+              >
+                {applicationDetail.verification_level === "FACULTY"
+                  ? "Fakultas"
+                  : "Ditmawa"}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Tanggal Daftar">

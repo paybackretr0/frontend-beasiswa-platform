@@ -74,6 +74,7 @@ const ApplicationsAdmin = () => {
         schema_id: item.schema_id,
         scholarship_id: item.scholarship_id,
         student_id: item.student_id,
+        verification_level: item.verification_level,
       }));
 
       setApplications(transformedData);
@@ -249,7 +250,7 @@ const ApplicationsAdmin = () => {
         currentStatus === "MENUNGGU_VERIFIKASI"
       ) {
         await rejectApplication(record.id, notes);
-      } else if (role === "PIMPINAN_DITMAWA" && currentStatus === "VERIFIED") {
+      } else if (role === "VALIDATOR_DITMAWA" && currentStatus === "VERIFIED") {
         await rejectApplicationByValidator(record.id, notes);
       } else {
         warning(
@@ -322,6 +323,27 @@ const ApplicationsAdmin = () => {
       sorter: (a, b) => (a.skema || "").localeCompare(b.skema || ""),
     },
     {
+      title: "Level Verifikasi",
+      dataIndex: "verification_level",
+      key: "verification_level",
+      render: (level) => {
+        const config = {
+          FACULTY: { color: "blue", text: "Fakultas" },
+          DITMAWA: { color: "purple", text: "Ditmawa" },
+        };
+        const { color, text } = config[level] || {
+          color: "default",
+          text: level,
+        };
+        return <Tag color={color}>{text}</Tag>;
+      },
+      filters: [
+        { text: "Fakultas", value: "FACULTY" },
+        { text: "Ditmawa", value: "DITMAWA" },
+      ],
+      onFilter: (value, record) => record.verification_level === value,
+    },
+    {
       title: "Tanggal Daftar",
       dataIndex: "tanggalDaftar",
       key: "tanggalDaftar",
@@ -364,11 +386,18 @@ const ApplicationsAdmin = () => {
         key: "verify",
         label: "Verifikasi",
         icon: <CheckOutlined />,
-        hidden: (record) =>
-          !(
-            role === "VERIFIKATOR_DITMAWA" &&
-            record.status === "MENUNGGU_VERIFIKASI"
-          ),
+        hidden: (record) => {
+          if (role === "VERIFIKATOR_FAKULTAS") {
+            return !(
+              record.status === "MENUNGGU_VERIFIKASI" &&
+              record.verification_level === "FACULTY"
+            );
+          }
+          if (role === "VERIFIKATOR_DITMAWA") {
+            return record.status !== "MENUNGGU_VERIFIKASI";
+          }
+          return true;
+        },
         onClick: handleVerify,
       },
       {
@@ -376,7 +405,7 @@ const ApplicationsAdmin = () => {
         label: "Validasi",
         icon: <CheckOutlined />,
         hidden: (record) =>
-          !(role === "PIMPINAN_DITMAWA" && record.status === "VERIFIED"),
+          !(role === "VALIDATOR_DITMAWA" && record.status === "VERIFIED"),
         onClick: handleValidate,
       },
       {
@@ -385,10 +414,16 @@ const ApplicationsAdmin = () => {
         icon: <CloseOutlined />,
         danger: true,
         hidden: (record) => {
+          if (role === "VERIFIKATOR_FAKULTAS") {
+            return !(
+              record.status === "MENUNGGU_VERIFIKASI" &&
+              record.verification_level === "FACULTY"
+            );
+          }
           if (role === "VERIFIKATOR_DITMAWA") {
             return record.status !== "MENUNGGU_VERIFIKASI";
           }
-          if (role === "PIMPINAN_DITMAWA") {
+          if (role === "VALIDATOR_DITMAWA") {
             return record.status !== "VERIFIED";
           }
           return true;
@@ -413,6 +448,28 @@ const ApplicationsAdmin = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
+      {(role === "VERIFIKATOR_FAKULTAS" || role === "VERIFIKATOR_DITMAWA") && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
+            <span className="text-sm text-blue-700 font-medium">
+              {role === "VERIFIKATOR_FAKULTAS" ? (
+                <>
+                  Anda hanya melihat pendaftaran beasiswa{" "}
+                  <strong>Level Fakultas</strong> untuk fakultas{" "}
+                  {user?.faculty?.name || "Anda"}
+                </>
+              ) : (
+                <>
+                  Anda hanya melihat pendaftaran beasiswa{" "}
+                  <strong>Level Ditmawa</strong>
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         {summaryLoading
