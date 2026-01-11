@@ -59,19 +59,23 @@ const ApplicationsAdmin = () => {
     try {
       setLoading(true);
       const data = await getAllApplications();
+
       const transformedData = data.map((item, index) => ({
         key: item.id || index,
         id: item.id,
         nama: item.nama,
         email: item.email,
         beasiswa: item.beasiswa,
+        skema: item.skema,
         tanggalDaftar: item.tanggalDaftar,
-        status: getStatusLabel(item.status),
-        rawStatus: item.status,
+        status: item.status,
+        statusLabel: getStatusLabel(item.status),
         notes: item.notes,
+        schema_id: item.schema_id,
         scholarship_id: item.scholarship_id,
         student_id: item.student_id,
       }));
+
       setApplications(transformedData);
     } catch (err) {
       console.error("Error fetching applications:", err);
@@ -85,28 +89,45 @@ const ApplicationsAdmin = () => {
     try {
       setSummaryLoading(true);
       const data = await getApplicationsSummary();
+
       const summary = [
         {
           title: "Total Pendaftar",
-          value: data.total,
+          value: data.total || 0,
           color: "text-blue-600",
+          bgColor: "bg-blue-50",
         },
         {
           title: "Menunggu Verifikasi",
-          value: data.menunggu_verifikasi,
+          value: data.menunggu_verifikasi || 0,
           color: "text-orange-600",
+          bgColor: "bg-orange-50",
         },
         {
-          title: "Terverifikasi - Menunggu Validasi",
-          value: data.menunggu_validasi,
+          title: "Menunggu Validasi",
+          value: data.menunggu_validasi || 0,
           color: "text-yellow-600",
         },
         {
-          title: "Dikembalikan",
-          value: data.dikembalikan,
+          title: "Revisi",
+          value: data.revisi || 0,
+          color: "text-purple-600",
+          bgColor: "bg-purple-50",
+        },
+        {
+          title: "Lolos Validasi",
+          value: data.lolos_validasi || 0,
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+        },
+        {
+          title: "Ditolak",
+          value: data.ditolak || 0,
           color: "text-red-600",
+          bgColor: "bg-red-50",
         },
       ];
+
       setSummaryData(summary);
     } catch (err) {
       console.error("Error fetching summary:", err);
@@ -119,19 +140,21 @@ const ApplicationsAdmin = () => {
   const getStatusLabel = (status) => {
     const statusMap = {
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
-      VERIFIED: "Terverifikasi - Menunggu Validasi",
-      REJECTED: "Dikembalikan",
-      VALIDATED: "Disetujui",
+      VERIFIED: "Menunggu Validasi",
+      REJECTED: "Ditolak",
+      VALIDATED: "Lolos Validasi",
+      REVISION_NEEDED: "Revisi",
     };
     return statusMap[status] || status;
   };
 
   const getStatusColor = (status) => {
     const colorMap = {
-      "Menunggu Verifikasi": "orange",
-      "Terverifikasi - Menunggu Validasi": "blue",
-      Dikembalikan: "red",
-      Disetujui: "green",
+      MENUNGGU_VERIFIKASI: "orange",
+      VERIFIED: "blue",
+      VALIDATED: "green",
+      REJECTED: "red",
+      REVISION_NEEDED: "purple",
     };
     return colorMap[status] || "default";
   };
@@ -146,6 +169,7 @@ const ApplicationsAdmin = () => {
     } catch (err) {
       console.error("Error fetching application detail:", err);
       error("Gagal!", err.message || "Gagal memuat detail pendaftaran");
+      setDetailModalVisible(false);
     } finally {
       setDetailLoading(false);
     }
@@ -159,15 +183,12 @@ const ApplicationsAdmin = () => {
   const handleVerify = async (record) => {
     try {
       await verifyApplication(record.id, "");
-      success(
-        "Berhasil!",
-        `Pendaftaran ${
-          record.nama || record.student?.nama
-        } berhasil diverifikasi`
-      );
+      success("Berhasil!", `Pendaftaran ${record.nama} berhasil diverifikasi`);
 
-      await fetchApplications();
-      await fetchSummary();
+      setTimeout(async () => {
+        await fetchApplications();
+        await fetchSummary();
+      }, 1500);
 
       if (detailModalVisible) {
         setDetailModalVisible(false);
@@ -182,13 +203,12 @@ const ApplicationsAdmin = () => {
   const handleValidate = async (record) => {
     try {
       await validateApplication(record.id, "");
-      success(
-        "Berhasil!",
-        `Pendaftaran ${record.nama || record.student?.nama} berhasil divalidasi`
-      );
+      success("Berhasil!", `Pendaftaran ${record.nama} berhasil divalidasi`);
 
-      await fetchApplications();
-      await fetchSummary();
+      setTimeout(async () => {
+        await fetchApplications();
+        await fetchSummary();
+      }, 1500);
 
       if (detailModalVisible) {
         setDetailModalVisible(false);
@@ -222,14 +242,14 @@ const ApplicationsAdmin = () => {
     try {
       setRejectLoading(true);
 
-      const currentStatus = record.status || record.rawStatus;
+      const currentStatus = record.status;
 
-      if (role === "VERIFIKATOR" && currentStatus === "Menunggu Verifikasi") {
-        await rejectApplication(record.id, notes);
-      } else if (
-        role === "PIMPINAN_DITMAWA" &&
-        currentStatus === "Terverifikasi - Menunggu Validasi"
+      if (
+        role === "VERIFIKATOR_DITMAWA" &&
+        currentStatus === "MENUNGGU_VERIFIKASI"
       ) {
+        await rejectApplication(record.id, notes);
+      } else if (role === "PIMPINAN_DITMAWA" && currentStatus === "VERIFIED") {
         await rejectApplicationByValidator(record.id, notes);
       } else {
         warning(
@@ -239,13 +259,12 @@ const ApplicationsAdmin = () => {
         return;
       }
 
-      success(
-        "Berhasil!",
-        `Pendaftaran ${record.nama || record.student?.nama} berhasil ditolak`
-      );
+      success("Berhasil!", `Pendaftaran ${record.nama} berhasil ditolak`);
 
-      await fetchApplications();
-      await fetchSummary();
+      setTimeout(async () => {
+        await fetchApplications();
+        await fetchSummary();
+      }, 1500);
 
       if (detailModalVisible) {
         setDetailModalVisible(false);
@@ -255,7 +274,7 @@ const ApplicationsAdmin = () => {
       handleCloseRejectModal();
     } catch (err) {
       console.error("Error rejecting application:", err);
-      warning("Gagal!", err.message || "Gagal menolak pendaftaran");
+      error("Gagal!", err.message || "Gagal menolak pendaftaran");
     } finally {
       setRejectLoading(false);
     }
@@ -282,19 +301,25 @@ const ApplicationsAdmin = () => {
       title: "Nama Pendaftar",
       dataIndex: "nama",
       key: "nama",
-      sorter: (a, b) => a.nama.localeCompare(b.nama),
+      sorter: (a, b) => (a.nama || "").localeCompare(b.nama || ""),
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
-      sorter: (a, b) => a.email.localeCompare(b.email),
+      sorter: (a, b) => (a.email || "").localeCompare(b.email || ""),
     },
     {
       title: "Beasiswa",
       dataIndex: "beasiswa",
       key: "beasiswa",
-      sorter: (a, b) => a.beasiswa.localeCompare(b.beasiswa),
+      sorter: (a, b) => (a.beasiswa || "").localeCompare(b.beasiswa || ""),
+    },
+    {
+      title: "Skema",
+      dataIndex: "skema",
+      key: "skema",
+      sorter: (a, b) => (a.skema || "").localeCompare(b.skema || ""),
     },
     {
       title: "Tanggal Daftar",
@@ -316,16 +341,15 @@ const ApplicationsAdmin = () => {
       key: "status",
       render: (status) => {
         const color = getStatusColor(status);
-        return <Tag color={color}>{status}</Tag>;
+        const label = getStatusLabel(status);
+        return <Tag color={color}>{label}</Tag>;
       },
       filters: [
-        { text: "Menunggu Verifikasi", value: "Menunggu Verifikasi" },
-        {
-          text: "Terverifikasi - Menunggu Validasi",
-          value: "Terverifikasi - Menunggu Validasi",
-        },
-        { text: "Dikembalikan", value: "Dikembalikan" },
-        { text: "Disetujui", value: "Disetujui" },
+        { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
+        { text: "Menunggu Validasi", value: "VERIFIED" },
+        { text: "Lolos Validasi", value: "VALIDATED" },
+        { text: "Ditolak", value: "REJECTED" },
+        { text: "Revisi", value: "REVISION_NEEDED" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -342,7 +366,8 @@ const ApplicationsAdmin = () => {
         icon: <CheckOutlined />,
         hidden: (record) =>
           !(
-            role === "VERIFIKATOR" && record.rawStatus === "MENUNGGU_VERIFIKASI"
+            role === "VERIFIKATOR_DITMAWA" &&
+            record.status === "MENUNGGU_VERIFIKASI"
           ),
         onClick: handleVerify,
       },
@@ -351,7 +376,7 @@ const ApplicationsAdmin = () => {
         label: "Validasi",
         icon: <CheckOutlined />,
         hidden: (record) =>
-          !(role === "PIMPINAN_DITMAWA" && record.rawStatus === "VERIFIED"),
+          !(role === "PIMPINAN_DITMAWA" && record.status === "VERIFIED"),
         onClick: handleValidate,
       },
       {
@@ -360,14 +385,12 @@ const ApplicationsAdmin = () => {
         icon: <CloseOutlined />,
         danger: true,
         hidden: (record) => {
-          if (role === "VERIFIKATOR") {
-            return record.rawStatus !== "MENUNGGU_VERIFIKASI";
+          if (role === "VERIFIKATOR_DITMAWA") {
+            return record.status !== "MENUNGGU_VERIFIKASI";
           }
-
           if (role === "PIMPINAN_DITMAWA") {
-            return record.rawStatus !== "VERIFIED";
+            return record.status !== "VERIFIED";
           }
-
           return true;
         },
         onClick: handleReject,
@@ -390,9 +413,10 @@ const ApplicationsAdmin = () => {
         onRemove={removeAlert}
         position="top-right"
       />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         {summaryLoading
-          ? Array.from({ length: 4 }).map((_, idx) => (
+          ? Array.from({ length: 6 }).map((_, idx) => (
               <Card key={idx}>
                 <div className="flex flex-col items-center py-4">
                   <Spin size="small" />
@@ -400,12 +424,13 @@ const ApplicationsAdmin = () => {
               </Card>
             ))
           : summaryData.map((item, idx) => (
-              <Card key={idx}>
+              <Card key={idx} className={item.bgColor}>
                 <div className="flex flex-col items-center py-4">
-                  <span className="text-sm text-gray-600 mb-2">
+                  <div className="text-3xl mb-2">{item.icon}</div>
+                  <span className="text-xs text-gray-600 mb-2 text-center">
                     {item.title}
                   </span>
-                  <span className={`text-2xl font-bold ${item.color}`}>
+                  <span className={`text-3xl font-bold ${item.color}`}>
                     {item.value}
                   </span>
                 </div>
@@ -417,8 +442,8 @@ const ApplicationsAdmin = () => {
         title="Kelola Pendaftaran"
         data={applications}
         columns={columns}
-        searchFields={["nama", "email", "beasiswa"]}
-        searchPlaceholder="Cari nama pendaftar, email, atau beasiswa..."
+        searchFields={["nama", "email", "beasiswa", "skema"]}
+        searchPlaceholder="Cari nama pendaftar, email, beasiswa, atau skema..."
         onAdd={null}
         loading={loading}
       />

@@ -26,6 +26,7 @@ const ApplicationDetailModal = ({
       VERIFIED: "blue",
       VALIDATED: "green",
       REJECTED: "red",
+      REVISION_NEEDED: "purple",
     };
     return colorMap[status] || "default";
   };
@@ -35,7 +36,8 @@ const ApplicationDetailModal = ({
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
       VERIFIED: "Terverifikasi - Menunggu Validasi",
       VALIDATED: "Disetujui",
-      REJECTED: "Dikembalikan",
+      REJECTED: "Ditolak",
+      REVISION_NEEDED: "Revisi Diperlukan",
     };
     return statusMap[status] || status;
   };
