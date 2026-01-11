@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Select, Spin, Tag } from "antd";
-import {
-  DownloadOutlined,
-  EyeOutlined,
-  CheckOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import UniversalTable, {
@@ -32,6 +27,8 @@ import {
   getTopPerformingFaculties,
   exportLaporanBeasiswa,
 } from "../../../services/analyticsService";
+import { getApplicationDetail } from "../../../services/applicationService";
+import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 
@@ -62,6 +59,10 @@ const ReportsAdmin = () => {
   const [monthlyData, setMonthlyData] = useState([]);
   const [scholarshipPerformance, setScholarshipPerformance] = useState([]);
   const [topFaculties, setTopFaculties] = useState([]);
+
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
 
@@ -330,14 +331,25 @@ const ReportsAdmin = () => {
       });
   };
 
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem("user"));
-  } catch (e) {}
-  const role = user?.role?.toUpperCase() || null;
+  const handleDetail = async (record) => {
+    try {
+      setDetailLoading(true);
+      setDetailModalVisible(true);
 
-  const handleDetail = (record) => {
-    info("Detail Pendaftar", `Detail pendaftar: ${record.nama}`);
+      const detail = await getApplicationDetail(record.id);
+      setSelectedApplication(detail);
+    } catch (err) {
+      console.error("Error fetching application detail:", err);
+      error("Gagal!", err.message || "Gagal memuat detail pendaftaran");
+      setDetailModalVisible(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setDetailModalVisible(false);
+    setSelectedApplication(null);
   };
 
   const getStatusLabel = (status) => {
@@ -422,60 +434,6 @@ const ReportsAdmin = () => {
         label: "Detail",
         icon: <EyeOutlined />,
         onClick: handleDetail,
-      },
-      {
-        key: "verify",
-        label: "Verifikasi",
-        icon: <CheckOutlined />,
-        hidden: (record) =>
-          !(
-            (role === "VERIFIKATOR_FAKULTAS" ||
-              role === "VERIFIKATOR_DITMAWA") &&
-            record.rawStatus === "MENUNGGU_VERIFIKASI"
-          ),
-        onClick: (record) => {
-          info("Verifikasi", `Verifikasi aplikasi: ${record.nama}`);
-        },
-      },
-      {
-        key: "validate",
-        label: "Validasi",
-        icon: <CheckOutlined />,
-        hidden: (record) =>
-          !(role === "VALIDATOR_DITMAWA" && record.rawStatus === "VERIFIED"),
-        onClick: (record) => {
-          info("Validasi", `Validasi aplikasi: ${record.nama}`);
-        },
-      },
-      {
-        key: "revise",
-        label: "Minta Revisi",
-        icon: <CloseOutlined />,
-        hidden: (record) =>
-          !(
-            (role === "VERIFIKATOR_FAKULTAS" ||
-              role === "VERIFIKATOR_DITMAWA") &&
-            record.rawStatus === "MENUNGGU_VERIFIKASI"
-          ),
-        onClick: (record) => {
-          info("Revisi", `Minta revisi untuk: ${record.nama}`);
-        },
-      },
-      {
-        key: "reject",
-        label: "Tolak",
-        icon: <CloseOutlined />,
-        danger: true,
-        hidden: (record) =>
-          !(
-            ((role === "VERIFIKATOR_FAKULTAS" ||
-              role === "VERIFIKATOR_DITMAWA") &&
-              record.rawStatus === "MENUNGGU_VERIFIKASI") ||
-            (role === "VALIDATOR_DITMAWA" && record.rawStatus === "VERIFIED")
-          ),
-        onClick: (record) => {
-          info("Tolak", `Tolak aplikasi: ${record.nama}`);
-        },
       },
     ]),
   ];
@@ -789,6 +747,16 @@ const ReportsAdmin = () => {
           }}
         />
       </div>
+      <ApplicationDetailModal
+        visible={detailModalVisible}
+        onClose={handleCloseDetailModal}
+        applicationDetail={selectedApplication}
+        loading={detailLoading}
+        onVerify={null}
+        onValidate={null}
+        onReject={null}
+        role={null}
+      />
     </div>
   );
 };
