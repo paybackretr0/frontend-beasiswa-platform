@@ -43,7 +43,7 @@ const ScholarshipRoutes = () => (
       }
     />
     <Route
-      path=":id/form/create"
+      path="schema/:schemaId/form/create"
       element={
         <RoleRoute access="scholarship">
           <CreateScholarshipForm />
@@ -51,7 +51,7 @@ const ScholarshipRoutes = () => (
       }
     />
     <Route
-      path=":id/form/preview"
+      path="schema/:schemaId/form/preview"
       element={
         <RoleRoute access="scholarship">
           <PreviewScholarshipForm />
@@ -59,7 +59,7 @@ const ScholarshipRoutes = () => (
       }
     />
     <Route
-      path=":id/form/edit"
+      path="schema/:schemaId/form/edit"
       element={
         <RoleRoute access="scholarship">
           <EditScholarshipForm />

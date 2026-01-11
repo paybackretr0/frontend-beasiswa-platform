@@ -34,7 +34,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 const PreviewScholarshipForm = () => {
-  const { id: scholarshipId } = useParams();
+  const { schemaId } = useParams();
   const navigate = useNavigate();
   const [formFields, setFormFields] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,12 +60,12 @@ const PreviewScholarshipForm = () => {
   useEffect(() => {
     document.title = "Preview Form Beasiswa - Admin";
     fetchFormFields();
-  }, [scholarshipId]);
+  }, [schemaId]);
 
   const fetchFormFields = async () => {
     try {
       setLoading(true);
-      const fields = await getFormFields(scholarshipId);
+      const fields = await getFormFields(schemaId);
       setFormFields(fields);
     } catch (error) {
       console.error("Error fetching form fields:", error);
@@ -147,7 +147,7 @@ const PreviewScholarshipForm = () => {
               type="primary"
               icon={<EditOutlined />}
               onClick={() =>
-                navigate(`/admin/scholarship/${scholarshipId}/form/edit`)
+                navigate(`/admin/scholarship/schema/${schemaId}/form/edit`)
               }
               className="bg-blue-500 hover:bg-blue-600 border-blue-500"
             >
@@ -176,7 +176,7 @@ const PreviewScholarshipForm = () => {
               type="primary"
               icon={<FormOutlined />}
               onClick={() =>
-                navigate(`/admin/scholarship/${scholarshipId}/form/create`)
+                navigate(`/admin/scholarship/schema/${schemaId}/form/create`)
               }
               size="large"
             >

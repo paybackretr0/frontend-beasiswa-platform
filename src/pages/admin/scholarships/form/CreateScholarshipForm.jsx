@@ -223,7 +223,7 @@ function SortableFieldItem({
 }
 
 const CreateScholarshipForm = () => {
-  const { id: scholarshipId } = useParams();
+  const { schemaId } = useParams();
   const navigate = useNavigate();
   const [formFields, setFormFields] = useState([
     {
@@ -257,10 +257,10 @@ const CreateScholarshipForm = () => {
     document.title = "Buat Form Beasiswa - Admin";
     const checkFormExists = async () => {
       try {
-        const { hasForm } = await checkScholarshipForm(scholarshipId);
+        const { hasForm } = await checkScholarshipForm(schemaId);
         if (hasForm) {
           message.info("Form sudah ada, mengarahkan ke halaman preview...");
-          navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
+          navigate(`/admin/scholarship/schema/${schemaId}/form/preview`);
         }
       } catch (error) {
         console.error("Error checking form existence:", error);
@@ -271,7 +271,7 @@ const CreateScholarshipForm = () => {
     };
 
     checkFormExists();
-  }, [scholarshipId, navigate]);
+  }, [schemaId, navigate]);
 
   if (checkingForm) {
     return (
@@ -379,9 +379,9 @@ const CreateScholarshipForm = () => {
 
       const fieldsToSend = formFields.map(({ id, ...field }) => field);
 
-      await createFormField(scholarshipId, fieldsToSend);
+      await createFormField(schemaId, fieldsToSend);
       message.success("Form berhasil dibuat!");
-      navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
+      navigate(`/admin/scholarship/schema/${schemaId}/form/preview`);
     } catch (error) {
       console.error("Error creating form:", error);
       message.error("Gagal membuat form");

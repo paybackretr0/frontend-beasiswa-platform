@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getBeasiswaById } from "../../../services/scholarshipService";
+import {
+  getBeasiswaById,
+  activateSchema,
+  deactivateSchema,
+} from "../../../services/scholarshipService";
 import { checkScholarshipForm } from "../../../services/formService";
 import { Spin, Divider, Tag, Timeline, Collapse, Empty } from "antd";
 import {
@@ -15,6 +19,7 @@ import {
   ArrowLeftOutlined,
   OrderedListOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
@@ -29,7 +34,7 @@ const ScholarshipDetail = () => {
   const [scholarship, setScholarship] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { alerts, error, removeAlert } = useAlert();
+  const { alerts, error, success, removeAlert } = useAlert();
 
   useEffect(() => {
     document.title = "Detail Beasiswa - Admin";
@@ -66,20 +71,61 @@ const ScholarshipDetail = () => {
     });
   };
 
-  const handleFormNavigation = async (scholarshipId) => {
+  const handleFormNavigation = async (schemaId) => {
     try {
-      const { hasForm } = await checkScholarshipForm(scholarshipId);
+      const { hasForm } = await checkScholarshipForm(schemaId);
 
       if (hasForm) {
-        navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
+        navigate(`/admin/scholarship/schema/${schemaId}/form/preview`);
       } else {
-        navigate(`/admin/scholarship/${scholarshipId}/form/create`);
+        navigate(`/admin/scholarship/schema/${schemaId}/form/create`);
       }
     } catch (err) {
       console.error("Error checking form status:", err);
       error(
         "Gagal Memeriksa Status Form",
         err.message || "Gagal memeriksa status form"
+      );
+    }
+  };
+
+  const handleSchemaToggle = async (schemaId, currentStatus, schemaName) => {
+    setScholarship((prev) => ({
+      ...prev,
+      schemas: prev.schemas.map((schema) =>
+        schema.id === schemaId
+          ? { ...schema, is_active: !currentStatus }
+          : schema
+      ),
+    }));
+
+    try {
+      if (currentStatus) {
+        await deactivateSchema(schemaId);
+        success("Berhasil", `Skema "${schemaName}" telah dinonaktifkan`);
+      } else {
+        await activateSchema(schemaId);
+        success("Berhasil", `Skema "${schemaName}" telah diaktifkan`);
+      }
+
+      setTimeout(() => {
+        fetchScholarshipDetail();
+      }, 2000);
+    } catch (err) {
+      console.error("Error toggling schema:", err);
+
+      setScholarship((prev) => ({
+        ...prev,
+        schemas: prev.schemas.map((schema) =>
+          schema.id === schemaId
+            ? { ...schema, is_active: currentStatus }
+            : schema
+        ),
+      }));
+
+      error(
+        "Gagal Mengubah Status",
+        err.message || "Gagal mengubah status schema"
       );
     }
   };
@@ -134,16 +180,6 @@ const ScholarshipDetail = () => {
           </div>
 
           <div className="flex gap-3">
-            {!scholarship?.is_external && (
-              <Button
-                onClick={handleFormNavigation}
-                className="!px-6 !py-2 !bg-green-500 hover:!bg-green-600"
-              >
-                <FileTextOutlined className="mr-2" />
-                Kelola Form
-              </Button>
-            )}
-
             <Button
               onClick={() =>
                 navigate(`/admin/scholarship/edit/${scholarship.id}`, {
@@ -234,6 +270,54 @@ const ScholarshipDetail = () => {
                       }
                       key={schema.id}
                       className="mb-3"
+                      extra={
+                        <div
+                          className="flex gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {!scholarship.is_external && (
+                            <Button
+                              size="small"
+                              onClick={() => handleFormNavigation(schema.id)}
+                              className="!bg-green-500 hover:!bg-green-600 !text-white"
+                            >
+                              <FileTextOutlined className="mr-1" />
+                              Kelola Form
+                            </Button>
+                          )}
+
+                          {!scholarship.is_external &&
+                            scholarship.is_active && (
+                              <Button
+                                size="small"
+                                onClick={() =>
+                                  handleSchemaToggle(
+                                    schema.id,
+                                    schema.is_active,
+                                    schema.name
+                                  )
+                                }
+                                className={
+                                  schema.is_active
+                                    ? "!bg-red-500 hover:!bg-red-600 !text-white"
+                                    : "!bg-blue-500 hover:!bg-blue-600 !text-white"
+                                }
+                              >
+                                {schema.is_active ? (
+                                  <>
+                                    <CloseCircleOutlined className="mr-1" />
+                                    Nonaktifkan
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircleOutlined className="mr-1" />
+                                    Aktifkan
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                        </div>
+                      }
                     >
                       <div className="space-y-4 pl-4">
                         {schema.description && (
@@ -247,7 +331,7 @@ const ScholarshipDetail = () => {
                           </div>
                         )}
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between bg-gray-50 rounded-lg">
                           <InfoBox
                             label="Kuota"
                             value={schema.quota || "Tidak terbatas"}
@@ -259,10 +343,6 @@ const ScholarshipDetail = () => {
                           <InfoBox
                             label="Semester Min"
                             value={schema.semester_minimum || "-"}
-                          />
-                          <InfoBox
-                            label="Syarat"
-                            value={`${schema.requirements?.length || 0} item`}
                           />
                         </div>
 
@@ -281,16 +361,6 @@ const ScholarshipDetail = () => {
                                   key={idx}
                                   className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded"
                                 >
-                                  <Tag
-                                    color={
-                                      req.requirement_type === "FILE"
-                                        ? "orange"
-                                        : "blue"
-                                    }
-                                    className="mb-2"
-                                  >
-                                    {req.requirement_type}
-                                  </Tag>
                                   {req.requirement_type === "TEXT" ? (
                                     <p className="text-gray-700 text-sm">
                                       {req.requirement_text}
@@ -333,7 +403,6 @@ const ScholarshipDetail = () => {
                                   key={idx}
                                   className="flex items-center space-x-2 bg-green-50 rounded p-2 text-sm"
                                 >
-                                  <CheckCircleOutlined className="text-green-500" />
                                   <span className="text-gray-700">
                                     {doc.document_name}
                                   </span>

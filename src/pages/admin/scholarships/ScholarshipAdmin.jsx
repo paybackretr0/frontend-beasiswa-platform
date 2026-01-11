@@ -9,7 +9,6 @@ import {
   EditOutlined,
   CheckOutlined,
   DeleteOutlined,
-  AlignLeftOutlined,
 } from "@ant-design/icons";
 import {
   fetchAllScholarships,
@@ -19,7 +18,6 @@ import {
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 import { useNavigate } from "react-router-dom";
-import { checkScholarshipForm } from "../../../services/formService";
 
 const ScholarshipAdmin = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -102,24 +100,6 @@ const ScholarshipAdmin = () => {
     }
   };
 
-  const handleFormNavigation = async (scholarshipId) => {
-    try {
-      const { hasForm } = await checkScholarshipForm(scholarshipId);
-
-      if (hasForm) {
-        navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
-      } else {
-        navigate(`/admin/scholarship/${scholarshipId}/form/create`);
-      }
-    } catch (err) {
-      console.error("Error checking form status:", err);
-      error(
-        "Gagal Memeriksa Status Form",
-        err.message || "Gagal memeriksa status form"
-      );
-    }
-  };
-
   const columns = [
     createNumberColumn(),
     {
@@ -197,13 +177,6 @@ const ScholarshipAdmin = () => {
           label: "Detail",
           icon: <EyeOutlined />,
           onClick: (record) => navigate(`/admin/scholarship/${record.id}`),
-        },
-        {
-          key: "form",
-          label: "Kelola Form",
-          icon: <AlignLeftOutlined />,
-          onClick: (record) => handleFormNavigation(record.id),
-          hidden: (record) => record.is_external,
         },
         {
           key: "edit",

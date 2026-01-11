@@ -6,9 +6,10 @@ import { getDepartments } from "../../../../services/departmentService";
 import { getStudyPrograms } from "../../../../services/studyProgramService";
 import useAlert from "../../../../hooks/useAlert";
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
+import AlertContainer from "../../../../components/AlertContainer";
 
 const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
-  const { warning } = useAlert();
+  const { warning, alerts, removeAlert } = useAlert();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,6 +25,8 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   ]);
 
   const [documents, setDocuments] = useState([]);
+  const [customDocuments, setCustomDocuments] = useState([]);
+  const [newCustomDoc, setNewCustomDoc] = useState("");
   const [stages, setStages] = useState([
     { id: 1, name: "ADMINISTRASI", order_no: 1 },
   ]);
@@ -37,7 +40,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   const [selectedStudyPrograms, setSelectedStudyPrograms] = useState([]);
 
   const defaultDocuments = [
-    "KTP/Identitas",
+    "KTP",
     "KTM",
     "Transkrip Nilai",
     "Surat Keterangan Tidak Mampu",
@@ -94,7 +97,12 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     const firstType = initialRequirements[0]?.type || "TEXT";
     setRequirementType(firstType);
 
-    setDocuments(data.documents || []);
+    const allDocs = data.documents || [];
+    const defaultDocs = allDocs.filter((doc) => defaultDocuments.includes(doc));
+    const customDocs = allDocs.filter((doc) => !defaultDocuments.includes(doc));
+
+    setDocuments(defaultDocs);
+    setCustomDocuments(customDocs);
 
     const sortedStages = (data.stages || [])
       .sort((a, b) => (a.order_no || 0) - (b.order_no || 0))
@@ -128,6 +136,8 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       { id: 1, type: "TEXT", text: "", file: null, fileName: "" },
     ]);
     setDocuments([]);
+    setCustomDocuments([]);
+    setNewCustomDoc("");
     setStages([{ id: 1, name: "ADMINISTRASI", order_no: 1 }]);
     setSelectedFaculties([]);
     setSelectedDepartments([]);
@@ -222,6 +232,32 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     setDocuments((prev) =>
       prev.includes(doc) ? prev.filter((d) => d !== doc) : [...prev, doc]
     );
+  };
+
+  const addCustomDocument = () => {
+    const trimmedDoc = newCustomDoc.trim();
+
+    if (!trimmedDoc) {
+      warning("Dokumen Kosong", "Nama dokumen tidak boleh kosong");
+      return;
+    }
+
+    if (defaultDocuments.includes(trimmedDoc)) {
+      warning("Dokumen Sudah Ada di Daftar", "Silakan centang saja.");
+      return;
+    }
+
+    if (customDocuments.includes(trimmedDoc)) {
+      warning("Dokumen Duplikat", "Dokumen custom ini sudah ditambahkan");
+      return;
+    }
+
+    setCustomDocuments([...customDocuments, trimmedDoc]);
+    setNewCustomDoc("");
+  };
+
+  const removeCustomDocument = (doc) => {
+    setCustomDocuments(customDocuments.filter((d) => d !== doc));
   };
 
   const handleFacultyToggle = (facultyId, isChecked) => {
@@ -460,7 +496,9 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       return;
     }
 
-    if (documents.length === 0) {
+    const allDocuments = [...documents, ...customDocuments];
+
+    if (allDocuments.length === 0) {
       warning(
         "Dokumen Wajib",
         "Pilih minimal 1 dokumen yang wajib diunggah mahasiswa"
@@ -477,7 +515,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
         file: r.type === "FILE" ? r.file : null,
         fileName: r.type === "FILE" ? r.fileName : null,
       })),
-      documents,
+      documents: allDocuments,
       stages: stages.map((s, index) => ({
         name: s.name,
         stage_name: s.name,
@@ -493,474 +531,555 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   };
 
   return (
-    <Modal
-      title={initialData ? "Edit Skema" : "Tambah Skema Baru"}
-      open={visible}
-      onCancel={onClose}
-      footer={null}
-      width={900}
-      destroyOnHidden
-    >
-      <div className="max-h-[70vh] overflow-y-auto p-4">
-        <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">Informasi Skema</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nama Skema <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                placeholder="Contoh: Prestasi Akademik"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Deskripsi
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                rows="2"
-                placeholder="Deskripsi singkat skema"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kuota Penerima
-              </label>
-              <input
-                type="number"
-                value={formData.quota}
-                onChange={(e) => handleInputChange("quota", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                placeholder="Kosongkan jika tidak terbatas"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                IPK Minimum
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                max="4.00"
-                value={formData.gpa_minimum}
-                onChange={(e) =>
-                  handleInputChange("gpa_minimum", e.target.value)
-                }
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                placeholder="Contoh: 3.00"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Semester Minimum <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.semester_minimum}
-                onChange={(e) =>
-                  handleInputChange("semester_minimum", e.target.value)
-                }
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                placeholder="Contoh: 3"
-              />
+    <>
+      <div style={{ position: "relative", zIndex: 1050 }}>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+      </div>
+      <Modal
+        title={initialData ? "Edit Skema" : "Tambah Skema Baru"}
+        open={visible}
+        onCancel={onClose}
+        footer={null}
+        width={900}
+        destroyOnHidden
+      >
+        <div className="max-h-[70vh] overflow-y-auto p-4">
+          <div className="mb-6">
+            <h3 className="font-semibold text-gray-800 mb-3">
+              Informasi Skema
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Skema <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Contoh: Prestasi Akademik"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Deskripsi
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  rows="2"
+                  placeholder="Deskripsi singkat skema"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kuota Penerima
+                </label>
+                <input
+                  type="number"
+                  value={formData.quota}
+                  onChange={(e) => handleInputChange("quota", e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Kosongkan jika tidak terbatas"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  IPK Minimum
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  max="4.00"
+                  value={formData.gpa_minimum}
+                  onChange={(e) =>
+                    handleInputChange("gpa_minimum", e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Contoh: 3.00"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Semester Minimum <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.semester_minimum}
+                  onChange={(e) =>
+                    handleInputChange("semester_minimum", e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Contoh: 3"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">
-            Syarat & Ketentuan <span className="text-red-500">*</span>
-          </h3>
-          <p className="text-xs text-gray-500 mb-3">
-            Pilih tipe: Teks (bisa banyak) atau File PDF (hanya 1 file)
-          </p>
+          <div className="mb-6">
+            <h3 className="font-semibold text-gray-800 mb-3">
+              Syarat & Ketentuan <span className="text-red-500">*</span>
+            </h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Pilih tipe: Teks (bisa banyak) atau File PDF (hanya 1 file)
+            </p>
 
-          <div className="mb-4">
-            <select
-              value={requirementType}
-              onChange={(e) => handleTypeChange(e.target.value)}
-              className="border border-gray-300 rounded-md px-4 py-2 text-sm"
-            >
-              <option value="TEXT">Teks</option>
-              <option value="FILE">File PDF</option>
-            </select>
-          </div>
+            <div className="mb-4">
+              <select
+                value={requirementType}
+                onChange={(e) => handleTypeChange(e.target.value)}
+                className="border border-gray-300 rounded-md px-4 py-2 text-sm"
+              >
+                <option value="TEXT">Teks</option>
+                <option value="FILE">File PDF</option>
+              </select>
+            </div>
 
-          {requirements.map((req, index) => (
-            <div key={req.id} className="mb-3">
-              {requirementType === "FILE" ? (
-                <div>
-                  {req.fileName ? (
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded">
-                      <span className="text-sm text-blue-700 flex-1">
-                        {req.fileName}
-                      </span>
+            {requirements.map((req, index) => (
+              <div key={req.id} className="mb-3">
+                {requirementType === "FILE" ? (
+                  <div>
+                    {req.fileName ? (
+                      <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                        <span className="text-sm text-blue-700 flex-1">
+                          {req.fileName}
+                        </span>
+                        <button
+                          onClick={() => removeRequirementFile(req.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <DeleteOutlined />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                        <UploadOutlined className="text-gray-500" />
+                        <span className="text-sm text-gray-600">
+                          Klik untuk upload file PDF syarat & ketentuan
+                        </span>
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) =>
+                            handleRequirementFileChange(
+                              req.id,
+                              e.target.files[0]
+                            )
+                          }
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="text"
+                      value={req.text}
+                      onChange={(e) =>
+                        updateRequirement(req.id, "text", e.target.value)
+                      }
+                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder={`Masukkan syarat ${index + 1}`}
+                    />
+                    {requirements.length > 1 && (
                       <button
-                        onClick={() => removeRequirementFile(req.id)}
+                        onClick={() => removeRequirement(req.id)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Hapus
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {requirementType === "TEXT" && (
+              <button
+                onClick={addRequirement}
+                className="text-blue-500 hover:text-blue-700 text-sm mt-2"
+              >
+                + Tambah Syarat
+              </button>
+            )}
+          </div>
+
+          <div className="mb-6">
+            <h3 className="font-semibold text-gray-800 mb-3">
+              Tahapan Seleksi <span className="text-red-500">*</span>
+            </h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Urutan tahapan seleksi beasiswa (otomatis terurut)
+            </p>
+            {stages.map((stage, index) => (
+              <div key={stage.id} className="flex gap-2 mb-2 items-center">
+                <span className="text-sm font-medium text-gray-600 w-8">
+                  {index + 1}.
+                </span>
+                <input
+                  type="text"
+                  value={stage.name}
+                  onChange={(e) => updateStage(stage.id, e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Contoh: ADMINISTRASI, WAWANCARA, PENGUMUMAN"
+                />
+                {stages.length > 1 && (
+                  <button
+                    onClick={() => removeStage(stage.id)}
+                    className="text-red-500 hover:text-red-700 px-2"
+                  >
+                    <DeleteOutlined />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              onClick={addStage}
+              className="text-blue-500 hover:text-blue-700 text-sm mt-2"
+            >
+              + Tambah Tahapan
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="font-semibold text-gray-800 mb-3">
+              Dokumen Wajib <span className="text-red-500">*</span>
+            </h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Pilih dokumen yang wajib diunggah oleh mahasiswa saat mendaftar
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dokumen Umum (Pilih dari daftar)
+              </label>
+              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border p-3 rounded bg-gray-50">
+                {defaultDocuments.map((doc) => (
+                  <div key={doc} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`doc-${doc}`}
+                      checked={documents.includes(doc)}
+                      onChange={(e) => toggleDocument(doc)}
+                      className="cursor-pointer"
+                    />
+                    <label
+                      htmlFor={`doc-${doc}`}
+                      className="text-sm text-gray-700 cursor-pointer"
+                    >
+                      {doc}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {documents.length} dokumen dipilih
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dokumen Lainnya (Tambah manual)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCustomDoc}
+                  onChange={(e) => setNewCustomDoc(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addCustomDocument()}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Contoh: Surat Keterangan Bekerja"
+                />
+                <Button
+                  onClick={addCustomDocument}
+                  className="!px-4 !py-2 whitespace-nowrap"
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+
+            {customDocuments.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dokumen Lainnya Ditambahkan
+                </label>
+                <div className="border rounded bg-blue-50 p-3 space-y-2">
+                  {customDocuments.map((doc) => (
+                    <div
+                      key={doc}
+                      className="flex items-center justify-between bg-white px-3 py-2 rounded border border-blue-200"
+                    >
+                      <span className="text-sm text-gray-700">{doc}</span>
+                      <button
+                        onClick={() => removeCustomDocument(doc)}
                         className="text-red-500 hover:text-red-700"
                       >
                         <DeleteOutlined />
                       </button>
                     </div>
-                  ) : (
-                    <label className="flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                      <UploadOutlined className="text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        Klik untuk upload file PDF syarat & ketentuan
-                      </span>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) =>
-                          handleRequirementFileChange(req.id, e.target.files[0])
-                        }
-                        className="hidden"
-                      />
-                    </label>
-                  )}
+                  ))}
                 </div>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <input
-                    type="text"
-                    value={req.text}
-                    onChange={(e) =>
-                      updateRequirement(req.id, "text", e.target.value)
-                    }
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    placeholder={`Masukkan syarat ${index + 1}`}
-                  />
-                  {requirements.length > 1 && (
-                    <button
-                      onClick={() => removeRequirement(req.id)}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      Hapus
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {requirementType === "TEXT" && (
-            <button
-              onClick={addRequirement}
-              className="text-blue-500 hover:text-blue-700 text-sm mt-2"
-            >
-              + Tambah Syarat
-            </button>
-          )}
-        </div>
-
-        <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">
-            Tahapan Seleksi <span className="text-red-500">*</span>
-          </h3>
-          <p className="text-xs text-gray-500 mb-3">
-            Urutan tahapan seleksi beasiswa (otomatis terurut)
-          </p>
-          {stages.map((stage, index) => (
-            <div key={stage.id} className="flex gap-2 mb-2 items-center">
-              <span className="text-sm font-medium text-gray-600 w-8">
-                {index + 1}.
-              </span>
-              <input
-                type="text"
-                value={stage.name}
-                onChange={(e) => updateStage(stage.id, e.target.value)}
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
-                placeholder="Contoh: ADMINISTRASI, WAWANCARA, PENGUMUMAN"
-              />
-              {stages.length > 1 && (
-                <button
-                  onClick={() => removeStage(stage.id)}
-                  className="text-red-500 hover:text-red-700 px-2"
-                >
-                  <DeleteOutlined />
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            onClick={addStage}
-            className="text-blue-500 hover:text-blue-700 text-sm mt-2"
-          >
-            + Tambah Tahapan
-          </button>
-        </div>
-
-        <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">
-            Dokumen Wajib <span className="text-red-500">*</span>
-          </h3>
-          <p className="text-xs text-gray-500 mb-3">
-            Pilih dokumen yang wajib diunggah oleh mahasiswa saat mendaftar
-          </p>
-          <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border p-3 rounded bg-gray-50">
-            {defaultDocuments.map((doc) => (
-              <div key={doc} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id={`doc-${doc}`}
-                  checked={documents.includes(doc)}
-                  onChange={(e) => toggleDocument(doc)}
-                  className="cursor-pointer"
-                />
-                <label
-                  htmlFor={`doc-${doc}`}
-                  className="text-sm text-gray-700 cursor-pointer"
-                >
-                  {doc}
-                </label>
+                <p className="text-xs text-blue-600 mt-2">
+                  {customDocuments.length} dokumen ditambahkan
+                </p>
               </div>
-            ))}
+            )}
+
+            <div className="bg-gray-100 p-3 rounded border border-gray-300">
+              <p className="text-sm font-medium text-gray-700">
+                Total:{" "}
+                <span className="text-blue-600">
+                  {documents.length + customDocuments.length}
+                </span>{" "}
+                dokumen wajib
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            {documents.length} dokumen dipilih
-          </p>
-        </div>
 
-        <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">Target Mahasiswa</h3>
-          <p className="text-xs text-gray-500 mb-3">
-            Pilih fakultas/departemen/prodi yang dapat mendaftar skema ini
-          </p>
+          <div className="mb-6">
+            <h3 className="font-semibold text-gray-800 mb-3">
+              Target Mahasiswa
+            </h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Pilih fakultas/departemen/prodi yang dapat mendaftar skema ini
+            </p>
 
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Fakultas
-                </label>
-                <div className="flex gap-2">
-                  {isAllFacultiesSelected() ? (
-                    <button
-                      onClick={handleClearAllFaculties}
-                      className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
-                    >
-                      Hapus Semua
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSelectAllFaculties}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                    >
-                      Pilih Semua
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
-                {faculties.map((faculty) => (
-                  <div key={faculty.id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id={`faculty-${faculty.id}`}
-                      checked={selectedFaculties.includes(faculty.id)}
-                      onChange={(e) =>
-                        handleFacultyToggle(faculty.id, e.target.checked)
-                      }
-                      className="cursor-pointer"
-                    />
-                    <label
-                      htmlFor={`faculty-${faculty.id}`}
-                      className="text-sm text-gray-700 cursor-pointer"
-                    >
-                      {faculty.name}
-                    </label>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Fakultas
+                  </label>
+                  <div className="flex gap-2">
+                    {isAllFacultiesSelected() ? (
+                      <button
+                        onClick={handleClearAllFaculties}
+                        className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
+                      >
+                        Hapus Semua
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSelectAllFaculties}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      >
+                        Pilih Semua
+                      </button>
+                    )}
                   </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {selectedFaculties.length} dari {faculties.length} fakultas
-                dipilih
-                {isAllFacultiesSelected() && (
-                  <span className="text-green-600 font-medium ml-2">
-                    Semua dipilih
-                  </span>
-                )}
-              </p>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Departemen
-                </label>
-                <div className="flex gap-2">
-                  {isAllDepartmentsSelected() ? (
-                    <button
-                      onClick={handleClearAllDepartments}
-                      className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
-                    >
-                      Hapus Semua
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSelectAllDepartments}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                    >
-                      Pilih Semua
-                    </button>
-                  )}
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
-                {departments.map((dept) => {
-                  const isDisabled = selectedFaculties.includes(
-                    dept.faculty_id
-                  );
-
-                  return (
-                    <div
-                      key={dept.id}
-                      className={`flex items-center gap-2 ${
-                        isDisabled ? "opacity-50" : ""
-                      }`}
-                    >
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
+                  {faculties.map((faculty) => (
+                    <div key={faculty.id} className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        id={`dept-${dept.id}`}
-                        checked={selectedDepartments.includes(dept.id)}
+                        id={`faculty-${faculty.id}`}
+                        checked={selectedFaculties.includes(faculty.id)}
                         onChange={(e) =>
-                          handleDepartmentToggle(dept.id, e.target.checked)
+                          handleFacultyToggle(faculty.id, e.target.checked)
                         }
-                        disabled={isDisabled}
-                        className="cursor-pointer disabled:cursor-not-allowed"
+                        className="cursor-pointer"
                       />
                       <label
-                        htmlFor={`dept-${dept.id}`}
-                        className={`text-sm text-gray-700 ${
-                          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
-                        }`}
+                        htmlFor={`faculty-${faculty.id}`}
+                        className="text-sm text-gray-700 cursor-pointer"
                       >
-                        {dept.name}
-                        {isDisabled && (
-                          <span className="text-xs text-blue-600 ml-1">
-                            (via fakultas)
-                          </span>
-                        )}
+                        {faculty.name}
                       </label>
                     </div>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {selectedDepartments.length} dari {departments.length}{" "}
-                departemen dipilih
-                {isAllDepartmentsSelected() && (
-                  <span className="text-green-600 font-medium ml-2">
-                    Semua dipilih
-                  </span>
-                )}
-              </p>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Program Studi
-                </label>
-                <div className="flex gap-2">
-                  {isAllStudyProgramsSelected() ? (
-                    <button
-                      onClick={handleClearAllStudyPrograms}
-                      className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
-                    >
-                      Hapus Semua
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSelectAllStudyPrograms}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                    >
-                      Pilih Semua
-                    </button>
-                  )}
+                  ))}
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedFaculties.length} dari {faculties.length} fakultas
+                  dipilih
+                  {isAllFacultiesSelected() && (
+                    <span className="text-green-600 font-medium ml-2">
+                      Semua dipilih
+                    </span>
+                  )}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
-                {studyPrograms.map((prog) => {
-                  const isDisabledByFaculty = selectedFaculties.includes(
-                    prog.department?.faculty_id
-                  );
-                  const isDisabledByDepartment = selectedDepartments.includes(
-                    prog.department_id
-                  );
-                  const isDisabled =
-                    isDisabledByFaculty || isDisabledByDepartment;
 
-                  return (
-                    <div
-                      key={prog.id}
-                      className={`flex items-center gap-2 ${
-                        isDisabled ? "opacity-50" : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        id={`prog-${prog.id}`}
-                        checked={selectedStudyPrograms.includes(prog.id)}
-                        onChange={(e) =>
-                          handleStudyProgramToggle(prog.id, e.target.checked)
-                        }
-                        disabled={isDisabled}
-                        className="cursor-pointer disabled:cursor-not-allowed"
-                      />
-                      <label
-                        htmlFor={`prog-${prog.id}`}
-                        className={`text-sm text-gray-700 ${
-                          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Departemen
+                  </label>
+                  <div className="flex gap-2">
+                    {isAllDepartmentsSelected() ? (
+                      <button
+                        onClick={handleClearAllDepartments}
+                        className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
+                      >
+                        Hapus Semua
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSelectAllDepartments}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      >
+                        Pilih Semua
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
+                  {departments.map((dept) => {
+                    const isDisabled = selectedFaculties.includes(
+                      dept.faculty_id
+                    );
+
+                    return (
+                      <div
+                        key={dept.id}
+                        className={`flex items-center gap-2 ${
+                          isDisabled ? "opacity-50" : ""
                         }`}
                       >
-                        {prog.degree} {prog.name}
-                        {isDisabledByFaculty && (
-                          <span className="text-xs text-blue-600 ml-1">
-                            (via fakultas)
-                          </span>
-                        )}
-                        {isDisabledByDepartment && !isDisabledByFaculty && (
-                          <span className="text-xs text-green-600 ml-1">
-                            (via departemen)
-                          </span>
-                        )}
-                      </label>
-                    </div>
-                  );
-                })}
+                        <input
+                          type="checkbox"
+                          id={`dept-${dept.id}`}
+                          checked={selectedDepartments.includes(dept.id)}
+                          onChange={(e) =>
+                            handleDepartmentToggle(dept.id, e.target.checked)
+                          }
+                          disabled={isDisabled}
+                          className="cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <label
+                          htmlFor={`dept-${dept.id}`}
+                          className={`text-sm text-gray-700 ${
+                            isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                          }`}
+                        >
+                          {dept.name}
+                          {isDisabled && (
+                            <span className="text-xs text-blue-600 ml-1">
+                              (via fakultas)
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedDepartments.length} dari {departments.length}{" "}
+                  departemen dipilih
+                  {isAllDepartmentsSelected() && (
+                    <span className="text-green-600 font-medium ml-2">
+                      Semua dipilih
+                    </span>
+                  )}
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {selectedStudyPrograms.length} dari {studyPrograms.length}{" "}
-                program studi dipilih
-                {isAllStudyProgramsSelected() && (
-                  <span className="text-green-600 font-medium ml-2">
-                    Semua dipilih
-                  </span>
-                )}
-              </p>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Program Studi
+                  </label>
+                  <div className="flex gap-2">
+                    {isAllStudyProgramsSelected() ? (
+                      <button
+                        onClick={handleClearAllStudyPrograms}
+                        className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
+                      >
+                        Hapus Semua
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSelectAllStudyPrograms}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      >
+                        Pilih Semua
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
+                  {studyPrograms.map((prog) => {
+                    const isDisabledByFaculty = selectedFaculties.includes(
+                      prog.department?.faculty_id
+                    );
+                    const isDisabledByDepartment = selectedDepartments.includes(
+                      prog.department_id
+                    );
+                    const isDisabled =
+                      isDisabledByFaculty || isDisabledByDepartment;
+
+                    return (
+                      <div
+                        key={prog.id}
+                        className={`flex items-center gap-2 ${
+                          isDisabled ? "opacity-50" : ""
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          id={`prog-${prog.id}`}
+                          checked={selectedStudyPrograms.includes(prog.id)}
+                          onChange={(e) =>
+                            handleStudyProgramToggle(prog.id, e.target.checked)
+                          }
+                          disabled={isDisabled}
+                          className="cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <label
+                          htmlFor={`prog-${prog.id}`}
+                          className={`text-sm text-gray-700 ${
+                            isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                          }`}
+                        >
+                          {prog.degree} {prog.department.name}
+                          {isDisabledByFaculty && (
+                            <span className="text-xs text-blue-600 ml-1">
+                              (via fakultas)
+                            </span>
+                          )}
+                          {isDisabledByDepartment && !isDisabledByFaculty && (
+                            <span className="text-xs text-green-600 ml-1">
+                              (via departemen)
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedStudyPrograms.length} dari {studyPrograms.length}{" "}
+                  program studi dipilih
+                  {isAllStudyProgramsSelected() && (
+                    <span className="text-green-600 font-medium ml-2">
+                      Semua dipilih
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-end gap-2 mt-6">
-          <Button onClick={onClose} className="bg-gray-500 hover:bg-gray-600">
-            Batal
-          </Button>
-          <Button onClick={handleSave}>Simpan Skema</Button>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button onClick={onClose} className="bg-gray-500 hover:bg-gray-600">
+              Batal
+            </Button>
+            <Button onClick={handleSave}>Simpan Skema</Button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 };
 

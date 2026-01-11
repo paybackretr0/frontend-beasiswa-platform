@@ -154,11 +154,6 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
                       <h3 className="text-lg font-semibold text-gray-800">
                         {index + 1}. {schema.name}
                       </h3>
-                      {!schema.is_active && (
-                        <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-                          Nonaktif
-                        </span>
-                      )}
                     </div>
 
                     {schema.description && (

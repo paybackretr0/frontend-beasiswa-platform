@@ -347,3 +347,39 @@ export const fetchActiveScholarshipsForInfo = async () => {
 
   return data.data;
 };
+
+export const activateSchema = async (schemaId) => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(
+    `${API_BASE_URL}/beasiswa/schema/${schemaId}/activate`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengaktifkan schema");
+  }
+  return data.data;
+};
+
+export const deactivateSchema = async (schemaId) => {
+  const token = localStorage.getItem("access_token");
+  const data = await authFetch(
+    `${API_BASE_URL}/beasiswa/schema/${schemaId}/deactivate`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!data.success) {
+    throw new Error(data.message || "Gagal menonaktifkan schema");
+  }
+  return data.data;
+};

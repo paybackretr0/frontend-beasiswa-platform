@@ -229,7 +229,7 @@ function SortableEditFieldItem({
 }
 
 const EditScholarshipForm = () => {
-  const { id: scholarshipId } = useParams();
+  const { schemaId } = useParams();
   const navigate = useNavigate();
   const [formFields, setFormFields] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -256,12 +256,12 @@ const EditScholarshipForm = () => {
   useEffect(() => {
     document.title = "Edit Form Beasiswa - Admin";
     fetchFormFields();
-  }, [scholarshipId]);
+  }, [schemaId]);
 
   const fetchFormFields = async () => {
     try {
       setInitialLoading(true);
-      const fields = await getFormFields(scholarshipId);
+      const fields = await getFormFields(schemaId);
 
       const transformedFields = fields.map((field, index) => ({
         id: field.id || `field-${index}-${Date.now()}`,
@@ -406,10 +406,10 @@ const EditScholarshipForm = () => {
         options: field.options,
       }));
 
-      await updateFormField(scholarshipId, fieldsToSend);
+      await updateFormField(schemaId, fieldsToSend);
       success("Berhasil!", "Form berhasil diupdate!");
       setTimeout(() => {
-        navigate(`/admin/scholarship/${scholarshipId}/form/preview`);
+        navigate(`/admin/scholarship/schema/${schemaId}/form/preview`);
       }, 2000);
     } catch (error) {
       console.error("Error updating form:", error);
@@ -469,7 +469,7 @@ const EditScholarshipForm = () => {
             <Space>
               <Button
                 onClick={() =>
-                  navigate(`/admin/scholarship/${scholarshipId}/form/preview`)
+                  navigate(`/admin/scholarship/schema/${schemaId}/form/preview`)
                 }
               >
                 Lihat Preview
