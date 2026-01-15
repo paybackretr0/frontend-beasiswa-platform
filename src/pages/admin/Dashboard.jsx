@@ -6,6 +6,7 @@ import {
   HorizontalBarChart,
   PieChart,
   ChartEmptyState,
+  PerformanceBarChart,
 } from "../../components/Chart";
 import {
   getSummary,
@@ -16,6 +17,7 @@ import {
   getStatusSummary,
   getActivities,
   getApplicationsList,
+  getScholarshipPerformance,
 } from "../../services/analyticsService";
 import {
   getGovernmentScholarshipSummary,
@@ -43,6 +45,7 @@ const AdminDashboard = () => {
   const [statusCounts, setStatusCounts] = useState([]);
   const [activities, setActivities] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
+  const [scholarshipPerformance, setScholarshipPerformance] = useState([]);
 
   const [govSummaryData, setGovSummaryData] = useState([]);
   const [govDistributionData, setGovDistributionData] = useState([]);
@@ -56,6 +59,10 @@ const AdminDashboard = () => {
     user = JSON.parse(localStorage.getItem("user"));
   } catch (e) {}
   const role = user?.role?.toUpperCase() || null;
+
+  const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
+    role
+  );
 
   const canSeeAPBN = [
     "SUPERADMIN",
@@ -182,12 +189,25 @@ const AdminDashboard = () => {
   const fetchChartData = async () => {
     try {
       const yearParam = selectedYear === "all" ? null : selectedYear;
-      const [fakultas, departemen, tahun, gender] = await Promise.all([
-        getFacultyDistribution(yearParam),
-        getDepartmentDistribution(yearParam),
-        getYearlyTrend(),
-        getGenderDistribution(yearParam),
-      ]);
+
+      const chartPromises = isFacultyRole
+        ? [
+            Promise.resolve([]),
+            getDepartmentDistribution(yearParam),
+            getYearlyTrend(),
+            getGenderDistribution(yearParam),
+            getScholarshipPerformance(yearParam),
+          ]
+        : [
+            getFacultyDistribution(yearParam),
+            getDepartmentDistribution(yearParam),
+            getYearlyTrend(),
+            getGenderDistribution(yearParam),
+            Promise.resolve([]),
+          ];
+
+      const [fakultas, departemen, tahun, gender, scholarship] =
+        await Promise.all(chartPromises);
 
       const defaultGenderData = [
         { label: "Laki-laki", value: 0, color: "#2D60FF" },
@@ -205,6 +225,7 @@ const AdminDashboard = () => {
       setDepartemenData(departemen || []);
       setTahunData(tahun || []);
       setGenderData(mergedGenderData);
+      setScholarshipPerformance(scholarship || []);
     } catch (err) {
       error("Gagal!", "Gagal memuat data grafik");
     }
@@ -301,13 +322,12 @@ const AdminDashboard = () => {
           <span className="text-sm text-blue-700 font-medium">
             {!canSeeAPBN
               ? `Beasiswa Non-APBN ${
-                  role === "VERIFIKATOR_FAKULTAS" ||
-                  role === "PIMPINAN_FAKULTAS"
-                    ? `(Fakultas ${user?.faculty?.name || ""})`
-                    : ""
+                  isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
                 }`
               : scholarshipType === "NON-APBN"
-              ? "Beasiswa Non-APBN"
+              ? `Beasiswa Non-APBN ${
+                  isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
+                }`
               : "Beasiswa Pemerintah (APBN)"}
             {" • "}
             {selectedYear === "all" ? "Semua Tahun" : `Tahun ${selectedYear}`}
@@ -335,14 +355,25 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {chartsLoading ? (
               <>
-                <Card
-                  title="Pendaftar Berdasarkan Fakultas"
-                  description="Distribusi pendaftar beasiswa per fakultas"
-                >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
-                  </div>
-                </Card>
+                {isFacultyRole ? (
+                  <Card
+                    title="Performa Beasiswa"
+                    description="Tingkat keberhasilan per beasiswa di fakultas Anda"
+                  >
+                    <div className="flex justify-center items-center py-12">
+                      <Spin size="large" />
+                    </div>
+                  </Card>
+                ) : (
+                  <Card
+                    title="Pendaftar Berdasarkan Fakultas"
+                    description="Distribusi pendaftar beasiswa per fakultas"
+                  >
+                    <div className="flex justify-center items-center py-12">
+                      <Spin size="large" />
+                    </div>
+                  </Card>
+                )}
                 <Card
                   title="Pendaftar Berdasarkan Departemen"
                   description="Distribusi pendaftar beasiswa per departemen"
@@ -355,11 +386,19 @@ const AdminDashboard = () => {
             ) : (
               <>
                 <div className="flex flex-col h-full">
-                  <HorizontalBarChart
-                    data={fakultasData}
-                    title="Pendaftar Berdasarkan Fakultas"
-                    description="Distribusi pendaftar beasiswa per fakultas"
-                  />
+                  {isFacultyRole ? (
+                    <PerformanceBarChart
+                      data={scholarshipPerformance}
+                      title="Performa Beasiswa"
+                      description="Tingkat keberhasilan per beasiswa di fakultas Anda"
+                    />
+                  ) : (
+                    <HorizontalBarChart
+                      data={fakultasData}
+                      title="Pendaftar Berdasarkan Fakultas"
+                      description="Distribusi pendaftar beasiswa per fakultas"
+                    />
+                  )}
                 </div>
                 <div className="flex flex-col h-full">
                   <HorizontalBarChart

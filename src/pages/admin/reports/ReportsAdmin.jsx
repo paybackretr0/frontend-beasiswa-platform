@@ -77,6 +77,24 @@ const ReportsAdmin = () => {
     genders: [],
   });
 
+  let user = null;
+  let facultyName = "";
+
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+    if (user?.faculty) {
+      facultyName = user.faculty.name;
+    }
+  } catch (e) {
+    console.error("Error parsing user:", e);
+  }
+
+  const role = user?.role?.toUpperCase() || null;
+
+  const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
+    role
+  );
+
   useEffect(() => {
     document.title = "Laporan - Admin";
     fetchAllData();
@@ -194,13 +212,25 @@ const ReportsAdmin = () => {
 
   const fetchChartData = async () => {
     try {
-      const [fakultas, departemen, tahun, gender, monthly] = await Promise.all([
-        getFacultyDistribution(selectedYear),
-        getDepartmentDistribution(selectedYear),
-        getYearlyTrend(),
-        getGenderDistribution(selectedYear),
-        getMonthlyTrend(selectedYear),
-      ]);
+      const chartPromises = isFacultyRole
+        ? [
+            Promise.resolve([]),
+            getDepartmentDistribution(selectedYear),
+            getYearlyTrend(),
+            getGenderDistribution(selectedYear),
+            getMonthlyTrend(selectedYear),
+          ]
+        : [
+            getFacultyDistribution(selectedYear),
+            getDepartmentDistribution(selectedYear),
+            getYearlyTrend(),
+            getGenderDistribution(selectedYear),
+            getMonthlyTrend(selectedYear),
+          ];
+
+      const [fakultas, departemen, tahun, gender, monthly] = await Promise.all(
+        chartPromises
+      );
 
       setFakultasData(fakultas || []);
       setDepartemenData(departemen || []);
@@ -453,7 +483,16 @@ const ReportsAdmin = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
       <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Laporan Beasiswa</h1>
+          {isFacultyRole && facultyName && (
+            <p className="text-sm text-gray-600 mt-1">
+              Data untuk {facultyName}
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <Select
             value={selectedYear}
@@ -468,14 +507,14 @@ const ReportsAdmin = () => {
               </Option>
             ))}
           </Select>
+          <Button
+            onClick={handleExportReport}
+            className="flex items-center gap-2"
+          >
+            <DownloadOutlined />
+            Export Laporan
+          </Button>
         </div>
-        <Button
-          onClick={handleExportReport}
-          className="flex items-center gap-2"
-        >
-          <DownloadOutlined />
-          Export Laporan
-        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -543,7 +582,6 @@ const ReportsAdmin = () => {
         )}
       </div>
 
-      {/* Performance Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
@@ -556,8 +594,14 @@ const ReportsAdmin = () => {
               </div>
             </Card>
             <Card
-              title="Fakultas Terbaik"
-              description="Fakultas dengan tingkat keberhasilan tertinggi"
+              title={
+                isFacultyRole ? "Performa per Departemen" : "Fakultas Terbaik"
+              }
+              description={
+                isFacultyRole
+                  ? "Tingkat keberhasilan per departemen"
+                  : "Fakultas dengan tingkat keberhasilan tertinggi"
+              }
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
@@ -574,67 +618,51 @@ const ReportsAdmin = () => {
               />
             </div>
             <div className="flex flex-col h-full">
-              <PerformanceBarChart
-                data={topFaculties}
-                title="Fakultas Terbaik"
-                description="5 fakultas dengan tingkat keberhasilan tertinggi"
-              />
+              {isFacultyRole ? (
+                <HorizontalBarChart
+                  data={departemenData}
+                  title="Performa per Departemen"
+                  description={`Distribusi pendaftar per departemen di ${facultyName}`}
+                />
+              ) : (
+                <PerformanceBarChart
+                  data={topFaculties}
+                  title="Fakultas Terbaik"
+                  description="5 fakultas dengan tingkat keberhasilan tertinggi"
+                />
+              )}
             </div>
           </>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div
+        className={`grid grid-cols-1 ${
+          !isFacultyRole ? "md:grid-cols-2" : ""
+        } gap-6`}
+      >
         {chartsLoading ? (
           <>
-            <Card
-              title="Pendaftar Berdasarkan Fakultas"
-              description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-            <Card
-              title="Pendaftar Berdasarkan Departemen"
-              description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col h-full">
-              <HorizontalBarChart
-                data={fakultasData}
+            {!isFacultyRole && (
+              <Card
                 title="Pendaftar Berdasarkan Fakultas"
                 description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
-              />
-            </div>
-            <div className="flex flex-col h-full">
-              <HorizontalBarChart
-                data={departemenData}
+              >
+                <div className="flex justify-center items-center py-12">
+                  <Spin size="large" />
+                </div>
+              </Card>
+            )}
+            {!isFacultyRole && (
+              <Card
                 title="Pendaftar Berdasarkan Departemen"
                 description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
-              />
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {chartsLoading ? (
-          <>
-            <Card
-              title="Pendaftar Tahun ke Tahun"
-              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
+              >
+                <div className="flex justify-center items-center py-12">
+                  <Spin size="large" />
+                </div>
+              </Card>
+            )}
             <Card
               title="Pendaftar Berdasarkan Gender"
               description="Distribusi pendaftar beasiswa berdasarkan gender"
@@ -646,16 +674,31 @@ const ReportsAdmin = () => {
           </>
         ) : (
           <>
-            <LineChart
-              data={tahunData}
-              title="Pendaftar Tahun ke Tahun"
-              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
-            />
-            <PieChart
-              data={genderData}
-              title="Pendaftar Berdasarkan Gender"
-              description="Distribusi pendaftar beasiswa berdasarkan gender"
-            />
+            {!isFacultyRole && (
+              <div className="flex flex-col h-full">
+                <HorizontalBarChart
+                  data={fakultasData}
+                  title="Pendaftar Berdasarkan Fakultas"
+                  description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
+                />
+              </div>
+            )}
+            {!isFacultyRole && (
+              <div className="flex flex-col h-full">
+                <HorizontalBarChart
+                  data={departemenData}
+                  title="Pendaftar Berdasarkan Departemen"
+                  description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
+                />
+              </div>
+            )}
+            <div className="flex flex-col h-full">
+              <PieChart
+                data={genderData}
+                title="Pendaftar Berdasarkan Gender"
+                description="Distribusi pendaftar beasiswa berdasarkan gender"
+              />
+            </div>
           </>
         )}
       </div>
@@ -676,18 +719,20 @@ const ReportsAdmin = () => {
           pageSize={8}
           customFilters={
             <>
-              <Select
-                value={filters.fakultas}
-                onChange={(value) => handleFilterChange("fakultas", value)}
-                placeholder="Semua Fakultas"
-                style={{ width: 140 }}
-              >
-                {filterOptions.faculties.map((option) => (
-                  <Option key={option} value={option}>
-                    {option === "Semua" ? "Semua Fakultas" : option}
-                  </Option>
-                ))}
-              </Select>
+              {!isFacultyRole && (
+                <Select
+                  value={filters.fakultas}
+                  onChange={(value) => handleFilterChange("fakultas", value)}
+                  placeholder="Semua Fakultas"
+                  style={{ width: 140 }}
+                >
+                  {filterOptions.faculties.map((option) => (
+                    <Option key={option} value={option}>
+                      {option === "Semua" ? "Semua Fakultas" : option}
+                    </Option>
+                  ))}
+                </Select>
+              )}
 
               <Select
                 value={filters.departemen}
