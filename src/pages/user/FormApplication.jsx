@@ -5,12 +5,10 @@ import {
   Select,
   DatePicker,
   Upload,
-  message,
   Spin,
   Alert,
   Button,
   Modal,
-  Form,
 } from "antd";
 import {
   UploadOutlined,
@@ -299,7 +297,7 @@ const FormApplication = () => {
                 handleAnswerChange(field.id, null);
               }}
               maxCount={1}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              accept=".pdf"
               fileList={
                 value
                   ? [
@@ -380,7 +378,7 @@ const FormApplication = () => {
             Petunjuk Upload File:
           </h4>
           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-            <li>Format yang didukung: PDF, DOC, DOCX, JPG, JPEG, PNG</li>
+            <li>Format yang didukung: PDF</li>
             <li>Ukuran maksimal file: 5MB</li>
             <li>File yang diunggah harus jelas dan dapat dibaca</li>
             <li>Pastikan file tidak corrupt atau rusak</li>
@@ -541,7 +539,7 @@ const FormApplication = () => {
 
                   {field.type === "FILE" && (
                     <div className="text-xs text-gray-500">
-                      Format: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 5MB)
+                      Format: PDF (Max: 5MB)
                     </div>
                   )}
                 </div>

@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import BackupAdmin from "../pages/admin/extras/BackupAdmin";
 import LogAdmin from "../pages/admin/extras/LogAdmin";
+import TemplateCommentAdmin from "../pages/admin/extras/TemplateCommentAdmin";
 import RoleRoute from "./guards/RoleRoute";
 
 const ExtraRoutes = () => (
@@ -18,6 +19,14 @@ const ExtraRoutes = () => (
       element={
         <RoleRoute access="extra">
           <LogAdmin />
+        </RoleRoute>
+      }
+    />
+    <Route
+      path="template-komentar"
+      element={
+        <RoleRoute access="extra">
+          <TemplateCommentAdmin />
         </RoleRoute>
       }
     />

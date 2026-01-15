@@ -86,6 +86,7 @@ export const ADMIN_MENUS = [
     submenu: [
       { label: "Backup Data", to: "/admin/extra/backup-data" },
       { label: "Log Aktivitas", to: "/admin/extra/log-aktivitas" },
+      { label: "Komentar", to: "/admin/extra/template-komentar" },
     ],
   },
 ];

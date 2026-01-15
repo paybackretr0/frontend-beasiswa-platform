@@ -8,6 +8,7 @@ import {
   MdClose,
 } from "react-icons/md";
 import { logout } from "../services/authService";
+import { ROLE_ACCESS } from "../config/roleAccess";
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -42,24 +43,19 @@ const Navbar = () => {
     ? JSON.parse(localStorage.getItem("user") || "{}")
     : { full_name: "", email: "", role: "" };
 
-  const isAdminRole = [
-    "SUPERADMIN",
-    "PIMPINAN_DITMAWA",
-    "PIMPINAN_FAKULTAS",
-    "VERIFIKATOR",
-  ].includes(user.role);
+  const role = user?.role;
+  const canAdminDashboard = ROLE_ACCESS[role]?.dashboard;
+  const isMahasiswa = role === "MAHASISWA";
 
   return (
     <nav className="sticky top-0 z-50 backdrop-blur bg-white/70">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-12 py-3">
-        {/* Logo */}
         <div className="font-bold text-xl">
           <NavLink to="/" className="no-underline text-gray-800">
             BeasiswaApp
           </NavLink>
         </div>
 
-        {/* Menu Tengah - Hidden on mobile */}
         <div className="hidden lg:flex gap-8">
           {isAuthenticated ? (
             <>
@@ -74,16 +70,6 @@ const Navbar = () => {
               >
                 Beranda
               </NavLink>
-              {/* <NavLink
-                to="/contact"
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-blue-600 font-semibold"
-                    : "text-gray-800 hover:text-blue-600 transition-colors"
-                }
-              >
-                Kontak
-              </NavLink> */}
               <NavLink
                 to="/scholarship"
                 className={({ isActive }) =>
@@ -94,17 +80,19 @@ const Navbar = () => {
               >
                 Beasiswa
               </NavLink>
-              <NavLink
-                to="/history"
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-blue-600 font-semibold"
-                    : "text-gray-800 hover:text-blue-600 transition-colors"
-                }
-              >
-                Riwayat
-              </NavLink>
-              {isAdminRole && (
+              {isMahasiswa && (
+                <NavLink
+                  to="/history"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-blue-600 font-semibold"
+                      : "text-gray-800 hover:text-blue-600 transition-colors"
+                  }
+                >
+                  Riwayat
+                </NavLink>
+              )}
+              {canAdminDashboard && (
                 <NavLink
                   to="/admin/dashboard"
                   className={({ isActive }) =>
@@ -130,16 +118,6 @@ const Navbar = () => {
               >
                 Beranda
               </NavLink>
-              {/* <NavLink
-                to="/contact"
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-blue-600 font-semibold"
-                    : "text-gray-800 hover:text-blue-600 transition-colors"
-                }
-              >
-                Kontak
-              </NavLink> */}
               <NavLink
                 to="/scholarship"
                 className={({ isActive }) =>
@@ -154,11 +132,9 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Right Side */}
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              {/* Profile Dropdown - Hidden on mobile */}
               <div className="hidden lg:block relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -210,14 +186,12 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Mobile Profile Avatar */}
               <div className="lg:hidden w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
                 {user.full_name ? user.full_name.charAt(0) : "U"}
               </div>
             </>
           ) : (
             <>
-              {/* Desktop Auth Links */}
               <div className="hidden lg:flex gap-8 items-center">
                 <NavLink
                   to="/login"
@@ -333,7 +307,7 @@ const Navbar = () => {
                 >
                   Riwayat
                 </NavLink>
-                {isAdminRole && (
+                {canAdminDashboard && (
                   <NavLink
                     to="/admin/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
