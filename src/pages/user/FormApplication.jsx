@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Input,
   Select,
@@ -15,12 +15,6 @@ import {
   SaveOutlined,
   SendOutlined,
   ArrowLeftOutlined,
-  FileTextOutlined,
-  NumberOutlined,
-  CalendarOutlined,
-  FileOutlined,
-  UnorderedListOutlined,
-  AlignLeftOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
@@ -56,9 +50,7 @@ const statusApplications = {
 
 const getCleanFileName = (filePath) => {
   if (!filePath) return "Unknown file";
-
   const fullFileName = filePath.split("\\").pop();
-
   const match = fullFileName.match(/^\d+-(.+)$/);
   return match ? match[1] : fullFileName;
 };
@@ -66,9 +58,14 @@ const getCleanFileName = (filePath) => {
 const FormApplication = () => {
   const { id: scholarshipId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const schemaIdFromUrl = searchParams.get("schema");
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [scholarship, setScholarship] = useState(null);
+  const [selectedSchema, setSelectedSchema] = useState(null);
+  const [availableSchemas, setAvailableSchemas] = useState([]);
   const [formFields, setFormFields] = useState([]);
   const [answers, setAnswers] = useState({});
   const [hasExistingApplication, setHasExistingApplication] = useState(false);
@@ -78,25 +75,18 @@ const FormApplication = () => {
 
   const { alerts, success, warning, error, removeAlert } = useAlert();
 
-  const typeIcons = {
-    TEXT: <FileTextOutlined className="text-blue-500" />,
-    NUMBER: <NumberOutlined className="text-green-500" />,
-    DATE: <CalendarOutlined className="text-purple-500" />,
-    TEXTAREA: <AlignLeftOutlined className="text-orange-500" />,
-    FILE: <FileOutlined className="text-red-500" />,
-    SELECT: <UnorderedListOutlined className="text-indigo-500" />,
-  };
-
   useEffect(() => {
     loadForm();
-  }, [scholarshipId]);
+  }, [scholarshipId, schemaIdFromUrl]);
 
   const loadForm = async () => {
     try {
       setLoading(true);
-      const data = await getScholarshipForm(scholarshipId);
+      const data = await getScholarshipForm(scholarshipId, schemaIdFromUrl);
 
       setScholarship(data.scholarship);
+      setSelectedSchema(data.selected_schema);
+      setAvailableSchemas(data.available_schemas);
       setFormFields(data.form_fields);
       setHasExistingApplication(data.has_existing_application);
       setExistingStatus(data.existing_application_status);
@@ -122,7 +112,7 @@ const FormApplication = () => {
       });
 
       setAnswers(initialAnswers);
-      document.title = `Daftar ${data.scholarship.name} - UNAND`;
+      document.title = `Daftar ${data.scholarship.name} - ${data.selected_schema.name}`;
     } catch (err) {
       error("Gagal!", err.message || "Gagal memuat form pendaftaran.");
       setTimeout(() => {
@@ -180,7 +170,7 @@ const FormApplication = () => {
   const handleSaveDraft = async () => {
     try {
       setSubmitting(true);
-      await saveDraft(scholarshipId, answers);
+      await saveDraft(scholarshipId, selectedSchema.id, answers);
       success("Berhasil!", "Draft berhasil disimpan");
     } catch (err) {
       error("Gagal!", err.message || "Gagal menyimpan draft.");
@@ -194,7 +184,7 @@ const FormApplication = () => {
 
     try {
       setSubmitting(true);
-      await submitApplication(scholarshipId, answers, false);
+      await submitApplication(scholarshipId, selectedSchema.id, answers, false);
       success("Berhasil!", "Aplikasi berhasil disubmit!");
       setTimeout(() => {
         navigate("/history");
@@ -433,7 +423,14 @@ const FormApplication = () => {
                   <div>
                     <p className="mb-4">
                       Anda sudah mendaftar beasiswa{" "}
-                      <strong>{scholarship?.name}</strong> dengan status:
+                      <strong>{scholarship?.name}</strong>
+                      {selectedSchema && (
+                        <>
+                          {" "}
+                          dengan skema <strong>{selectedSchema.name}</strong>
+                        </>
+                      )}{" "}
+                      dengan status:
                     </p>
                     <div className="text-lg font-bold text-blue-600 mb-4">
                       {statusApplications[existingStatus] || existingStatus}
@@ -480,8 +477,8 @@ const FormApplication = () => {
 
           <Card>
             <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex justify-between items-start">
-                <div>
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
                   <h1 className="text-2xl font-bold text-gray-800 mb-2">
                     Formulir Pendaftaran Beasiswa
                   </h1>
@@ -493,7 +490,7 @@ const FormApplication = () => {
                       Penyelenggara: {scholarship?.organizer}
                     </div>
                     {scholarship?.end_date && (
-                      <div className="text-sm text-orange-600 font-medium">
+                      <div className="text-sm text-orange-600 font-medium mb-3">
                         Batas Pendaftaran:{" "}
                         {new Date(scholarship.end_date).toLocaleDateString(
                           "id-ID",
@@ -503,6 +500,24 @@ const FormApplication = () => {
                             month: "long",
                             day: "numeric",
                           }
+                        )}
+                      </div>
+                    )}
+
+                    {selectedSchema && (
+                      <div className="bg-white border border-blue-300 rounded-lg p-4 mt-3">
+                        <div className="flex items-center mb-2">
+                          <h3 className="font-semibold text-blue-900 flex items-center">
+                            Skema yang Dipilih
+                          </h3>
+                        </div>
+                        <div className="text-blue-800 font-medium mb-2">
+                          {selectedSchema.name}
+                        </div>
+                        {selectedSchema.description && (
+                          <p className="text-sm text-gray-600 mb-3">
+                            {selectedSchema.description}
+                          </p>
                         )}
                       </div>
                     )}
@@ -522,7 +537,6 @@ const FormApplication = () => {
               {formFields.map((field, index) => (
                 <div key={field.id} className="space-y-2">
                   <label className="flex items-center text-sm font-medium text-gray-700">
-                    <span className="mr-2">{typeIcons[field.type]}</span>
                     <span>{field.label}</span>
                     {field.is_required && (
                       <span className="text-red-500 ml-1 text-base">*</span>
@@ -546,12 +560,12 @@ const FormApplication = () => {
               ))}
             </form>
 
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center mt-8 pt-6 border-t border-gray-200 gap-4">
               <div className="text-sm text-gray-500">
                 <span className="text-red-500">*</span> Field wajib diisi
               </div>
 
-              <div className="space-x-4">
+              <div className="space-x-4 ml-auto">
                 <Button
                   icon={<SaveOutlined />}
                   onClick={handleSaveDraft}

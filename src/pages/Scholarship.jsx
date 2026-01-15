@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Tag } from "antd";
+import { Tag, Tooltip } from "antd";
 import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   ClockCircleOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import GuestLayout from "../layouts/GuestLayout";
 import Card from "../components/Card";
@@ -26,7 +27,6 @@ const Scholarship = () => {
   }, []);
 
   useEffect(() => {
-    // Update displayed scholarships when displayCount changes
     setDisplayedScholarships(scholarships.slice(0, displayCount));
   }, [displayCount, scholarships]);
 
@@ -82,7 +82,7 @@ const Scholarship = () => {
   const getStatusTag = (isActive, endDate) => {
     if (!isActive) {
       return (
-        <Tag color="red" icon={<ExclamationCircleOutlined />} className="mb-2">
+        <Tag color="red" icon={<ExclamationCircleOutlined />}>
           Tutup
         </Tag>
       );
@@ -90,7 +90,7 @@ const Scholarship = () => {
 
     if (!endDate) {
       return (
-        <Tag color="green" icon={<CheckCircleOutlined />} className="mb-2">
+        <Tag color="green" icon={<CheckCircleOutlined />}>
           Buka
         </Tag>
       );
@@ -103,64 +103,23 @@ const Scholarship = () => {
 
     if (diffDays < 0) {
       return (
-        <Tag color="red" icon={<ClockCircleOutlined />} className="mb-2">
+        <Tag color="red" icon={<ClockCircleOutlined />}>
           Berakhir
         </Tag>
       );
     }
     if (diffDays <= 7) {
       return (
-        <Tag color="orange" icon={<ClockCircleOutlined />} className="mb-2">
+        <Tag color="orange" icon={<ClockCircleOutlined />}>
           Berakhir {diffDays} hari lagi
         </Tag>
       );
     }
     return (
-      <Tag color="green" icon={<CheckCircleOutlined />} className="mb-2">
+      <Tag color="green" icon={<CheckCircleOutlined />}>
         Aktif
       </Tag>
     );
-  };
-
-  const getButtonStyle = (isActive, endDate) => {
-    if (!isActive) {
-      return "bg-gray-500 text-white hover:bg-gray-600";
-    }
-
-    if (endDate) {
-      const today = new Date();
-      const end = new Date(endDate);
-      const diffTime = end - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) {
-        return "bg-gray-500 text-white hover:bg-gray-600";
-      }
-      if (diffDays <= 7) {
-        return "bg-orange-600 text-white hover:bg-orange-700";
-      }
-    }
-
-    return "bg-blue-600 text-white hover:bg-blue-700";
-  };
-
-  const getButtonText = (isActive, endDate) => {
-    if (!isActive) {
-      return "Lihat Detail";
-    }
-
-    if (endDate) {
-      const today = new Date();
-      const end = new Date(endDate);
-      const diffTime = end - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) {
-        return "Lihat Detail";
-      }
-    }
-
-    return "Lihat Detail";
   };
 
   if (loading) {
@@ -247,7 +206,7 @@ const Scholarship = () => {
               {displayedScholarships.length}
             </span>{" "}
             dari <span className="font-semibold">{scholarships.length}</span>{" "}
-            beasiswa
+            beasiswa aktif
           </p>
         </div>
 
@@ -260,19 +219,45 @@ const Scholarship = () => {
               subtitle={`${scholarship.organizer} • ${scholarship.year}`}
             >
               <div className="mt-4 space-y-3">
-                <div className="flex justify-start">
+                {/* Status Tags */}
+                <div className="flex flex-wrap gap-2">
                   {getStatusTag(scholarship.is_active, scholarship.end_date)}
                 </div>
 
-                <div className="text-sm text-gray-600 space-y-1">
-                  {scholarship.quota && (
-                    <div className="flex justify-between">
-                      <span>Kuota:</span>
-                      <span className="font-medium">
-                        {scholarship.quota} orang
-                      </span>
+                {/* Schema Info */}
+                {scholarship.total_schemas > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="text-xs text-blue-700 space-y-1">
+                      {scholarship.total_quota > 0 && (
+                        <div className="flex justify-between">
+                          <span>Total Kuota:</span>
+                          <span className="font-medium">
+                            {scholarship.total_quota} orang
+                          </span>
+                        </div>
+                      )}
+                      {scholarship.min_gpa && (
+                        <div className="flex justify-between">
+                          <span>Min. IPK:</span>
+                          <span className="font-medium">
+                            {scholarship.min_gpa}
+                          </span>
+                        </div>
+                      )}
+                      {scholarship.min_semester && (
+                        <div className="flex justify-between">
+                          <span>Min. Semester:</span>
+                          <span className="font-medium">
+                            {scholarship.min_semester}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
+
+                {/* Main Info */}
+                <div className="text-sm text-gray-600 space-y-1">
                   <div className="flex justify-between">
                     <span>Nilai:</span>
                     <span className="font-medium text-green-600">
@@ -285,31 +270,47 @@ const Scholarship = () => {
                       {scholarship.duration_semesters} semester
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Batas:</span>
-                    <span className="font-medium text-orange-600">
-                      {formatDate(scholarship.end_date)}
-                    </span>
-                  </div>
-                  {scholarship.gpa_minimum && (
+                  {scholarship.end_date && (
                     <div className="flex justify-between">
-                      <span>Min. IPK:</span>
-                      <span className="font-medium">
-                        {scholarship.gpa_minimum}
+                      <span>Batas:</span>
+                      <span className="font-medium text-orange-600">
+                        {formatDate(scholarship.end_date)}
                       </span>
                     </div>
                   )}
                 </div>
 
+                {scholarship.benefits && scholarship.benefits.length > 0 && (
+                  <Tooltip
+                    title={
+                      <div>
+                        <strong>Benefit:</strong>
+                        <ul className="list-disc pl-4 mt-1">
+                          {scholarship.benefits
+                            .slice(0, 3)
+                            .map((benefit, idx) => (
+                              <li key={idx}>{benefit}</li>
+                            ))}
+                          {scholarship.benefits.length > 3 && (
+                            <li>+ {scholarship.benefits.length - 3} lainnya</li>
+                          )}
+                        </ul>
+                      </div>
+                    }
+                  >
+                    <div className="text-xs text-blue-600 cursor-help">
+                      {scholarship.benefits.length} benefit tersedia
+                    </div>
+                  </Tooltip>
+                )}
+
+                {/* CTA Button */}
                 <div className="pt-2">
                   <Link
                     to={`/scholarship/${scholarship.id}`}
-                    className={`block w-full text-center px-4 py-2 text-sm rounded-lg transition-colors ${getButtonStyle(
-                      scholarship.is_active,
-                      scholarship.end_date
-                    )}`}
+                    className="block w-full text-center px-4 py-2 text-sm rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700"
                   >
-                    {getButtonText(scholarship.is_active, scholarship.end_date)}
+                    Lihat Detail & Skema
                   </Link>
                 </div>
               </div>

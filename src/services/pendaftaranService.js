@@ -1,10 +1,13 @@
 import { authFetch } from "./tokenAuth";
 import API_BASE_URL from "./apiConfig";
 
-export const getScholarshipForm = async (scholarshipId) => {
+// ✅ UPDATE: Get scholarship form with schema
+export const getScholarshipForm = async (scholarshipId, schemaId) => {
   try {
+    const queryParams = schemaId ? `?schemaId=${schemaId}` : "";
+
     const response = await authFetch(
-      `${API_BASE_URL}/pendaftaran/scholarship/${scholarshipId}/form`
+      `${API_BASE_URL}/pendaftaran/scholarship/${scholarshipId}/form${queryParams}`
     );
 
     if (!response.success) {
@@ -18,8 +21,10 @@ export const getScholarshipForm = async (scholarshipId) => {
   }
 };
 
+// ✅ UPDATE: Submit application with schema
 export const submitApplication = async (
   scholarshipId,
+  schemaId,
   answers,
   isDraft = false
 ) => {
@@ -50,6 +55,7 @@ export const submitApplication = async (
     });
 
     formData.append("answers", JSON.stringify(answersData));
+    formData.append("schemaId", schemaId); // ✅ ADD schema ID
     formData.append("isDraft", isDraft.toString());
 
     const response = await authFetch(
@@ -71,6 +77,7 @@ export const submitApplication = async (
   }
 };
 
-export const saveDraft = async (scholarshipId, answers) => {
-  return submitApplication(scholarshipId, answers, true);
+// ✅ UPDATE: Save draft with schema
+export const saveDraft = async (scholarshipId, schemaId, answers) => {
+  return submitApplication(scholarshipId, schemaId, answers, true);
 };

@@ -56,7 +56,7 @@ const ScholarshipAdmin = () => {
         is_external: item.is_external,
         jenis: item.is_external ? "Eksternal" : "Internal",
         verification_level: item.verification_level,
-        schema_count: item.schema_count || 0,
+        total_schemas: item.total_schemas || 0,
         active_schemas: item.active_schemas || 0,
       }));
 
@@ -124,8 +124,8 @@ const ScholarshipAdmin = () => {
     },
     {
       title: "Skema",
-      dataIndex: "schema_count",
-      key: "schema_count",
+      dataIndex: "total_schemas",
+      key: "total_schemas",
       width: "10%",
       render: (count, record) => (
         <span className="text-sm">

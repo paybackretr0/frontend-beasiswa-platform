@@ -34,7 +34,6 @@ export const ROLE_ACCESS = {
 
   PIMPINAN_DITMAWA: {
     dashboard: true,
-    registration: true,
     report: true,
     infoScholarship: true,
   },
