@@ -4,7 +4,12 @@ import UniversalTable, {
   createNumberColumn,
   createActionColumn,
 } from "../../../components/Table";
-import { EyeOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  FormOutlined,
+} from "@ant-design/icons";
 import Card from "../../../components/Card";
 import {
   getAllApplications,
@@ -14,15 +19,17 @@ import {
 import {
   verifyApplication,
   rejectApplication,
+  requestRevisionApplication,
 } from "../../../services/verifikatorService";
 import {
   validateApplication,
   rejectApplicationByValidator,
+  requestRevisionByValidator,
 } from "../../../services/validatorService";
 import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
-import UniversalModal from "../../../components/Modal";
+import RevisionRejectModal from "../../../components/RevisionRejectModal";
 
 const ApplicationsAdmin = () => {
   const [applications, setApplications] = useState([]);
@@ -34,10 +41,25 @@ const ApplicationsAdmin = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  const [revisionModalVisible, setRevisionModalVisible] = useState(false);
+  const [selectedApplicationForRevision, setSelectedApplicationForRevision] =
+    useState(null);
+  const [revisionLoading, setRevisionLoading] = useState(false);
+
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [selectedApplicationForReject, setSelectedApplicationForReject] =
     useState(null);
   const [rejectLoading, setRejectLoading] = useState(false);
+
+  const [verifyModalVisible, setVerifyModalVisible] = useState(false);
+  const [selectedApplicationForVerify, setSelectedApplicationForVerify] =
+    useState(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+
+  const [validateModalVisible, setValidateModalVisible] = useState(false);
+  const [selectedApplicationForValidate, setSelectedApplicationForValidate] =
+    useState(null);
+  const [validateLoading, setValidateLoading] = useState(false);
 
   const { alerts, success, error, removeAlert, clearAlerts, warning } =
     useAlert();
@@ -70,7 +92,6 @@ const ApplicationsAdmin = () => {
         tanggalDaftar: item.tanggalDaftar,
         status: item.status,
         statusLabel: getStatusLabel(item.status),
-        notes: item.notes,
         schema_id: item.schema_id,
         scholarship_id: item.scholarship_id,
         student_id: item.student_id,
@@ -160,6 +181,11 @@ const ApplicationsAdmin = () => {
     return colorMap[status] || "default";
   };
 
+  const refreshData = async () => {
+    await fetchApplications();
+    await fetchSummary();
+  };
+
   const handleDetail = async (record) => {
     try {
       setDetailLoading(true);
@@ -182,42 +208,78 @@ const ApplicationsAdmin = () => {
   };
 
   const handleVerify = async (record) => {
+    setSelectedApplicationForVerify(record);
+    setVerifyModalVisible(true);
+  };
+
+  const handleSubmitVerify = async (values) => {
+    const { notes, template_ids } = values;
+    const record = selectedApplicationForVerify;
+
     try {
-      await verifyApplication(record.id, "");
+      setVerifyLoading(true);
+
+      const payload = {
+        notes: notes || "",
+        template_ids: template_ids || [],
+      };
+
+      await verifyApplication(record.id, payload);
+
       success("Berhasil!", `Pendaftaran ${record.nama} berhasil diverifikasi`);
 
-      setTimeout(async () => {
-        await fetchApplications();
-        await fetchSummary();
-      }, 1500);
+      setTimeout(refreshData, 1500);
 
       if (detailModalVisible) {
         setDetailModalVisible(false);
         setSelectedApplication(null);
       }
+
+      setVerifyModalVisible(false);
+      setSelectedApplicationForVerify(null);
     } catch (err) {
       console.error("Error verifying application:", err);
       error("Gagal!", err.message || "Gagal memverifikasi pendaftaran");
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
   const handleValidate = async (record) => {
+    setSelectedApplicationForValidate(record);
+    setValidateModalVisible(true);
+  };
+
+  const handleSubmitValidate = async (values) => {
+    const { notes, template_ids } = values;
+    const record = selectedApplicationForValidate;
+
     try {
-      await validateApplication(record.id, "");
+      setValidateLoading(true);
+
+      const payload = {
+        notes: notes || "",
+        template_ids: template_ids || [],
+      };
+
+      await validateApplication(record.id, payload);
+
       success("Berhasil!", `Pendaftaran ${record.nama} berhasil divalidasi`);
 
-      setTimeout(async () => {
-        await fetchApplications();
-        await fetchSummary();
-      }, 1500);
+      setTimeout(refreshData, 1500);
 
       if (detailModalVisible) {
         setDetailModalVisible(false);
         setSelectedApplication(null);
       }
+
+      setValidateModalVisible(false);
+      setSelectedApplicationForValidate(null);
     } catch (err) {
       console.error("Error validating application:", err);
       error("Gagal!", err.message || "Gagal memvalidasi pendaftaran");
+    } finally {
+      setValidateLoading(false);
     }
   };
 
@@ -226,32 +288,27 @@ const ApplicationsAdmin = () => {
     setRejectModalVisible(true);
   };
 
-  const handleCloseRejectModal = () => {
-    setRejectModalVisible(false);
-    setSelectedApplicationForReject(null);
-  };
-
   const handleSubmitReject = async (values) => {
-    const { notes } = values;
+    const { notes, template_ids } = values;
     const record = selectedApplicationForReject;
-
-    if (!notes || !notes.trim()) {
-      warning("Gagal!", "Alasan penolakan harus diisi");
-      return;
-    }
 
     try {
       setRejectLoading(true);
 
+      const payload = {
+        notes: notes || "",
+        template_ids: template_ids || [],
+      };
+
       const currentStatus = record.status;
 
       if (
-        role === "VERIFIKATOR_DITMAWA" &&
+        (role === "VERIFIKATOR_FAKULTAS" || role === "VERIFIKATOR_DITMAWA") &&
         currentStatus === "MENUNGGU_VERIFIKASI"
       ) {
-        await rejectApplication(record.id, notes);
+        await rejectApplication(record.id, payload);
       } else if (role === "VALIDATOR_DITMAWA" && currentStatus === "VERIFIED") {
-        await rejectApplicationByValidator(record.id, notes);
+        await rejectApplicationByValidator(record.id, payload);
       } else {
         warning(
           "Gagal!",
@@ -262,17 +319,15 @@ const ApplicationsAdmin = () => {
 
       success("Berhasil!", `Pendaftaran ${record.nama} berhasil ditolak`);
 
-      setTimeout(async () => {
-        await fetchApplications();
-        await fetchSummary();
-      }, 1500);
+      setTimeout(refreshData, 1500);
 
       if (detailModalVisible) {
         setDetailModalVisible(false);
         setSelectedApplication(null);
       }
 
-      handleCloseRejectModal();
+      setRejectModalVisible(false);
+      setSelectedApplicationForReject(null);
     } catch (err) {
       console.error("Error rejecting application:", err);
       error("Gagal!", err.message || "Gagal menolak pendaftaran");
@@ -281,20 +336,47 @@ const ApplicationsAdmin = () => {
     }
   };
 
-  const rejectModalFields = [
-    {
-      name: "notes",
-      label: "Alasan Penolakan",
-      type: "textarea",
-      placeholder: "Masukkan alasan penolakan...",
-      rows: 5,
-      maxLength: 500,
-      rules: [
-        { required: true, message: "Alasan penolakan harus diisi" },
-        { min: 10, message: "Alasan penolakan minimal 10 karakter" },
-      ],
-    },
-  ];
+  const handleRequestRevision = async (record) => {
+    setSelectedApplicationForRevision(record);
+    setRevisionModalVisible(true);
+  };
+
+  const handleSubmitRevision = async (values) => {
+    const { notes, template_ids } = values;
+    const record = selectedApplicationForRevision;
+
+    try {
+      setRevisionLoading(true);
+
+      const payload = {
+        notes: notes || "",
+        template_ids: template_ids || [],
+      };
+
+      if (role === "VALIDATOR_DITMAWA" || role === "PIMPINAN_DITMAWA") {
+        await requestRevisionByValidator(record.id, payload);
+      } else {
+        await requestRevisionApplication(record.id, payload);
+      }
+
+      success("Berhasil!", `Revisi berhasil diminta untuk ${record.nama}`);
+
+      setTimeout(refreshData, 1500);
+
+      if (detailModalVisible) {
+        setDetailModalVisible(false);
+        setSelectedApplication(null);
+      }
+
+      setRevisionModalVisible(false);
+      setSelectedApplicationForRevision(null);
+    } catch (err) {
+      console.error("Error requesting revision:", err);
+      error("Gagal!", err.message || "Gagal meminta revisi");
+    } finally {
+      setRevisionLoading(false);
+    }
+  };
 
   const columns = [
     createNumberColumn(),
@@ -430,6 +512,27 @@ const ApplicationsAdmin = () => {
         },
         onClick: handleReject,
       },
+      {
+        key: "requestRevision",
+        label: "Minta Revisi",
+        icon: <FormOutlined />,
+        hidden: (record) => {
+          if (role === "VERIFIKATOR_FAKULTAS") {
+            return !(
+              record.status === "MENUNGGU_VERIFIKASI" &&
+              record.verification_level === "FACULTY"
+            );
+          }
+          if (role === "VERIFIKATOR_DITMAWA") {
+            return record.status !== "MENUNGGU_VERIFIKASI";
+          }
+          if (role === "VALIDATOR_DITMAWA") {
+            return record.status !== "VERIFIED";
+          }
+          return true;
+        },
+        onClick: handleRequestRevision,
+      },
     ]),
   ];
 
@@ -513,18 +616,68 @@ const ApplicationsAdmin = () => {
         onVerify={handleVerify}
         onValidate={handleValidate}
         onReject={handleReject}
+        onRequestRevision={handleRequestRevision}
         role={role}
       />
 
-      <UniversalModal
+      <RevisionRejectModal
+        visible={verifyModalVisible}
+        onCancel={() => {
+          setVerifyModalVisible(false);
+          setSelectedApplicationForVerify(null);
+        }}
+        onSubmit={handleSubmitVerify}
+        title={`Verifikasi Pendaftaran - ${
+          selectedApplicationForVerify?.nama || "Unknown"
+        }`}
+        loading={verifyLoading}
+        type="VERIFICATION"
+        zIndex={1100} // ✅ ADD: Higher than ApplicationDetailModal (default 1000)
+      />
+
+      <RevisionRejectModal
+        visible={validateModalVisible}
+        onCancel={() => {
+          setValidateModalVisible(false);
+          setSelectedApplicationForValidate(null);
+        }}
+        onSubmit={handleSubmitValidate}
+        title={`Validasi Pendaftaran - ${
+          selectedApplicationForValidate?.nama || "Unknown"
+        }`}
+        loading={validateLoading}
+        type="VALIDATION"
+        zIndex={1100} // ✅ ADD
+      />
+
+      <RevisionRejectModal
         visible={rejectModalVisible}
-        onCancel={handleCloseRejectModal}
+        onCancel={() => {
+          setRejectModalVisible(false);
+          setSelectedApplicationForReject(null);
+        }}
         onSubmit={handleSubmitReject}
         title={`Tolak Pendaftaran - ${
           selectedApplicationForReject?.nama || "Unknown"
         }`}
-        fields={rejectModalFields}
         loading={rejectLoading}
+        type="REJECTION"
+        zIndex={1100} // ✅ ADD
+      />
+
+      <RevisionRejectModal
+        visible={revisionModalVisible}
+        onCancel={() => {
+          setRevisionModalVisible(false);
+          setSelectedApplicationForRevision(null);
+        }}
+        onSubmit={handleSubmitRevision}
+        title={`Minta Revisi - ${
+          selectedApplicationForRevision?.nama || "Unknown"
+        }`}
+        loading={revisionLoading}
+        type="REVISION"
+        zIndex={1100} // ✅ ADD
       />
     </div>
   );

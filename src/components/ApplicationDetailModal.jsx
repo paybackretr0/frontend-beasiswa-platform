@@ -7,6 +7,7 @@ import {
   ClockCircleOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import ApplicationCommentsTab from "./ApplicationCommentsTab";
 
 const ApplicationDetailModal = ({
   visible,
@@ -16,6 +17,7 @@ const ApplicationDetailModal = ({
   onVerify,
   onValidate,
   onReject,
+  onRequestRevision,
   role,
 }) => {
   if (!applicationDetail) return null;
@@ -70,6 +72,34 @@ const ApplicationDetailModal = ({
                 "id-ID",
                 dateTimeOptions
               )}
+            </div>
+          </div>
+        ),
+      });
+    }
+
+    if (
+      applicationDetail.revision_requested_at &&
+      applicationDetail.revision_requester
+    ) {
+      history.push({
+        color: "purple",
+        dot: <CloseCircleOutlined />,
+        children: (
+          <div>
+            <div className="font-medium">Revisi Diminta</div>
+            <div className="text-sm text-gray-600">
+              oleh: {applicationDetail.revision_requester.full_name}
+            </div>
+            {applicationDetail.notes && (
+              <div className="text-sm text-purple-600 mt-1 p-2 bg-purple-50 rounded">
+                <strong>Catatan:</strong> {applicationDetail.notes}
+              </div>
+            )}
+            <div className="text-xs text-gray-400">
+              {new Date(
+                applicationDetail.revision_requested_at
+              ).toLocaleDateString("id-ID", dateTimeOptions)}
             </div>
           </div>
         ),
@@ -167,22 +197,42 @@ const ApplicationDetailModal = ({
       return buttons;
     }
 
+    const recordForAction = {
+      id: applicationDetail.id,
+      nama:
+        applicationDetail.student?.nama ||
+        applicationDetail.student?.full_name ||
+        "Unknown",
+      email: applicationDetail.student?.email,
+      status: applicationDetail.status,
+      verification_level: applicationDetail.verification_level,
+      beasiswa: applicationDetail.scholarship?.name,
+      schema_id: applicationDetail.schema_id,
+      scholarship_id: applicationDetail.scholarship_id,
+      student_id: applicationDetail.student_id,
+    };
+
     if (role === "VERIFIKATOR_FAKULTAS") {
       if (status === "MENUNGGU_VERIFIKASI" && verificationLevel === "FACULTY") {
         buttons.push(
-          <Button
-            key="reject"
-            danger
-            onClick={() => onReject(applicationDetail)}
-          >
+          <Button key="reject" danger onClick={() => onReject(recordForAction)}>
             Tolak
+          </Button>
+        );
+        buttons.push(
+          <Button
+            key="revision"
+            type="default"
+            onClick={() => onRequestRevision(recordForAction)}
+          >
+            Minta Revisi
           </Button>
         );
         buttons.push(
           <Button
             key="verify"
             type="primary"
-            onClick={() => onVerify(applicationDetail)}
+            onClick={() => onVerify(recordForAction)}
           >
             Verifikasi
           </Button>
@@ -193,19 +243,24 @@ const ApplicationDetailModal = ({
     if (role === "VERIFIKATOR_DITMAWA") {
       if (status === "MENUNGGU_VERIFIKASI") {
         buttons.push(
-          <Button
-            key="reject"
-            danger
-            onClick={() => onReject(applicationDetail)}
-          >
+          <Button key="reject" danger onClick={() => onReject(recordForAction)}>
             Tolak
+          </Button>
+        );
+        buttons.push(
+          <Button
+            key="revision"
+            type="default"
+            onClick={() => onRequestRevision(recordForAction)}
+          >
+            Minta Revisi
           </Button>
         );
         buttons.push(
           <Button
             key="verify"
             type="primary"
-            onClick={() => onVerify(applicationDetail)}
+            onClick={() => onVerify(recordForAction)}
           >
             Verifikasi
           </Button>
@@ -216,19 +271,24 @@ const ApplicationDetailModal = ({
     if (role === "VALIDATOR_DITMAWA") {
       if (status === "VERIFIED") {
         buttons.push(
-          <Button
-            key="reject"
-            danger
-            onClick={() => onReject(applicationDetail)}
-          >
+          <Button key="reject" danger onClick={() => onReject(recordForAction)}>
             Tolak
+          </Button>
+        );
+        buttons.push(
+          <Button
+            key="revision"
+            type="default"
+            onClick={() => onRequestRevision(recordForAction)}
+          >
+            Minta Revisi
           </Button>
         );
         buttons.push(
           <Button
             key="validate"
             type="primary"
-            onClick={() => onValidate(applicationDetail)}
+            onClick={() => onValidate(recordForAction)}
           >
             Validasi
           </Button>
@@ -314,6 +374,26 @@ const ApplicationDetailModal = ({
                   )
                 : "-"}
             </Descriptions.Item>
+            {applicationDetail.revision_requested_at && (
+              <>
+                <Descriptions.Item label="Tanggal Revisi Diminta">
+                  {new Date(
+                    applicationDetail.revision_requested_at
+                  ).toLocaleDateString("id-ID", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                    timeZone: "Asia/Jakarta",
+                  })}
+                </Descriptions.Item>
+                <Descriptions.Item label="Diminta oleh">
+                  {applicationDetail.revision_requester?.full_name || "-"}
+                </Descriptions.Item>
+              </>
+            )}
             <Descriptions.Item label="Tanggal Verifikasi">
               {applicationDetail.verified_at
                 ? new Date(applicationDetail.verified_at).toLocaleDateString(
@@ -514,6 +594,11 @@ const ApplicationDetailModal = ({
           )}
         </div>
       ),
+    },
+    {
+      key: "6",
+      label: <span>Komentar</span>,
+      children: <ApplicationCommentsTab applicationId={applicationDetail.id} />,
     },
   ];
 
