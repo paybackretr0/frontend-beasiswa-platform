@@ -1,7 +1,6 @@
 import { authFetch } from "./tokenAuth";
 import API_BASE_URL from "./apiConfig";
 
-// ✅ UPDATE: Get scholarship form with schema
 export const getScholarshipForm = async (scholarshipId, schemaId) => {
   try {
     const queryParams = schemaId ? `?schemaId=${schemaId}` : "";
@@ -21,7 +20,6 @@ export const getScholarshipForm = async (scholarshipId, schemaId) => {
   }
 };
 
-// ✅ UPDATE: Submit application with schema
 export const submitApplication = async (
   scholarshipId,
   schemaId,
@@ -77,7 +75,6 @@ export const submitApplication = async (
   }
 };
 
-// ✅ UPDATE: Save draft with schema
 export const saveDraft = async (scholarshipId, schemaId, answers) => {
   return submitApplication(scholarshipId, schemaId, answers, true);
 };
