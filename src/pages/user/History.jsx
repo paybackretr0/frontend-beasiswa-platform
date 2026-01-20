@@ -106,34 +106,6 @@ const History = () => {
     }, 1000);
   };
 
-  const createStatusColumn = () => ({
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (status) => {
-      const statusConfig = {
-        VALIDATED: { color: "green", text: "Divalidasi" },
-        REJECTED: { color: "red", text: "Ditolak" },
-        MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
-        VERIFIED: { color: "cyan", text: "Terverifikasi - Menunggu Validasi" },
-        DRAFT: { color: "orange", text: "Draft" },
-        REVISION_NEEDED: { color: "purple", text: "Perlu Revisi" },
-      };
-
-      const config = statusConfig[status] || { color: "default", text: status };
-      return <Tag color={config.color}>{config.text}</Tag>;
-    },
-    filters: [
-      { text: "Divalidasi", value: "VALIDATED" },
-      { text: "Ditolak", value: "REJECTED" },
-      { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
-      { text: "Terverifikasi - Menunggu Validasi", value: "VERIFIED" },
-      { text: "Draft", value: "DRAFT" },
-      { text: "Perlu Revisi", value: "REVISION_NEEDED" },
-    ],
-    onFilter: (value, record) => record.status === value,
-  });
-
   const columns = [
     createNumberColumn(),
     {

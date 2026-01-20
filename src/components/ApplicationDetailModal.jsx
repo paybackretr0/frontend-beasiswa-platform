@@ -120,6 +120,30 @@ const ApplicationDetailModal = ({
       });
     }
 
+    if (applicationDetail.revision_submitted_at) {
+      history.push({
+        color: "green",
+        dot: <CheckCircleOutlined />,
+        children: (
+          <div>
+            <div className="font-medium">Revisi Telah Disubmit</div>
+            <div className="text-sm text-gray-600">
+              oleh: {applicationDetail.student.nama}
+            </div>
+            <div className="text-sm text-green-600 mt-1 p-2 bg-green-50 rounded">
+              Mahasiswa telah mengirimkan revisi yang diminta
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              Disubmit pada:{" "}
+              {new Date(
+                applicationDetail.revision_submitted_at,
+              ).toLocaleDateString("id-ID", dateTimeOptions)}
+            </div>
+          </div>
+        ),
+      });
+    }
+
     if (applicationDetail.verified_at && applicationDetail.verificator) {
       history.push({
         color: "green",
@@ -433,6 +457,31 @@ const ApplicationDetailModal = ({
                   </Descriptions.Item>
                 )}
               </>
+            )}
+
+            {applicationDetail.revision_submitted_at && (
+              <Descriptions.Item label="Tanggal Submit Revisi" span={3}>
+                <div className="flex items-center gap-2">
+                  <Tag color="green" className="text-sm font-medium">
+                    {" "}
+                    {new Date(
+                      applicationDetail.revision_submitted_at,
+                    ).toLocaleDateString("id-ID", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                      timeZone: "Asia/Jakarta",
+                    })}{" "}
+                    WIB
+                  </Tag>
+                </div>
+                <div className="text-green-600 text-sm mt-1">
+                  Revisi telah disubmit oleh mahasiswa
+                </div>
+              </Descriptions.Item>
             )}
 
             {applicationDetail.verified_at && (
