@@ -24,7 +24,9 @@ import {
   getScholarshipForm,
   submitApplication,
   saveDraft,
+  submitRevision,
 } from "../../services/pendaftaranService";
+import { getApplicationDetailUser } from "../../services/applicationService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
@@ -46,6 +48,7 @@ const statusApplications = {
   VERIFIED: "TERVERIFIKASI - MENUNGGU VALIDASI",
   REJECTED: "DITOLAK",
   VALIDATED: "DISETUJUI",
+  REVISION_NEEDED: "PERLU REVISI",
 };
 
 const getCleanFileName = (filePath) => {
@@ -60,6 +63,7 @@ const FormApplication = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const schemaIdFromUrl = searchParams.get("schema");
+  const revisionIdFromUrl = searchParams.get("revision");
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -73,47 +77,112 @@ const FormApplication = () => {
   const [errors, setErrors] = useState({});
   const [helpModalVisible, setHelpModalVisible] = useState(false);
 
+  const [isRevisionMode, setIsRevisionMode] = useState(false);
+  const [revisionApplicationId, setRevisionApplicationId] = useState(null);
+
   const { alerts, success, warning, error, removeAlert } = useAlert();
 
   useEffect(() => {
     loadForm();
-  }, [scholarshipId, schemaIdFromUrl]);
+  }, [scholarshipId, schemaIdFromUrl, revisionIdFromUrl]);
 
   const loadForm = async () => {
     try {
       setLoading(true);
-      const data = await getScholarshipForm(scholarshipId, schemaIdFromUrl);
 
-      setScholarship(data.scholarship);
-      setSelectedSchema(data.selected_schema);
-      setAvailableSchemas(data.available_schemas);
-      setFormFields(data.form_fields);
-      setHasExistingApplication(data.has_existing_application);
-      setExistingStatus(data.existing_application_status);
+      if (revisionIdFromUrl) {
+        setIsRevisionMode(true);
+        setRevisionApplicationId(revisionIdFromUrl);
 
-      const initialAnswers = {};
-      data.form_fields.forEach((field) => {
-        const existingAnswer = data.existing_answers?.[field.id];
+        const revisionData = await getApplicationDetailUser(revisionIdFromUrl);
 
-        if (existingAnswer) {
-          if (field.type === "FILE") {
-            initialAnswers[field.id] = existingAnswer.file_path
-              ? {
-                  name: getCleanFileName(existingAnswer.file_path),
-                  path: existingAnswer.file_path,
-                }
-              : null;
-          } else {
-            initialAnswers[field.id] = existingAnswer.answer_text || "";
-          }
-        } else {
-          initialAnswers[field.id] = field.type === "FILE" ? null : "";
+        const scholarshipId = revisionData.scholarship_id;
+        const schemaId = revisionData.schema_id;
+
+        if (!scholarshipId || !schemaId) {
+          throw new Error("Data beasiswa tidak lengkap");
         }
-      });
 
-      setAnswers(initialAnswers);
-      document.title = `Daftar ${data.scholarship.name} - ${data.selected_schema.name}`;
+        const formData = await getScholarshipForm(scholarshipId, schemaId);
+
+        setScholarship(formData.scholarship);
+        setSelectedSchema(formData.selected_schema);
+        setAvailableSchemas(formData.available_schemas);
+        setFormFields(formData.form_fields);
+
+        const existingAnswers = {};
+
+        if (
+          revisionData.formAnswers &&
+          Array.isArray(revisionData.formAnswers)
+        ) {
+          revisionData.formAnswers.forEach((ans) => {
+            if (ans.field_id) {
+              if (ans.answer_text) {
+                existingAnswers[ans.field_id] = ans.answer_text;
+              } else if (ans.file_path) {
+                existingAnswers[ans.field_id] = {
+                  path: ans.file_path,
+                  name: getCleanFileName(ans.file_path),
+                  mime_type: ans.mime_type,
+                };
+              }
+            }
+          });
+        }
+
+        if (revisionData.documents && Array.isArray(revisionData.documents)) {
+          revisionData.documents.forEach((doc) => {
+            if (doc.field_id && !existingAnswers[doc.field_id]) {
+              existingAnswers[doc.field_id] = {
+                path: doc.filePath || doc.file_path,
+                name:
+                  doc.fileName ||
+                  getCleanFileName(doc.filePath || doc.file_path),
+                mime_type: doc.mimeType || doc.mime_type,
+              };
+            }
+          });
+        }
+
+        setAnswers(existingAnswers);
+
+        document.title = `Revisi Pendaftaran ${formData.scholarship.name}`;
+      } else {
+        const data = await getScholarshipForm(scholarshipId, schemaIdFromUrl);
+
+        setScholarship(data.scholarship);
+        setSelectedSchema(data.selected_schema);
+        setAvailableSchemas(data.available_schemas);
+        setFormFields(data.form_fields);
+        setHasExistingApplication(data.has_existing_application);
+        setExistingStatus(data.existing_application_status);
+
+        const initialAnswers = {};
+        data.form_fields.forEach((field) => {
+          const existingAnswer = data.existing_answers?.[field.id];
+
+          if (existingAnswer) {
+            if (field.type === "FILE") {
+              initialAnswers[field.id] = existingAnswer.file_path
+                ? {
+                    name: getCleanFileName(existingAnswer.file_path),
+                    path: existingAnswer.file_path,
+                  }
+                : null;
+            } else {
+              initialAnswers[field.id] = existingAnswer.answer_text || "";
+            }
+          } else {
+            initialAnswers[field.id] = field.type === "FILE" ? null : "";
+          }
+        });
+
+        setAnswers(initialAnswers);
+        document.title = `Daftar ${data.scholarship.name} - ${data.selected_schema.name}`;
+      }
     } catch (err) {
+      console.error("Error loading form:", err);
       error("Gagal!", err.message || "Gagal memuat form pendaftaran.");
       setTimeout(() => {
         navigate("/scholarship");
@@ -184,13 +253,27 @@ const FormApplication = () => {
 
     try {
       setSubmitting(true);
-      await submitApplication(scholarshipId, selectedSchema.id, answers, false);
-      success("Berhasil!", "Aplikasi berhasil disubmit!");
-      setTimeout(() => {
-        navigate("/history");
-      }, 1200);
+
+      if (isRevisionMode) {
+        await submitRevision(revisionApplicationId, answers);
+        success("Berhasil!", "Revisi berhasil disubmit!");
+        setTimeout(() => {
+          navigate("/history");
+        }, 1200);
+      } else {
+        await submitApplication(
+          scholarshipId,
+          selectedSchema.id,
+          answers,
+          false,
+        );
+        success("Berhasil!", "Pendaftaran berhasil disubmit!");
+        setTimeout(() => {
+          navigate("/history");
+        }, 1200);
+      }
     } catch (err) {
-      error("Gagal!", err.message || "Gagal mengirim aplikasi.");
+      error("Gagal!", err.message || "Gagal mengirim pendaftaran.");
     } finally {
       setSubmitting(false);
     }
@@ -359,7 +442,7 @@ const FormApplication = () => {
             <li>
               Anda dapat menyimpan draft terlebih dahulu sebelum submit final
             </li>
-            <li>Setelah submit, aplikasi tidak dapat diubah lagi</li>
+            <li>Setelah submit, pendaftaran tidak dapat diubah lagi</li>
           </ul>
         </div>
 
@@ -391,7 +474,7 @@ const FormApplication = () => {
         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
             <strong>Penting:</strong> Pastikan koneksi internet stabil saat
-            mengupload file dan submit aplikasi untuk menghindari kegagalan
+            mengupload file dan submit pendaftaran untuk menghindari kegagalan
             pengiriman.
           </p>
         </div>
@@ -465,6 +548,22 @@ const FormApplication = () => {
       />
       <GuestLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
+          {isRevisionMode && (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-300 rounded-lg">
+              <div className="flex items-center">
+                <InfoCircleOutlined className="text-orange-600 mr-2 text-xl" />
+                <div>
+                  <h4 className="font-semibold text-orange-800 mb-1">
+                    Revisi Pendaftaran
+                  </h4>
+                  <p className="text-orange-700 text-sm">
+                    Anda sedang merevisi pendaftaran beasiswa. Pastikan semua
+                    data yang diminta sudah diperbaiki sesuai catatan revisi.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="mb-6">
             <Button
               icon={<ArrowLeftOutlined />}
@@ -499,7 +598,7 @@ const FormApplication = () => {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
-                          }
+                          },
                         )}
                       </div>
                     )}
@@ -566,14 +665,16 @@ const FormApplication = () => {
               </div>
 
               <div className="space-x-4 ml-auto">
-                <Button
-                  icon={<SaveOutlined />}
-                  onClick={handleSaveDraft}
-                  loading={submitting}
-                  disabled={submitting}
-                >
-                  {submitting ? "Menyimpan..." : "Simpan Draft"}
-                </Button>
+                {!isRevisionMode && (
+                  <Button
+                    icon={<SaveOutlined />}
+                    onClick={handleSaveDraft}
+                    loading={submitting}
+                    disabled={submitting}
+                  >
+                    {submitting ? "Menyimpan..." : "Simpan Draft"}
+                  </Button>
+                )}
 
                 <Button
                   type="primary"
@@ -582,7 +683,11 @@ const FormApplication = () => {
                   loading={submitting}
                   disabled={submitting}
                 >
-                  {submitting ? "Mengirim..." : "Submit Aplikasi"}
+                  {submitting
+                    ? "Mengirim..."
+                    : isRevisionMode
+                      ? "Submit Revisi"
+                      : "Submit Pendaftaran"}
                 </Button>
               </div>
             </div>

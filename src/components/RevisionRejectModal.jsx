@@ -1,6 +1,21 @@
-import { Modal, Form, Input, Checkbox, Divider, Spin, Alert } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Checkbox,
+  Divider,
+  Spin,
+  Alert,
+  DatePicker,
+} from "antd";
 import { useState, useEffect } from "react";
 import { getActiveTemplatesByType } from "../services/commentService";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { TextArea } = Input;
 
@@ -45,9 +60,10 @@ const RevisionRejectModal = ({
       const values = await form.validateFields();
       const notes = values.notes?.trim() || "";
       const template_ids = values.template_ids || [];
+      const revision_deadline = values.revision_deadline
+        ? values.revision_deadline.toISOString()
+        : null;
 
-      // ✅ For VERIFICATION & VALIDATION: notes and templates are optional
-      // ✅ For REVISION & REJECTION: at least one must be filled
       if (type !== "VERIFICATION" && type !== "VALIDATION") {
         if (!notes && template_ids.length === 0) {
           form.setFields([
@@ -60,7 +76,11 @@ const RevisionRejectModal = ({
         }
       }
 
-      onSubmit({ notes, template_ids });
+      onSubmit({
+        notes,
+        template_ids,
+        ...(type === "REVISION" && { revision_deadline }),
+      });
     } catch (error) {
       console.error("Validation failed:", error);
     }
@@ -76,6 +96,10 @@ const RevisionRejectModal = ({
     return labels[type] || type;
   };
 
+  const disabledDate = (current) => {
+    return current && current < dayjs().startOf("day");
+  };
+
   return (
     <Modal
       title={title}
@@ -89,7 +113,6 @@ const RevisionRejectModal = ({
       zIndex={zIndex}
     >
       <Form form={form} layout="vertical">
-        {/* ✅ Template Selection - Hidden for VERIFICATION & VALIDATION if no templates */}
         {type !== "VERIFICATION" && type !== "VALIDATION" && (
           <Form.Item
             name="template_ids"
@@ -146,7 +169,6 @@ const RevisionRejectModal = ({
           </Form.Item>
         )}
 
-        {/* ✅ Divider - Only show if templates exist or is VERIFICATION/VALIDATION */}
         {(templates.length > 0 ||
           type === "VERIFICATION" ||
           type === "VALIDATION") && (
@@ -154,38 +176,35 @@ const RevisionRejectModal = ({
             {type === "VERIFICATION" || type === "VALIDATION"
               ? "Catatan (Opsional)"
               : templates.length > 0
-              ? "atau"
-              : ""}
+                ? "atau"
+                : ""}
           </Divider>
         )}
 
-        {/* ✅ Custom Notes */}
         <Form.Item
           name="notes"
           label={
             type === "VERIFICATION" || type === "VALIDATION"
               ? `Catatan ${getTypeLabel()} (Opsional)`
               : templates.length > 0
-              ? "Catatan Tambahan (Opsional)"
-              : `Catatan ${getTypeLabel()}`
+                ? "Catatan Tambahan (Opsional)"
+                : `Catatan ${getTypeLabel()}`
           }
           rules={[
             {
               validator: (_, value) => {
                 const templateIds = form.getFieldValue("template_ids");
 
-                // For VERIFICATION & VALIDATION, notes are always optional
                 if (type === "VERIFICATION" || type === "VALIDATION") {
                   return Promise.resolve();
                 }
 
-                // For REJECTION & REVISION, at least one must be filled
                 if (
                   (!value || value.trim() === "") &&
                   (!templateIds || templateIds.length === 0)
                 ) {
                   return Promise.reject(
-                    "Pilih template atau masukkan catatan kustom"
+                    "Pilih template atau masukkan catatan kustom",
                   );
                 }
                 return Promise.resolve();
@@ -207,7 +226,30 @@ const RevisionRejectModal = ({
           />
         </Form.Item>
 
-        {/* ✅ Tips - Only show if templates exist */}
+        {type === "REVISION" && (
+          <Form.Item
+            name="revision_deadline"
+            label="Deadline Revisi (WIB)"
+            rules={[
+              {
+                required: true,
+                message: "Deadline revisi harus ditentukan",
+              },
+            ]}
+            extra="Waktu akan disimpan dalam zona waktu WIB (UTC+7)"
+          >
+            <DatePicker
+              showTime
+              format="DD MMMM YYYY, HH:mm [WIB]"
+              placeholder="Pilih tanggal dan waktu deadline (WIB)"
+              className="w-full"
+              disabledDate={disabledDate}
+              showNow={false}
+              defaultValue={dayjs().tz("Asia/Jakarta")}
+            />
+          </Form.Item>
+        )}
+
         {templates.length > 0 && (
           <div className="text-xs text-gray-500 mt-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <strong>Tips:</strong> Anda bisa memilih satu atau lebih template,

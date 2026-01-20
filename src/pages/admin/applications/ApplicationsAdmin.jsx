@@ -312,7 +312,7 @@ const ApplicationsAdmin = () => {
       } else {
         warning(
           "Gagal!",
-          "Anda tidak memiliki akses untuk menolak pendaftaran ini"
+          "Anda tidak memiliki akses untuk menolak pendaftaran ini",
         );
         return;
       }
@@ -342,7 +342,7 @@ const ApplicationsAdmin = () => {
   };
 
   const handleSubmitRevision = async (values) => {
-    const { notes, template_ids } = values;
+    const { notes, template_ids, revision_deadline } = values;
     const record = selectedApplicationForRevision;
 
     try {
@@ -351,6 +351,7 @@ const ApplicationsAdmin = () => {
       const payload = {
         notes: notes || "",
         template_ids: template_ids || [],
+        revision_deadline: revision_deadline,
       };
 
       if (role === "VALIDATOR_DITMAWA" || role === "PIMPINAN_DITMAWA") {
@@ -632,7 +633,7 @@ const ApplicationsAdmin = () => {
         }`}
         loading={verifyLoading}
         type="VERIFICATION"
-        zIndex={1100} // ✅ ADD: Higher than ApplicationDetailModal (default 1000)
+        zIndex={1100}
       />
 
       <RevisionRejectModal
@@ -647,7 +648,7 @@ const ApplicationsAdmin = () => {
         }`}
         loading={validateLoading}
         type="VALIDATION"
-        zIndex={1100} // ✅ ADD
+        zIndex={1100}
       />
 
       <RevisionRejectModal
@@ -662,7 +663,7 @@ const ApplicationsAdmin = () => {
         }`}
         loading={rejectLoading}
         type="REJECTION"
-        zIndex={1100} // ✅ ADD
+        zIndex={1100}
       />
 
       <RevisionRejectModal
@@ -677,7 +678,7 @@ const ApplicationsAdmin = () => {
         }`}
         loading={revisionLoading}
         type="REVISION"
-        zIndex={1100} // ✅ ADD
+        zIndex={1100}
       />
     </div>
   );

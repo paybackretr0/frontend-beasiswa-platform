@@ -14,6 +14,10 @@ import { getApplicationDetailUser } from "../../services/applicationService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
+import {
+  formatToWIB,
+  isDeadlinePassed as checkDeadlinePassed,
+} from "../../utils/timezone";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -85,15 +89,19 @@ const History = () => {
     setSelectedApplication(null);
   };
 
+  const isRevisionDeadlinePassed = (deadline) => {
+    return checkDeadlinePassed(deadline);
+  };
+
   const handleCompleteDraft = (record) => {
     success(
       "Mengalihkan...",
-      `Mengarahkan ke form pendaftaran ${record.beasiswa}`
+      `Mengarahkan ke form pendaftaran ${record.beasiswa}`,
     );
 
     setTimeout(() => {
       navigate(
-        `/scholarship/${record.scholarship_id}/apply?schema=${record.schema_id}`
+        `/scholarship/${record.scholarship_id}/apply?schema=${record.schema_id}`,
       );
     }, 1000);
   };
@@ -109,6 +117,7 @@ const History = () => {
         MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
         VERIFIED: { color: "cyan", text: "Terverifikasi - Menunggu Validasi" },
         DRAFT: { color: "orange", text: "Draft" },
+        REVISION_NEEDED: { color: "purple", text: "Perlu Revisi" },
       };
 
       const config = statusConfig[status] || { color: "default", text: status };
@@ -120,6 +129,7 @@ const History = () => {
       { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
       { text: "Terverifikasi - Menunggu Validasi", value: "VERIFIED" },
       { text: "Draft", value: "DRAFT" },
+      { text: "Perlu Revisi", value: "REVISION_NEEDED" },
     ],
     onFilter: (value, record) => record.status === value,
   });
@@ -175,7 +185,64 @@ const History = () => {
           <span className="text-gray-400 text-xs">Belum disubmit</span>
         ),
     },
-    createStatusColumn(),
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status, record) => {
+        const statusConfig = {
+          VALIDATED: { color: "green", text: "Divalidasi" },
+          REJECTED: { color: "red", text: "Ditolak" },
+          MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
+          VERIFIED: {
+            color: "cyan",
+            text: "Terverifikasi - Menunggu Validasi",
+          },
+          DRAFT: { color: "orange", text: "Draft" },
+          REVISION_NEEDED: { color: "purple", text: "Perlu Revisi" },
+        };
+
+        const config = statusConfig[status] || {
+          color: "default",
+          text: status,
+        };
+
+        return (
+          <div>
+            <Tag color={config.color}>{config.text}</Tag>
+            {status === "REVISION_NEEDED" && record.revision_deadline && (
+              <div className="mt-1">
+                <div
+                  className={`text-xs font-medium ${
+                    isRevisionDeadlinePassed(record.revision_deadline)
+                      ? "text-red-600"
+                      : "text-orange-600"
+                  }`}
+                >
+                  Deadline:{" "}
+                  {formatToWIB(record.revision_deadline, "DD MMM YYYY, HH:mm")}{" "}
+                  WIB
+                </div>
+                {isRevisionDeadlinePassed(record.revision_deadline) && (
+                  <Tag color="red" className="text-xs mt-1">
+                    Deadline Sudah Lewat
+                  </Tag>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      },
+      filters: [
+        { text: "Divalidasi", value: "VALIDATED" },
+        { text: "Ditolak", value: "REJECTED" },
+        { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
+        { text: "Terverifikasi - Menunggu Validasi", value: "VERIFIED" },
+        { text: "Draft", value: "DRAFT" },
+        { text: "Perlu Revisi", value: "REVISION_NEEDED" },
+      ],
+      onFilter: (value, record) => record.status === value,
+    },
     createActionColumn([
       {
         key: "detail",
@@ -193,6 +260,20 @@ const History = () => {
         hidden: (record) => record.status !== "DRAFT",
         onClick: handleCompleteDraft,
       },
+      {
+        key: "revision",
+        label: "Revisi",
+        icon: <FormOutlined />,
+        type: "default",
+        danger: true,
+        hidden: (record) =>
+          record.status !== "REVISION_NEEDED" ||
+          isRevisionDeadlinePassed(record.revision_deadline),
+        onClick: (record) =>
+          navigate(
+            `/scholarship/${record.scholarship_id}/apply?revision=${record.id}&schema=${record.schema_id}`,
+          ),
+      },
     ]),
   ];
 
@@ -205,7 +286,7 @@ const History = () => {
         onChange={(value) => {
           if (value) {
             const filtered = applications.filter(
-              (item) => item.status === value
+              (item) => item.status === value,
             );
             setFilteredData(filtered);
           } else {
@@ -218,6 +299,7 @@ const History = () => {
         <Option value="MENUNGGU_VERIFIKASI">Menunggu Verifikasi</Option>
         <Option value="VERIFIED">Terverifikasi</Option>
         <Option value="DRAFT">Draft</Option>
+        <Option value="REVISION_NEEDED">Perlu Revisi</Option>
       </Select>
 
       <RangePicker
@@ -244,13 +326,13 @@ const History = () => {
 
   const totalApplications = applications.length;
   const validatedCount = applications.filter(
-    (item) => item.status === "VALIDATED"
+    (item) => item.status === "VALIDATED",
   ).length;
   const inProgressCount = applications.filter(
-    (item) => !["VALIDATED", "REJECTED", "DRAFT"].includes(item.status)
+    (item) => !["VALIDATED", "REJECTED", "DRAFT"].includes(item.status),
   ).length;
   const draftCount = applications.filter(
-    (item) => item.status === "DRAFT"
+    (item) => item.status === "DRAFT",
   ).length;
 
   if (loading) {

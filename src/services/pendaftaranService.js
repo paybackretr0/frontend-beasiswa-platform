@@ -6,7 +6,7 @@ export const getScholarshipForm = async (scholarshipId, schemaId) => {
     const queryParams = schemaId ? `?schemaId=${schemaId}` : "";
 
     const response = await authFetch(
-      `${API_BASE_URL}/pendaftaran/scholarship/${scholarshipId}/form${queryParams}`
+      `${API_BASE_URL}/pendaftaran/scholarship/${scholarshipId}/form${queryParams}`,
     );
 
     if (!response.success) {
@@ -24,7 +24,7 @@ export const submitApplication = async (
   scholarshipId,
   schemaId,
   answers,
-  isDraft = false
+  isDraft = false,
 ) => {
   try {
     const formData = new FormData();
@@ -61,7 +61,7 @@ export const submitApplication = async (
       {
         method: "POST",
         body: formData,
-      }
+      },
     );
 
     if (!response.success) {
@@ -77,4 +77,51 @@ export const submitApplication = async (
 
 export const saveDraft = async (scholarshipId, schemaId, answers) => {
   return submitApplication(scholarshipId, schemaId, answers, true);
+};
+
+export const submitRevision = async (applicationId, answers) => {
+  try {
+    const formData = new FormData();
+    const answersData = {};
+
+    Object.keys(answers).forEach((fieldId) => {
+      const answer = answers[fieldId];
+
+      if (answer instanceof File) {
+        formData.append(`field_${fieldId}`, answer);
+        answersData[fieldId] = {
+          file_path: answer.name,
+          mime_type: answer.type,
+          size_bytes: answer.size,
+        };
+      } else if (answer?.path) {
+        answersData[fieldId] = {
+          file_path: answer.path,
+          mime_type: answer.mime_type || null,
+          size_bytes: answer.size_bytes || null,
+        };
+      } else {
+        answersData[fieldId] = { answer_text: answer };
+      }
+    });
+
+    formData.append("answers", JSON.stringify(answersData));
+
+    const response = await authFetch(
+      `${API_BASE_URL}/pendaftaran/application/${applicationId}/revision`,
+      {
+        method: "PUT",
+        body: formData,
+      },
+    );
+
+    if (!response.success) {
+      throw new Error(response.message || "Gagal submit revisi");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error submitting revision:", error);
+    throw new Error(error.message || "Gagal submit revisi");
+  }
 };
