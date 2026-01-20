@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import StepOne from "./StepOne";
-import StepTwo from "./StepTwo";
-import StepThree from "./StepThree";
+import StepSchemas from "./StepSchemas";
+import StepFinalize from "./StepFinalize";
 import { createScholarship } from "../../../../services/scholarshipService";
 import useAlert from "../../../../hooks/useAlert";
 import AlertContainer from "../../../../components/AlertContainer";
@@ -20,29 +20,20 @@ const ScholarshipAdd = () => {
     year: new Date().getFullYear(),
     description: "",
     is_external: false,
-    terms_type: "TEXT",
-    terms_content: "",
-    requirements: [],
+    verification_level: "DITMAWA",
+
+    schemas: [],
 
     start_date: "",
     end_date: "",
-    quota: null,
-    gpa_minimum: null,
-    semester_minimum: "",
-    documents: [],
-    benefits: [],
-
     contact_person_name: "",
     contact_person_email: "",
     contact_person_phone: "",
-    is_active: true,
     scholarship_value: "",
     duration_semesters: "",
     website_url: "",
-    faculties: [],
-    departments: [],
-    study_programs: [],
-    stages: [],
+    is_active: true,
+    benefits: [],
   });
 
   const handleNext = (stepData) => {
@@ -62,7 +53,7 @@ const ScholarshipAdd = () => {
       await createScholarship(finalData);
       success(
         "Berhasil!",
-        `Beasiswa "${finalData.name}" telah berhasil ditambahkan ke sistem.`
+        `Beasiswa "${finalData.name}" dengan ${finalData.schemas.length} schema telah berhasil ditambahkan.`
       );
 
       setTimeout(() => {
@@ -116,18 +107,84 @@ const ScholarshipAdd = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
+      <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div
+            className={`flex items-center gap-2 ${
+              currentStep >= 1 ? "text-blue-600" : "text-gray-400"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                currentStep >= 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              1
+            </div>
+            <span className="text-sm font-medium hidden sm:inline">
+              Data Umum
+            </span>
+          </div>
+
+          <div
+            className={`flex-1 h-1 mx-2 ${
+              currentStep >= 2 ? "bg-blue-500" : "bg-gray-200"
+            }`}
+          ></div>
+
+          <div
+            className={`flex items-center gap-2 ${
+              currentStep >= 2 ? "text-blue-600" : "text-gray-400"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                currentStep >= 2 ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              2
+            </div>
+            <span className="text-sm font-medium hidden sm:inline">Schema</span>
+          </div>
+
+          <div
+            className={`flex-1 h-1 mx-2 ${
+              currentStep >= 3 ? "bg-blue-500" : "bg-gray-200"
+            }`}
+          ></div>
+
+          <div
+            className={`flex items-center gap-2 ${
+              currentStep >= 3 ? "text-blue-600" : "text-gray-400"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                currentStep >= 3 ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              3
+            </div>
+            <span className="text-sm font-medium hidden sm:inline">
+              Finalisasi
+            </span>
+          </div>
+        </div>
+      </div>
+
       {currentStep === 1 && (
         <StepOne onNext={handleNext} initialData={scholarshipData} />
       )}
       {currentStep === 2 && (
-        <StepTwo
+        <StepSchemas
           onNext={handleNext}
           onBack={handleBack}
           initialData={scholarshipData}
         />
       )}
       {currentStep === 3 && (
-        <StepThree
+        <StepFinalize
           onBack={handleBack}
           onSubmit={handleSubmit}
           initialData={scholarshipData}

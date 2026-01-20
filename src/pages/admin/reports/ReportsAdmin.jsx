@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Select, Spin, Tag } from "antd";
-import {
-  DownloadOutlined,
-  EyeOutlined,
-  CheckOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import UniversalTable, {
@@ -32,6 +27,8 @@ import {
   getTopPerformingFaculties,
   exportLaporanBeasiswa,
 } from "../../../services/analyticsService";
+import { getApplicationDetail } from "../../../services/applicationService";
+import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 
@@ -44,7 +41,7 @@ const years = Array.from(
 );
 
 const ReportsAdmin = () => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState("all");
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
 
@@ -63,6 +60,10 @@ const ReportsAdmin = () => {
   const [scholarshipPerformance, setScholarshipPerformance] = useState([]);
   const [topFaculties, setTopFaculties] = useState([]);
 
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
   const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
 
   const [filters, setFilters] = useState({
@@ -75,6 +76,24 @@ const ReportsAdmin = () => {
     departments: [],
     genders: [],
   });
+
+  let user = null;
+  let facultyName = "";
+
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+    if (user?.faculty) {
+      facultyName = user.faculty.name;
+    }
+  } catch (e) {
+    console.error("Error parsing user:", e);
+  }
+
+  const role = user?.role?.toUpperCase() || null;
+
+  const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
+    role
+  );
 
   useEffect(() => {
     document.title = "Laporan - Admin";
@@ -154,11 +173,13 @@ const ReportsAdmin = () => {
 
   const fetchSelectionSummary = async () => {
     try {
-      const data = await getSelectionSummary(selectedYear);
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+      const data = await getSelectionSummary(yearParam);
+
       const summary = [
         {
-          title: "Jumlah Mahasiswa Diterima",
-          value: data.lolosSeleksiBerkas || 0,
+          title: "Divalidasi (Lolos)",
+          value: data.validated || 0,
           color: "text-green-600",
         },
         {
@@ -168,12 +189,17 @@ const ReportsAdmin = () => {
         },
         {
           title: "Menunggu Validasi",
-          value: data.menungguValidasi || 0,
+          value: data.verified || 0,
+          color: "text-blue-600",
+        },
+        {
+          title: "Perlu Revisi",
+          value: data.revisionNeeded || 0,
           color: "text-yellow-600",
         },
         {
-          title: "Tidak Lolos Seleksi",
-          value: data.tidakLolosSeleksi || 0,
+          title: "Ditolak",
+          value: data.rejected || 0,
           color: "text-red-600",
         },
       ];
@@ -186,13 +212,25 @@ const ReportsAdmin = () => {
 
   const fetchChartData = async () => {
     try {
-      const [fakultas, departemen, tahun, gender, monthly] = await Promise.all([
-        getFacultyDistribution(selectedYear),
-        getDepartmentDistribution(selectedYear),
-        getYearlyTrend(),
-        getGenderDistribution(selectedYear),
-        getMonthlyTrend(selectedYear),
-      ]);
+      const chartPromises = isFacultyRole
+        ? [
+            Promise.resolve([]),
+            getDepartmentDistribution(selectedYear),
+            getYearlyTrend(),
+            getGenderDistribution(selectedYear),
+            getMonthlyTrend(selectedYear),
+          ]
+        : [
+            getFacultyDistribution(selectedYear),
+            getDepartmentDistribution(selectedYear),
+            getYearlyTrend(),
+            getGenderDistribution(selectedYear),
+            getMonthlyTrend(selectedYear),
+          ];
+
+      const [fakultas, departemen, tahun, gender, monthly] = await Promise.all(
+        chartPromises
+      );
 
       setFakultasData(fakultas || []);
       setDepartemenData(departemen || []);
@@ -323,34 +361,47 @@ const ReportsAdmin = () => {
       });
   };
 
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem("user"));
-  } catch (e) {}
-  const role = user?.role?.toUpperCase() || null;
+  const handleDetail = async (record) => {
+    try {
+      setDetailLoading(true);
+      setDetailModalVisible(true);
 
-  const handleDetail = (record) => {
-    info("Detail Pendaftar", `Detail pendaftar: ${record.nama}`);
+      const detail = await getApplicationDetail(record.id);
+      setSelectedApplication(detail);
+    } catch (err) {
+      console.error("Error fetching application detail:", err);
+      error("Gagal!", err.message || "Gagal memuat detail pendaftaran");
+      setDetailModalVisible(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setDetailModalVisible(false);
+    setSelectedApplication(null);
   };
 
   const getStatusLabel = (status) => {
     const statusMap = {
+      DRAFT: "Draft",
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
       VERIFIED: "Terverifikasi",
-      MENUNGGU_VALIDASI: "Menunggu Validasi",
-      REJECTED: "Dikembalikan",
-      VALIDATED: "Disetujui",
+      VALIDATED: "Divalidasi",
+      REJECTED: "Ditolak",
+      REVISION_NEEDED: "Perlu Revisi",
     };
     return statusMap[status] || status;
   };
 
   const getStatusColor = (status) => {
     const colorMap = {
+      Draft: "default",
       "Menunggu Verifikasi": "orange",
-      Terverifikasi: "blue",
-      "Menunggu Validasi": "gold",
-      Dikembalikan: "red",
-      Disetujui: "green",
+      "Menunggu Validasi": "blue",
+      Divalidasi: "green",
+      Ditolak: "red",
+      "Perlu Revisi": "gold",
     };
     return colorMap[status] || "default";
   };
@@ -391,10 +442,13 @@ const ReportsAdmin = () => {
       },
       filters: [
         { text: "Menunggu Verifikasi", value: "Menunggu Verifikasi" },
-        { text: "Terverifikasi", value: "Terverifikasi" },
-        { text: "Menunggu Validasi", value: "Menunggu Validasi" },
-        { text: "Dikembalikan", value: "Dikembalikan" },
-        { text: "Disetujui", value: "Disetujui" },
+        {
+          text: "Menunggu Validasi",
+          value: "Menunggu Validasi",
+        },
+        { text: "Divalidasi", value: "Divalidasi" },
+        { text: "Ditolak", value: "Ditolak" },
+        { text: "Perlu Revisi", value: "Perlu Revisi" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -410,41 +464,6 @@ const ReportsAdmin = () => {
         label: "Detail",
         icon: <EyeOutlined />,
         onClick: handleDetail,
-      },
-      {
-        key: "verify",
-        label: "Verifikasi",
-        icon: <CheckOutlined />,
-        hidden: (record) =>
-          !(
-            role === "VERIFIKATOR" && record.rawStatus === "MENUNGGU_VERIFIKASI"
-          ),
-        onClick: {},
-      },
-      {
-        key: "validate",
-        label: "Validasi",
-        icon: <CheckOutlined />,
-        hidden: (record) =>
-          !(
-            role === "PIMPINAN_DITMAWA" &&
-            ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus)
-          ),
-        onClick: {},
-      },
-      {
-        key: "reject",
-        label: "Tolak",
-        icon: <CloseOutlined />,
-        danger: true,
-        hidden: (record) =>
-          !(
-            (role === "VERIFIKATOR" &&
-              record.rawStatus === "MENUNGGU_VERIFIKASI") ||
-            (role === "PIMPINAN_DITMAWA" &&
-              ["VERIFIED", "MENUNGGU_VALIDASI"].includes(record.rawStatus))
-          ),
-        onClick: {},
       },
     ]),
   ];
@@ -464,28 +483,38 @@ const ReportsAdmin = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
       <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Laporan Beasiswa</h1>
+          {isFacultyRole && facultyName && (
+            <p className="text-sm text-gray-600 mt-1">
+              Data untuk {facultyName}
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <Select
             value={selectedYear}
             onChange={handleYearChange}
-            style={{ width: 120 }}
+            style={{ width: 150 }}
             size="large"
           >
+            <Option value="all">Semua Tahun</Option>
             {years.map((year) => (
               <Option key={year} value={year}>
                 {year}
               </Option>
             ))}
           </Select>
+          <Button
+            onClick={handleExportReport}
+            className="flex items-center gap-2"
+          >
+            <DownloadOutlined />
+            Export Laporan
+          </Button>
         </div>
-        <Button
-          onClick={handleExportReport}
-          className="flex items-center gap-2"
-        >
-          <DownloadOutlined />
-          Export Laporan
-        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -501,11 +530,14 @@ const ReportsAdmin = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {selectionSummaryData.map((item, idx) => (
           <Card key={idx}>
             <div className="flex flex-col items-center py-4">
-              <span className="text-sm text-gray-600 mb-2">{item.title}</span>
+              <span className="text-3xl mb-2">{item.icon}</span>
+              <span className="text-sm text-gray-600 mb-2 text-center">
+                {item.title}
+              </span>
               <span className={`text-2xl font-bold ${item.color}`}>
                 {item.value}
               </span>
@@ -550,7 +582,6 @@ const ReportsAdmin = () => {
         )}
       </div>
 
-      {/* Performance Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
@@ -563,8 +594,14 @@ const ReportsAdmin = () => {
               </div>
             </Card>
             <Card
-              title="Fakultas Terbaik"
-              description="Fakultas dengan tingkat keberhasilan tertinggi"
+              title={
+                isFacultyRole ? "Performa per Departemen" : "Fakultas Terbaik"
+              }
+              description={
+                isFacultyRole
+                  ? "Tingkat keberhasilan per departemen"
+                  : "Fakultas dengan tingkat keberhasilan tertinggi"
+              }
             >
               <div className="flex justify-center items-center py-12">
                 <Spin size="large" />
@@ -581,67 +618,51 @@ const ReportsAdmin = () => {
               />
             </div>
             <div className="flex flex-col h-full">
-              <PerformanceBarChart
-                data={topFaculties}
-                title="Fakultas Terbaik"
-                description="5 fakultas dengan tingkat keberhasilan tertinggi"
-              />
+              {isFacultyRole ? (
+                <HorizontalBarChart
+                  data={departemenData}
+                  title="Performa per Departemen"
+                  description={`Distribusi pendaftar per departemen di ${facultyName}`}
+                />
+              ) : (
+                <PerformanceBarChart
+                  data={topFaculties}
+                  title="Fakultas Terbaik"
+                  description="5 fakultas dengan tingkat keberhasilan tertinggi"
+                />
+              )}
             </div>
           </>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div
+        className={`grid grid-cols-1 ${
+          !isFacultyRole ? "md:grid-cols-2" : ""
+        } gap-6`}
+      >
         {chartsLoading ? (
           <>
-            <Card
-              title="Pendaftar Berdasarkan Fakultas"
-              description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-            <Card
-              title="Pendaftar Berdasarkan Departemen"
-              description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col h-full">
-              <HorizontalBarChart
-                data={fakultasData}
+            {!isFacultyRole && (
+              <Card
                 title="Pendaftar Berdasarkan Fakultas"
                 description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
-              />
-            </div>
-            <div className="flex flex-col h-full">
-              <HorizontalBarChart
-                data={departemenData}
+              >
+                <div className="flex justify-center items-center py-12">
+                  <Spin size="large" />
+                </div>
+              </Card>
+            )}
+            {!isFacultyRole && (
+              <Card
                 title="Pendaftar Berdasarkan Departemen"
                 description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
-              />
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {chartsLoading ? (
-          <>
-            <Card
-              title="Pendaftar Tahun ke Tahun"
-              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
+              >
+                <div className="flex justify-center items-center py-12">
+                  <Spin size="large" />
+                </div>
+              </Card>
+            )}
             <Card
               title="Pendaftar Berdasarkan Gender"
               description="Distribusi pendaftar beasiswa berdasarkan gender"
@@ -653,16 +674,31 @@ const ReportsAdmin = () => {
           </>
         ) : (
           <>
-            <LineChart
-              data={tahunData}
-              title="Pendaftar Tahun ke Tahun"
-              description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
-            />
-            <PieChart
-              data={genderData}
-              title="Pendaftar Berdasarkan Gender"
-              description="Distribusi pendaftar beasiswa berdasarkan gender"
-            />
+            {!isFacultyRole && (
+              <div className="flex flex-col h-full">
+                <HorizontalBarChart
+                  data={fakultasData}
+                  title="Pendaftar Berdasarkan Fakultas"
+                  description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
+                />
+              </div>
+            )}
+            {!isFacultyRole && (
+              <div className="flex flex-col h-full">
+                <HorizontalBarChart
+                  data={departemenData}
+                  title="Pendaftar Berdasarkan Departemen"
+                  description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
+                />
+              </div>
+            )}
+            <div className="flex flex-col h-full">
+              <PieChart
+                data={genderData}
+                title="Pendaftar Berdasarkan Gender"
+                description="Distribusi pendaftar beasiswa berdasarkan gender"
+              />
+            </div>
           </>
         )}
       </div>
@@ -683,18 +719,20 @@ const ReportsAdmin = () => {
           pageSize={8}
           customFilters={
             <>
-              <Select
-                value={filters.fakultas}
-                onChange={(value) => handleFilterChange("fakultas", value)}
-                placeholder="Semua Fakultas"
-                style={{ width: 140 }}
-              >
-                {filterOptions.faculties.map((option) => (
-                  <Option key={option} value={option}>
-                    {option === "Semua" ? "Semua Fakultas" : option}
-                  </Option>
-                ))}
-              </Select>
+              {!isFacultyRole && (
+                <Select
+                  value={filters.fakultas}
+                  onChange={(value) => handleFilterChange("fakultas", value)}
+                  placeholder="Semua Fakultas"
+                  style={{ width: 140 }}
+                >
+                  {filterOptions.faculties.map((option) => (
+                    <Option key={option} value={option}>
+                      {option === "Semua" ? "Semua Fakultas" : option}
+                    </Option>
+                  ))}
+                </Select>
+              )}
 
               <Select
                 value={filters.departemen}
@@ -754,6 +792,16 @@ const ReportsAdmin = () => {
           }}
         />
       </div>
+      <ApplicationDetailModal
+        visible={detailModalVisible}
+        onClose={handleCloseDetailModal}
+        applicationDetail={selectedApplication}
+        loading={detailLoading}
+        onVerify={null}
+        onValidate={null}
+        onReject={null}
+        role={null}
+      />
     </div>
   );
 };

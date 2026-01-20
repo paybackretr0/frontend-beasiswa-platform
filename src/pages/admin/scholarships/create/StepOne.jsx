@@ -11,12 +11,9 @@ const StepOne = ({ onNext, initialData = {} }) => {
     year: initialData.year || new Date().getFullYear(),
     description: initialData.description || "",
     is_external: initialData.is_external || false,
+    verification_level: initialData.verification_level || "DITMAWA",
   });
 
-  const [requirements, setRequirements] = useState([
-    { id: 1, type: "TEXT", text: "", file: null },
-  ]);
-  const [requirementType, setRequirementType] = useState("TEXT");
   const [logoFile, setLogoFile] = useState(null);
 
   const handleInputChange = (field, value) => {
@@ -48,47 +45,13 @@ const StepOne = ({ onNext, initialData = {} }) => {
     }
   };
 
-  const addRequirementField = () => {
-    if (requirementType !== "FILE") {
-      setRequirements([
-        ...requirements,
-        {
-          id: requirements.length + 1,
-          type: requirementType,
-          text: "",
-          file: null,
-        },
-      ]);
-    }
-  };
-
-  const removeRequirementField = (id) => {
-    setRequirements(requirements.filter((req) => req.id !== id));
-  };
-
-  const updateRequirementField = (id, key, value) => {
-    setRequirements(
-      requirements.map((req) =>
-        req.id === id ? { ...req, [key]: value } : req
-      )
-    );
-  };
-
-  const handleTypeChange = (type) => {
-    setRequirementType(type);
-    if (type === "FILE") {
-      setRequirements([{ id: 1, type: "FILE", text: "", file: null }]);
-    } else {
-      setRequirements([{ id: 1, type: "TEXT", text: "", file: null }]);
-    }
-  };
-
   const handleNext = () => {
     if (
       !formData.name ||
       !formData.organizer ||
       !formData.description ||
-      !formData.year
+      !formData.year ||
+      !formData.verification_level
     ) {
       warning(
         "Data Belum Lengkap",
@@ -97,27 +60,8 @@ const StepOne = ({ onNext, initialData = {} }) => {
       return;
     }
 
-    const validRequirements = requirements.filter((req) => {
-      if (req.type === "TEXT") {
-        return req.text.trim() !== "";
-      } else {
-        return req.file !== null;
-      }
-    });
-
-    if (validRequirements.length === 0) {
-      warning(
-        "Syarat Ketentuan Kosong",
-        "Mohon tambahkan minimal satu syarat dan ketentuan untuk beasiswa"
-      );
-      return;
-    }
-
     const stepData = {
       ...formData,
-      requirements: validRequirements,
-      requirementFile:
-        validRequirements.find((req) => req.type === "FILE")?.file || null,
       logoFile: logoFile,
     };
 
@@ -136,7 +80,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
           Tambah Beasiswa Baru
         </h1>
         <p className="text-gray-600 mt-1">
-          Lengkapi data berikut untuk menambahkan beasiswa baru.
+          Lengkapi data umum beasiswa terlebih dahulu.
         </p>
       </div>
 
@@ -145,7 +89,9 @@ const StepOne = ({ onNext, initialData = {} }) => {
           <div className="w-8 h-8 flex items-center justify-center bg-blue-500 text-white rounded-full">
             1
           </div>
-          <h2 className="text-lg font-semibold text-gray-700">Data Utama</h2>
+          <h2 className="text-lg font-semibold text-gray-700">
+            Data Umum Beasiswa
+          </h2>
         </div>
         <hr className="border-gray-300 mb-6" />
 
@@ -175,7 +121,6 @@ const StepOne = ({ onNext, initialData = {} }) => {
                     Beasiswa Internal
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Beasiswa yang proses pendaftarannya dikelola oleh admin.
                     Mahasiswa mendaftar langsung di sistem ini.
                   </p>
                 </div>
@@ -203,14 +148,36 @@ const StepOne = ({ onNext, initialData = {} }) => {
                     Beasiswa Eksternal
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Beasiswa dari yang hanya ditampilkan sebagai informasi.
-                    Pendaftaran dilakukan di website penyedia.
+                    Hanya ditampilkan sebagai informasi.
                   </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {!formData.is_external && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Level Verifikasi <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.verification_level}
+              onChange={(e) =>
+                handleInputChange("verification_level", e.target.value)
+              }
+              className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
+            >
+              <option value="FACULTY">Fakultas</option>
+              <option value="DITMAWA">Ditmawa</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.verification_level === "FACULTY"
+                ? "Verifikasi akan dilakukan oleh Verifikator Fakultas"
+                : "Verifikasi akan dilakukan oleh Verifikator Ditmawa"}
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
@@ -227,7 +194,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sumber/Penyedia Beasiswa <span className="text-red-500">*</span>
+              Sumber/Penyedia <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -247,10 +214,9 @@ const StepOne = ({ onNext, initialData = {} }) => {
               onChange={(e) =>
                 handleInputChange("year", parseInt(e.target.value))
               }
-              min="2000"
-              max={new Date().getFullYear()}
+              min="2024"
+              max={new Date().getFullYear() + 1}
               className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
-              placeholder="Masukkan tahun"
             />
           </div>
         </div>
@@ -281,115 +247,19 @@ const StepOne = ({ onNext, initialData = {} }) => {
                 className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Format yang didukung: PNG, JPG, JPEG. Maksimal 5MB.
+                Format: PNG, JPG, JPEG. Max 5MB.
               </p>
             </div>
             {logoFile && (
               <div className="w-20 h-20 border border-gray-300 rounded-md overflow-hidden">
                 <img
                   src={URL.createObjectURL(logoFile)}
-                  alt="Preview logo"
+                  alt="Preview"
                   className="w-full h-full object-cover"
                 />
               </div>
             )}
           </div>
-          {logoFile && (
-            <div className="mt-2">
-              <p className="text-xs text-green-600">
-                File dipilih: {logoFile.name} (
-                {(logoFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setLogoFile(null);
-                  const fileInput = document.querySelector(
-                    'input[type="file"][accept*="image"]'
-                  );
-                  if (fileInput) fileInput.value = "";
-                }}
-                className="text-red-500 hover:text-red-700 text-xs mt-1"
-              >
-                Hapus Logo
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-4">
-            Syarat dan Ketentuan <span className="text-red-500">*</span>
-          </label>
-          <div className="mb-4">
-            <select
-              value={requirementType}
-              onChange={(e) => handleTypeChange(e.target.value)}
-              className="border border-gray-300 rounded-md px-4 py-2 text-sm"
-            >
-              <option value="TEXT">Teks</option>
-              <option value="FILE">File</option>
-            </select>
-          </div>
-
-          {requirements.map((requirement) => (
-            <div key={requirement.id} className="flex items-center gap-4 mb-4">
-              {requirementType === "FILE" ? (
-                <div className="flex-1">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) =>
-                      updateRequirementField(
-                        requirement.id,
-                        "file",
-                        e.target.files[0]
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
-                  />
-                  {requirement.file && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      File dipilih: {requirement.file.name}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  value={requirement.text}
-                  onChange={(e) =>
-                    updateRequirementField(
-                      requirement.id,
-                      "text",
-                      e.target.value
-                    )
-                  }
-                  className="flex-1 border border-gray-300 rounded-md px-4 py-2 text-sm"
-                  placeholder="Masukkan syarat atau ketentuan"
-                />
-              )}
-              {requirementType !== "FILE" && requirements.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeRequirementField(requirement.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Hapus
-                </button>
-              )}
-            </div>
-          ))}
-
-          {requirementType !== "FILE" && (
-            <button
-              type="button"
-              onClick={addRequirementField}
-              className="text-blue-500 hover:text-blue-700 text-sm"
-            >
-              + Tambah Syarat/Ketentuan
-            </button>
-          )}
         </div>
       </div>
 

@@ -7,7 +7,7 @@ const AlertContainer = ({ alerts, onRemove, position = "top-right" }) => {
       position: "fixed",
       top: "24px",
       right: "24px",
-      zIndex: 1000,
+      zIndex: 1300,
       maxWidth: "400px",
     },
     "top-left": {

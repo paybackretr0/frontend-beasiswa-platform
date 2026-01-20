@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EditStepOne from "./EditStepOne";
-import EditStepTwo from "./EditStepTwo";
-import EditStepThree from "./EditStepThree";
+import EditStepSchemas from "./EditStepSchemas";
+import EditStepFinalize from "./EditStepFinalize";
 import {
   updateScholarship,
   getBeasiswaById,
@@ -25,24 +25,21 @@ const ScholarshipEdit = () => {
     year: new Date().getFullYear(),
     description: "",
     is_external: false,
-    requirements: [],
+    verification_level: "DITMAWA",
+
+    schemas: [],
+
     start_date: "",
     end_date: "",
-    quota: null,
-    gpa_minimum: null,
-    semester_minimum: "",
-    documents: [],
-    benefits: [],
     contact_person_name: "",
     contact_person_email: "",
     contact_person_phone: "",
-    is_active: true,
     scholarship_value: "",
     duration_semesters: "",
     website_url: "",
-    faculties: [],
-    departments: [],
-    study_programs: [],
+    is_active: true,
+
+    existingLogo: null,
   });
 
   useEffect(() => {
@@ -55,42 +52,66 @@ const ScholarshipEdit = () => {
       setInitialLoading(true);
       const data = await getBeasiswaById(id);
 
+      const transformedSchemas = (data.schemas || []).map((schema) => ({
+        id: schema.id,
+        name: schema.name,
+        description: schema.description,
+        quota: schema.quota,
+        gpa_minimum: schema.gpa_minimum,
+        semester_minimum: schema.semester_minimum,
+        is_active: schema.is_active,
+
+        requirements: (schema.requirements || []).map((req) => ({
+          id: req.id,
+          type: req.requirement_type,
+          text: req.requirement_text || "",
+          file: null,
+          fileName: req.requirement_file
+            ? req.requirement_file.split("/").pop()
+            : "",
+          existingFile: req.requirement_file,
+        })),
+
+        documents: (schema.documents || []).map((doc) => doc.document_name),
+
+        stages: (schema.stages || [])
+          .sort((a, b) => a.order_no - b.order_no)
+          .map((stage) => ({
+            id: stage.id,
+            name: stage.stage_name,
+            stage_name: stage.stage_name,
+            order_no: stage.order_no,
+          })),
+
+        faculties: data.faculties?.map((f) => f.id) || [],
+        departments: data.departments?.map((d) => d.id) || [],
+        study_programs: data.studyPrograms?.map((p) => p.id) || [],
+      }));
+
       const transformedData = {
         id: data.id,
+
         name: data.name,
         organizer: data.organizer,
         year: data.year,
         description: data.description,
         is_external: data.is_external || false,
-        requirements: data.requirements || [],
+        verification_level: data.verification_level || "DITMAWA",
+        existingLogo: data.logo_path,
+
+        schemas: transformedSchemas,
+
         start_date: data.start_date,
         end_date: data.end_date,
-        quota: data.quota,
-        gpa_minimum: data.gpa_minimum,
-        semester_minimum: data.semester_minimum,
-        documents:
-          data.scholarshipDocuments?.map((doc) => doc.document_name) || [],
-        benefits: data.benefits?.map((benefit) => benefit.benefit_text) || [],
         contact_person_name: data.contact_person_name,
         contact_person_email: data.contact_person_email,
         contact_person_phone: data.contact_person_phone,
-        is_active: data.is_active,
         scholarship_value: data.scholarship_value,
         duration_semesters: data.duration_semesters,
         website_url: data.website_url,
-        faculties: data.faculties?.map((faculty) => faculty.id) || [],
-        departments: data.departments?.map((dept) => dept.id) || [],
-        study_programs: data.study_programs?.map((prog) => prog.id) || [],
-        existingLogo: data.logo_path,
-        existingRequirementFiles:
-          data.requirements?.filter((req) => req.requirement_type === "FILE") ||
-          [],
-        stages:
-          data.stages?.map((stage) => ({
-            id: stage.id,
-            stage_name: stage.stage_name,
-            order_no: stage.order_no,
-          })) || [],
+        is_active: data.is_active,
+
+        benefits: data.benefits?.map((b) => b.benefit_text) || [],
       };
 
       setScholarshipData(transformedData);
@@ -149,18 +170,21 @@ const ScholarshipEdit = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
       {currentStep === 1 && (
         <EditStepOne onNext={handleNext} initialData={scholarshipData} />
       )}
+
       {currentStep === 2 && (
-        <EditStepTwo
+        <EditStepSchemas
           onNext={handleNext}
           onBack={handleBack}
           initialData={scholarshipData}
         />
       )}
+
       {currentStep === 3 && (
-        <EditStepThree
+        <EditStepFinalize
           onBack={handleBack}
           onSubmit={handleSubmit}
           initialData={scholarshipData}

@@ -41,6 +41,7 @@ const UniversalModal = ({
           <Select
             placeholder={field.placeholder || `Pilih ${field.label}`}
             allowClear
+            onChange={field.onChange}
           >
             {field.options?.map((option) => (
               <Select.Option key={option.value} value={option.value}>

@@ -7,6 +7,8 @@ import {
   ClockCircleOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import ApplicationCommentsTab from "./ApplicationCommentsTab";
+import { formatToWIB, isDeadlinePassed } from "../utils/timezone";
 
 const ApplicationDetailModal = ({
   visible,
@@ -16,6 +18,7 @@ const ApplicationDetailModal = ({
   onVerify,
   onValidate,
   onReject,
+  onRequestRevision,
   role,
 }) => {
   if (!applicationDetail) return null;
@@ -26,6 +29,7 @@ const ApplicationDetailModal = ({
       VERIFIED: "blue",
       VALIDATED: "green",
       REJECTED: "red",
+      REVISION_NEEDED: "purple",
     };
     return colorMap[status] || "default";
   };
@@ -35,7 +39,8 @@ const ApplicationDetailModal = ({
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
       VERIFIED: "Terverifikasi - Menunggu Validasi",
       VALIDATED: "Disetujui",
-      REJECTED: "Dikembalikan",
+      REJECTED: "Ditolak",
+      REVISION_NEEDED: "Revisi Diperlukan",
     };
     return statusMap[status] || status;
   };
@@ -66,8 +71,49 @@ const ApplicationDetailModal = ({
             <div className="text-xs text-gray-400">
               {new Date(applicationDetail.submitted_at).toLocaleDateString(
                 "id-ID",
-                dateTimeOptions
+                dateTimeOptions,
               )}
+            </div>
+          </div>
+        ),
+      });
+    }
+
+    if (
+      applicationDetail.revision_requested_at &&
+      applicationDetail.revision_requester
+    ) {
+      history.push({
+        color: isDeadlinePassed(applicationDetail.revision_deadline)
+          ? "red"
+          : "purple",
+        dot: <CloseCircleOutlined />,
+        children: (
+          <div>
+            <div className="font-medium">Revisi Diminta</div>
+            <div className="text-sm text-gray-600">
+              oleh: {applicationDetail.revision_requester.full_name}
+            </div>
+            {applicationDetail.revision_deadline && (
+              <div
+                className={`text-sm mt-2 p-2 rounded border ${
+                  isDeadlinePassed(applicationDetail.revision_deadline)
+                    ? "bg-red-50 border-red-200 text-red-700"
+                    : "bg-orange-50 border-orange-200 text-orange-700"
+                }`}
+              >
+                <strong>Deadline Revisi:</strong>{" "}
+                {formatToWIB(applicationDetail.revision_deadline)} WIB
+                {isDeadlinePassed(applicationDetail.revision_deadline) && (
+                  <div className="font-semibold mt-1">Deadline telah lewat</div>
+                )}
+              </div>
+            )}
+            <div className="text-xs text-gray-400 mt-1">
+              Diminta pada:{" "}
+              {new Date(
+                applicationDetail.revision_requested_at,
+              ).toLocaleDateString("id-ID", dateTimeOptions)}
             </div>
           </div>
         ),
@@ -87,7 +133,7 @@ const ApplicationDetailModal = ({
             <div className="text-xs text-gray-400">
               {new Date(applicationDetail.verified_at).toLocaleDateString(
                 "id-ID",
-                dateTimeOptions
+                dateTimeOptions,
               )}
             </div>
           </div>
@@ -108,7 +154,7 @@ const ApplicationDetailModal = ({
             <div className="text-xs text-gray-400">
               {new Date(applicationDetail.validated_at).toLocaleDateString(
                 "id-ID",
-                dateTimeOptions
+                dateTimeOptions,
               )}
             </div>
           </div>
@@ -134,7 +180,7 @@ const ApplicationDetailModal = ({
             <div className="text-xs text-gray-400">
               {new Date(applicationDetail.rejected_at).toLocaleDateString(
                 "id-ID",
-                dateTimeOptions
+                dateTimeOptions,
               )}
             </div>
           </div>
@@ -154,43 +200,114 @@ const ApplicationDetailModal = ({
   const renderActionButtons = () => {
     const buttons = [];
     const status = applicationDetail.status;
+    const verificationLevel = applicationDetail.verification_level;
 
-    if (!role || role === "MAHASISWA") {
+    if (
+      !role ||
+      role === "MAHASISWA" ||
+      role === "SUPERADMIN" ||
+      role === "PIMPINAN_DITMAWA"
+    ) {
       return buttons;
     }
 
-    if (status === "MENUNGGU_VERIFIKASI" && role === "VERIFIKATOR") {
-      buttons.push(
-        <Button key="reject" danger onClick={() => onReject(applicationDetail)}>
-          Tolak
-        </Button>
-      );
-      buttons.push(
-        <Button
-          key="verify"
-          type="primary"
-          onClick={() => onVerify(applicationDetail)}
-        >
-          Verifikasi
-        </Button>
-      );
+    const recordForAction = {
+      id: applicationDetail.id,
+      nama:
+        applicationDetail.student?.nama ||
+        applicationDetail.student?.full_name ||
+        "Unknown",
+      email: applicationDetail.student?.email,
+      status: applicationDetail.status,
+      verification_level: applicationDetail.verification_level,
+      beasiswa: applicationDetail.scholarship?.name,
+      schema_id: applicationDetail.schema_id,
+      scholarship_id: applicationDetail.scholarship_id,
+      student_id: applicationDetail.student_id,
+    };
+
+    if (role === "VERIFIKATOR_FAKULTAS") {
+      if (status === "MENUNGGU_VERIFIKASI" && verificationLevel === "FACULTY") {
+        buttons.push(
+          <Button key="reject" danger onClick={() => onReject(recordForAction)}>
+            Tolak
+          </Button>,
+        );
+        buttons.push(
+          <Button
+            key="revision"
+            type="default"
+            onClick={() => onRequestRevision(recordForAction)}
+          >
+            Minta Revisi
+          </Button>,
+        );
+        buttons.push(
+          <Button
+            key="verify"
+            type="primary"
+            onClick={() => onVerify(recordForAction)}
+          >
+            Verifikasi
+          </Button>,
+        );
+      }
     }
 
-    if (status === "VERIFIED" && role === "PIMPINAN_DITMAWA") {
-      buttons.push(
-        <Button key="reject" danger onClick={() => onReject(applicationDetail)}>
-          Tolak
-        </Button>
-      );
-      buttons.push(
-        <Button
-          key="validate"
-          type="primary"
-          onClick={() => onValidate(applicationDetail)}
-        >
-          Validasi
-        </Button>
-      );
+    if (role === "VERIFIKATOR_DITMAWA") {
+      if (status === "MENUNGGU_VERIFIKASI") {
+        buttons.push(
+          <Button key="reject" danger onClick={() => onReject(recordForAction)}>
+            Tolak
+          </Button>,
+        );
+        buttons.push(
+          <Button
+            key="revision"
+            type="default"
+            onClick={() => onRequestRevision(recordForAction)}
+          >
+            Minta Revisi
+          </Button>,
+        );
+        buttons.push(
+          <Button
+            key="verify"
+            type="primary"
+            onClick={() => onVerify(recordForAction)}
+          >
+            Verifikasi
+          </Button>,
+        );
+      }
+    }
+
+    if (role === "VALIDATOR_DITMAWA") {
+      if (status === "VERIFIED") {
+        buttons.push(
+          <Button key="reject" danger onClick={() => onReject(recordForAction)}>
+            Tolak
+          </Button>,
+        );
+        buttons.push(
+          <Button
+            key="revision"
+            type="default"
+            onClick={() => onRequestRevision(recordForAction)}
+          >
+            Minta Revisi
+          </Button>,
+        );
+        buttons.push(
+          <Button
+            key="validate"
+            type="primary"
+            onClick={() => onValidate(recordForAction)}
+          >
+            Validasi
+          </Button>,
+        );
+      }
     }
 
     return buttons;
@@ -224,7 +341,7 @@ const ApplicationDetailModal = ({
             <Descriptions.Item label="Tanggal Lahir">
               {applicationDetail.student.birth_date
                 ? new Date(
-                    applicationDetail.student.birth_date
+                    applicationDetail.student.birth_date,
                   ).toLocaleDateString("id-ID")
                 : "-"}
             </Descriptions.Item>
@@ -242,6 +359,19 @@ const ApplicationDetailModal = ({
                 {getStatusLabel(applicationDetail.status)}
               </Tag>
             </Descriptions.Item>
+            <Descriptions.Item label="Level Verifikasi">
+              <Tag
+                color={
+                  applicationDetail.verification_level === "FACULTY"
+                    ? "blue"
+                    : "purple"
+                }
+              >
+                {applicationDetail.verification_level === "FACULTY"
+                  ? "Fakultas"
+                  : "Ditmawa"}
+              </Tag>
+            </Descriptions.Item>
             <Descriptions.Item label="Tanggal Daftar">
               {applicationDetail.submitted_at
                 ? new Date(applicationDetail.submitted_at).toLocaleDateString(
@@ -254,15 +384,18 @@ const ApplicationDetailModal = ({
                       minute: "2-digit",
                       hour12: false,
                       timeZone: "Asia/Jakarta",
-                    }
+                    },
                   )
                 : "-"}
             </Descriptions.Item>
-            <Descriptions.Item label="Tanggal Verifikasi">
-              {applicationDetail.verified_at
-                ? new Date(applicationDetail.verified_at).toLocaleDateString(
-                    "id-ID",
-                    {
+
+            {applicationDetail.status === "REVISION_NEEDED" && (
+              <>
+                {applicationDetail.revision_requested_at && (
+                  <Descriptions.Item label="Tanggal Revisi Diminta">
+                    {new Date(
+                      applicationDetail.revision_requested_at,
+                    ).toLocaleDateString("id-ID", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -270,26 +403,70 @@ const ApplicationDetailModal = ({
                       minute: "2-digit",
                       hour12: false,
                       timeZone: "Asia/Jakarta",
-                    }
-                  )
-                : "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tanggal Validasi">
-              {applicationDetail.validated_at
-                ? new Date(applicationDetail.validated_at).toLocaleDateString(
-                    "id-ID",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                      timeZone: "Asia/Jakarta",
-                    }
-                  )
-                : "-"}
-            </Descriptions.Item>
+                    })}
+                  </Descriptions.Item>
+                )}
+                {applicationDetail.revision_requester && (
+                  <Descriptions.Item label="Diminta oleh">
+                    {applicationDetail.revision_requester.full_name}
+                  </Descriptions.Item>
+                )}
+                {applicationDetail.revision_deadline && (
+                  <Descriptions.Item label="Deadline Revisi" span={3}>
+                    <div className="flex items-center gap-2">
+                      <Tag
+                        color={
+                          isDeadlinePassed(applicationDetail.revision_deadline)
+                            ? "red"
+                            : "orange"
+                        }
+                        className="text-sm font-medium"
+                      >
+                        {formatToWIB(applicationDetail.revision_deadline)} WIB
+                      </Tag>
+                    </div>
+                    {isDeadlinePassed(applicationDetail.revision_deadline) && (
+                      <div className="text-red-600 font-semibold text-sm">
+                        Deadline telah lewat! Tidak dapat mengirim revisi lagi.
+                      </div>
+                    )}
+                  </Descriptions.Item>
+                )}
+              </>
+            )}
+
+            {applicationDetail.verified_at && (
+              <Descriptions.Item label="Tanggal Verifikasi">
+                {new Date(applicationDetail.verified_at).toLocaleDateString(
+                  "id-ID",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                    timeZone: "Asia/Jakarta",
+                  },
+                )}
+              </Descriptions.Item>
+            )}
+            {applicationDetail.validated_at && (
+              <Descriptions.Item label="Tanggal Validasi">
+                {new Date(applicationDetail.validated_at).toLocaleDateString(
+                  "id-ID",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                    timeZone: "Asia/Jakarta",
+                  },
+                )}
+              </Descriptions.Item>
+            )}
             {applicationDetail.rejected_at && (
               <Descriptions.Item label="Tanggal Penolakan">
                 {new Date(applicationDetail.rejected_at).toLocaleDateString(
@@ -302,15 +479,8 @@ const ApplicationDetailModal = ({
                     minute: "2-digit",
                     hour12: false,
                     timeZone: "Asia/Jakarta",
-                  }
+                  },
                 )}
-              </Descriptions.Item>
-            )}
-            {applicationDetail.notes && (
-              <Descriptions.Item label="Catatan" span={3}>
-                <div className="p-3 bg-red-50 border border-red-200 rounded">
-                  {applicationDetail.notes}
-                </div>
               </Descriptions.Item>
             )}
           </Descriptions>
@@ -370,7 +540,7 @@ const ApplicationDetailModal = ({
                               minute: "2-digit",
                               hour12: false,
                               timeZone: "Asia/Jakarta",
-                            }
+                            },
                           )}
                         </div>
                       </div>
@@ -382,7 +552,7 @@ const ApplicationDetailModal = ({
                         onClick={() =>
                           window.open(
                             `${import.meta.env.VITE_IMAGE_URL}/${doc.filePath}`,
-                            "_blank"
+                            "_blank",
                           )
                         }
                       >
@@ -448,7 +618,7 @@ const ApplicationDetailModal = ({
                         : value}
                     </div>
                   </div>
-                )
+                ),
               )}
             </div>
           ) : (
@@ -458,6 +628,11 @@ const ApplicationDetailModal = ({
           )}
         </div>
       ),
+    },
+    {
+      key: "6",
+      label: <span>Komentar</span>,
+      children: <ApplicationCommentsTab applicationId={applicationDetail.id} />,
     },
   ];
 

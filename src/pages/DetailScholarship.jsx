@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Empty, Spin, Tag, Timeline, Divider } from "antd";
+import {
+  Empty,
+  Spin,
+  Tag,
+  Timeline,
+  Divider,
+  Tabs,
+  Card as AntCard,
+} from "antd";
 import {
   HomeOutlined,
   ReloadOutlined,
@@ -16,6 +24,8 @@ import {
   ApartmentOutlined,
   RightOutlined,
   StarOutlined,
+  InfoCircleOutlined,
+  FormOutlined,
 } from "@ant-design/icons";
 import GuestLayout from "../layouts/GuestLayout";
 import Button from "../components/Button";
@@ -34,6 +44,7 @@ const DetailScholarship = () => {
   const [otherScholarships, setOtherScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeSchemaTab, setActiveSchemaTab] = useState("0");
 
   const { alert, setAlert, warning, error: alertError } = useAlert();
 
@@ -62,7 +73,7 @@ const DetailScholarship = () => {
       const data = await getOtherScholarships(id, 5);
       setOtherScholarships(data);
     } catch (error) {
-      alertError(error.message || "Gagal memuat beasiswa lainnya");
+      console.error("Error loading other scholarships:", error);
     }
   };
 
@@ -123,10 +134,20 @@ const DetailScholarship = () => {
         </Tag>
       );
     }
+
+    if (!endDate) {
+      return (
+        <Tag color="green" icon={<CheckCircleOutlined />} className="px-3 py-1">
+          Aktif
+        </Tag>
+      );
+    }
+
     const today = new Date();
     const end = new Date(endDate);
     const diffTime = end - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
     if (diffDays < 0) {
       return (
         <Tag color="red" icon={<ClockCircleOutlined />} className="px-3 py-1">
@@ -149,6 +170,251 @@ const DetailScholarship = () => {
       <Tag color="green" icon={<CheckCircleOutlined />} className="px-3 py-1">
         Aktif
       </Tag>
+    );
+  };
+
+  const renderSchemaTabs = () => {
+    if (!scholarship.schemas || scholarship.schemas.length === 0) {
+      return (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="Belum ada skema beasiswa"
+          className="my-8"
+        />
+      );
+    }
+
+    const activeSchemas = scholarship.schemas.filter((s) => s.is_active);
+
+    if (activeSchemas.length === 0) {
+      return (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="Tidak ada skema aktif saat ini"
+          className="my-8"
+        />
+      );
+    }
+
+    const tabItems = activeSchemas.map((schema, index) => ({
+      key: index.toString(),
+      label: (
+        <span className="flex items-center gap-2">
+          <FormOutlined />
+          {schema.name}
+          {schema.quota && (
+            <Tag color="blue" className="ml-1">
+              {schema.quota} kuota
+            </Tag>
+          )}
+        </span>
+      ),
+      children: (
+        <div className="space-y-6">
+          <AntCard className="border-l-4 border-l-blue-500">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+              <InfoCircleOutlined className="mr-2 text-blue-500" />
+              Informasi Skema
+            </h3>
+            {schema.description && (
+              <p className="text-gray-700 mb-4">{schema.description}</p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {schema.quota && (
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                  <span className="text-gray-600">Kuota:</span>
+                  <span className="font-semibold text-lg">
+                    {schema.quota} orang
+                  </span>
+                </div>
+              )}
+              {schema.gpa_minimum && (
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <span className="text-gray-600">Minimum IPK:</span>
+                  <span className="font-semibold text-lg">
+                    {schema.gpa_minimum}
+                  </span>
+                </div>
+              )}
+              {schema.semester_minimum && (
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600">Minimum Semester:</span>
+                  <span className="font-semibold text-lg">
+                    {schema.semester_minimum}
+                  </span>
+                </div>
+              )}
+            </div>
+          </AntCard>
+
+          <AntCard>
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+              <CheckCircleOutlined className="mr-2 text-green-500" />
+              Persyaratan Skema
+            </h3>
+            {schema.requirements && schema.requirements.length > 0 ? (
+              <div className="space-y-3">
+                {schema.requirements.map((req, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400"
+                  >
+                    <div className="flex-1">
+                      {req.requirement_type === "TEXT" && (
+                        <span className="text-gray-700">
+                          {req.requirement_text}
+                        </span>
+                      )}
+                      {req.requirement_type === "FILE" &&
+                        req.requirement_file && (
+                          <a
+                            href={`${import.meta.env.VITE_IMAGE_URL}/${
+                              req.requirement_file
+                            }`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline flex items-center gap-2"
+                          >
+                            <FileTextOutlined />
+                            Lihat syarat & ketentuan (PDF)
+                          </a>
+                        )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Belum ada persyaratan khusus"
+                className="my-4"
+              />
+            )}
+          </AntCard>
+
+          <AntCard>
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+              <FileTextOutlined className="mr-2 text-red-500" />
+              Dokumen yang Diperlukan
+            </h3>
+            {schema.documents && schema.documents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {schema.documents.map((doc, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-400"
+                  >
+                    <div className="flex-1">
+                      <span className="text-gray-700">{doc.document_name}</span>
+                      {doc.template_file && (
+                        <a
+                          href={`${import.meta.env.VITE_IMAGE_URL}/${
+                            doc.template_file
+                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-xs text-blue-600 hover:text-blue-800 mt-1"
+                        >
+                          Download template
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Tidak ada dokumen yang diperlukan"
+                className="my-4"
+              />
+            )}
+          </AntCard>
+
+          <AntCard>
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+              <TrophyOutlined className="mr-2 text-purple-500" />
+              Tahapan Seleksi
+            </h3>
+            {schema.stages && schema.stages.length > 0 ? (
+              <Timeline
+                items={schema.stages
+                  .sort((a, b) => a.order_no - b.order_no)
+                  .map((stage, stageIdx) => ({
+                    dot: (
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {stageIdx + 1}
+                      </div>
+                    ),
+                    children: (
+                      <div className="ml-4">
+                        <h4 className="font-semibold text-gray-900">
+                          {stage.stage_name}
+                        </h4>
+                      </div>
+                    ),
+                  }))}
+              />
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Belum ada tahapan seleksi"
+                className="my-4"
+              />
+            )}
+          </AntCard>
+
+          {scholarship.is_active &&
+            (!scholarship.end_date ||
+              new Date() <= new Date(scholarship.end_date)) && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-gray-900 mb-3">
+                  Tertarik dengan skema ini?
+                </h4>
+                {scholarship.is_external ? (
+                  <>
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-start space-x-2">
+                        <ExclamationCircleOutlined className="text-blue-500 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm text-blue-800">
+                          Pendaftaran dilakukan melalui website penyedia
+                          beasiswa.
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={() =>
+                        handleExternalApplication(scholarship.website_url)
+                      }
+                    >
+                      Daftar di Website Penyedia
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    className="w-full"
+                    onClick={() =>
+                      navigate(`/scholarship/${id}/apply?schema=${schema.id}`)
+                    }
+                  >
+                    Daftar Skema Ini Sekarang
+                  </Button>
+                )}
+              </div>
+            )}
+        </div>
+      ),
+    }));
+
+    return (
+      <Tabs
+        activeKey={activeSchemaTab}
+        onChange={setActiveSchemaTab}
+        items={tabItems}
+        type="card"
+        className="schema-tabs"
+      />
     );
   };
 
@@ -222,10 +488,9 @@ const DetailScholarship = () => {
   return (
     <GuestLayout>
       <AlertContainer alert={alert} setAlert={setAlert} position="top-right" />
-      {/* Hero Section */}
+
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-          {/* Breadcrumb */}
           <nav className="mb-8 text-sm opacity-80">
             <Link
               to="/scholarship"
@@ -238,7 +503,6 @@ const DetailScholarship = () => {
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* Logo */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl p-4 shadow-lg">
                 <img
@@ -249,16 +513,15 @@ const DetailScholarship = () => {
               </div>
             </div>
 
-            {/* Main Info */}
             <div className="lg:col-span-2 space-y-6">
               <div>
                 <h1 className="text-4xl font-bold mb-4">{scholarship.name}</h1>
-                <div className="flex items-center space-x-4 mb-4">
-                  <span className="flex items-center">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
                     <BankOutlined className="mr-2" />
                     {scholarship.organizer}
                   </span>
-                  <span className="flex items-center">
+                  <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
                     <CalendarOutlined className="mr-2" />
                     {scholarship.year}
                   </span>
@@ -266,7 +529,6 @@ const DetailScholarship = () => {
                 </div>
               </div>
 
-              {/* Key Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
                   <div className="text-2xl font-bold">
@@ -278,68 +540,45 @@ const DetailScholarship = () => {
                   <div className="text-2xl font-bold">
                     {scholarship.duration_semesters}
                   </div>
-                  <div className="text-sm opacity-80">
-                    Durasi Penerimaan (Semester)
-                  </div>
+                  <div className="text-sm opacity-80">Durasi (Semester)</div>
                 </div>
-                {scholarship.quota && (
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold">
-                      {scholarship.quota}
-                    </div>
-                    <div className="text-sm opacity-80">Kuota</div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold">
+                    {scholarship.schemas?.filter((s) => s.is_active).length ||
+                      0}
                   </div>
-                )}
+                  <div className="text-sm opacity-80">Skema Aktif</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content Section */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Quick Info Card */}
             <Card className="border-l-4 border-l-blue-500">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
                 <StarOutlined className="mr-2 text-blue-500" />
-                Informasi Singkat
+                Informasi Umum
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Minimum IPK:</span>
-                    <span className="font-semibold text-lg">
-                      {scholarship.gpa_minimum || "Tidak ditentukan"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Minimum Semester:</span>
-                    <span className="font-semibold text-lg">
-                      {scholarship.semester_minimum}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Periode Pendaftaran:</span>
+                  <span className="font-semibold">
+                    {formatDate(scholarship.start_date)}
+                  </span>
                 </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Periode Pendaftaran:</span>
-                    <span className="font-semibold text-lg">
-                      {formatDate(scholarship.start_date)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Batas Pendaftaran:</span>
-                    <span className="font-semibold text-lg text-red-600">
-                      {formatDate(scholarship.end_date)}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Batas Pendaftaran:</span>
+                  <span className="font-semibold text-red-600">
+                    {formatDate(scholarship.end_date)}
+                  </span>
                 </div>
               </div>
             </Card>
 
-            {/* Description Card */}
             <Card>
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <FileTextOutlined className="mr-2 text-blue-500" />
@@ -364,86 +603,35 @@ const DetailScholarship = () => {
               )}
             </Card>
 
-            {/* Requirements Card */}
-            <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <CheckCircleOutlined className="mr-2 text-green-500" />
-                Persyaratan
-              </h2>
-              {scholarship.requirements &&
-              scholarship.requirements.length > 0 ? (
+            {scholarship.benefits && scholarship.benefits.length > 0 && (
+              <Card>
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <StarOutlined className="mr-2 text-yellow-500" />
+                  Benefit Beasiswa
+                </h2>
                 <div className="space-y-3">
-                  {scholarship.requirements.map((req, index) => (
+                  {scholarship.benefits.map((benefit, index) => (
                     <div
                       key={index}
-                      className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400"
+                      className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400"
                     >
-                      <div className="flex-1">
-                        {req.requirement_type === "TEXT" && (
-                          <span className="text-gray-700">
-                            {req.requirement_text}
-                          </span>
-                        )}
-                        {req.requirement_type === "FILE" && (
-                          <a
-                            href={`${import.meta.env.VITE_IMAGE_URL}/${
-                              req.requirement_file
-                            }`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            Lihat syarat & ketentuan disini
-                          </a>
-                        )}
-                      </div>
+                      <span className="text-gray-700">
+                        {benefit.benefit_text}
+                      </span>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Belum ada persyaratan"
-                  className="my-8"
-                />
-              )}
-            </Card>
+              </Card>
+            )}
 
-            {/* Selection Stages Card */}
             <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <TrophyOutlined className="mr-2 text-purple-500" />
-                Tahapan Seleksi
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <FormOutlined className="mr-2 text-indigo-500" />
+                Skema Beasiswa yang Tersedia
               </h2>
-              {scholarship.stages && scholarship.stages.length > 0 ? (
-                <Timeline
-                  items={scholarship.stages
-                    .sort((a, b) => a.order_no - b.order_no)
-                    .map((stage, index) => ({
-                      dot: (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {index + 1}
-                        </div>
-                      ),
-                      children: (
-                        <div className="ml-4">
-                          <h4 className="font-semibold text-gray-900">
-                            {stage.stage_name}
-                          </h4>
-                        </div>
-                      ),
-                    }))}
-                />
-              ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Belum ada tahapan seleksi"
-                  className="my-8"
-                />
-              )}
+              {renderSchemaTabs()}
             </Card>
 
-            {/* Eligible Faculties and Departments */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
@@ -490,90 +678,10 @@ const DetailScholarship = () => {
                 )}
               </Card>
             </div>
-
-            {/* Required Documents Card */}
-            <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <FileTextOutlined className="mr-2 text-red-500" />
-                Dokumen yang Diperlukan
-              </h2>
-              {scholarship.scholarshipDocuments &&
-              scholarship.scholarshipDocuments.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {scholarship.scholarshipDocuments.map((doc, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-400"
-                    >
-                      <FileTextOutlined className="text-red-500 flex-shrink-0" />
-                      <span className="text-gray-700">{doc.document_name}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Tidak ada dokumen yang diperlukan"
-                  className="my-8"
-                />
-              )}
-            </Card>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-20 space-y-6">
-              {scholarship.is_active &&
-                new Date() <= new Date(scholarship.end_date) && (
-                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">
-                      Siap untuk mendaftar?
-                    </h3>
-                    {scholarship.is_external ? (
-                      <>
-                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <div className="flex items-start space-x-2">
-                            <ExclamationCircleOutlined className="text-blue-500 mt-0.5 flex-shrink-0" />
-                            <div className="text-sm text-blue-800">
-                              <div>
-                                Pendaftaran dilakukan melalui website penyedia
-                                beasiswa. Pastikan Anda membaca persyaratan
-                                dengan teliti.
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Button
-                            className="w-full bg-green-600 hover:bg-green-700"
-                            onClick={() =>
-                              handleExternalApplication(scholarship.website_url)
-                            }
-                          >
-                            <span className="flex items-center justify-center space-x-2">
-                              <span>Daftar di Website Penyedia</span>
-                            </span>
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-gray-600 text-sm mb-6">
-                          Pastikan Anda memenuhi semua persyaratan sebelum
-                          mendaftar.
-                        </p>
-                        <Button
-                          className="w-full"
-                          onClick={() => navigate(`/scholarship/${id}/apply`)}
-                        >
-                          Daftar Sekarang
-                        </Button>
-                      </>
-                    )}
-                  </Card>
-                )}
-              {/* Other Scholarships Card */}
               <Card>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
                   Beasiswa Lainnya

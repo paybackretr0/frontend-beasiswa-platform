@@ -6,6 +6,7 @@ import {
   HorizontalBarChart,
   PieChart,
   ChartEmptyState,
+  PerformanceBarChart,
 } from "../../components/Chart";
 import {
   getSummary,
@@ -16,6 +17,7 @@ import {
   getStatusSummary,
   getActivities,
   getApplicationsList,
+  getScholarshipPerformance,
 } from "../../services/analyticsService";
 import {
   getGovernmentScholarshipSummary,
@@ -32,7 +34,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState("all");
   const [scholarshipType, setScholarshipType] = useState("NON-APBN");
 
   const [summaryData, setSummaryData] = useState([]);
@@ -43,6 +45,7 @@ const AdminDashboard = () => {
   const [statusCounts, setStatusCounts] = useState([]);
   const [activities, setActivities] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
+  const [scholarshipPerformance, setScholarshipPerformance] = useState([]);
 
   const [govSummaryData, setGovSummaryData] = useState([]);
   const [govDistributionData, setGovDistributionData] = useState([]);
@@ -57,11 +60,30 @@ const AdminDashboard = () => {
   } catch (e) {}
   const role = user?.role?.toUpperCase() || null;
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: currentYear - 2025 + 3 },
-    (_, i) => 2025 + i
+  const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
+    role
   );
+
+  const canSeeAPBN = [
+    "SUPERADMIN",
+    "PIMPINAN_DITMAWA",
+    "PIMPINAN_FAKULTAS",
+  ].includes(role);
+
+  useEffect(() => {
+    if (!canSeeAPBN) {
+      setScholarshipType("NON-APBN");
+    }
+  }, [canSeeAPBN]);
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [
+    { value: "all", label: "Semua Tahun" },
+    ...Array.from({ length: currentYear - 2023 }, (_, i) => ({
+      value: 2024 + i,
+      label: (2024 + i).toString(),
+    })),
+  ];
 
   useEffect(() => {
     document.title = "Dashboard - Admin";
@@ -97,10 +119,12 @@ const AdminDashboard = () => {
 
   const fetchAPBNData = async () => {
     try {
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+
       const [summary, distribution, categories, yearly] = await Promise.all([
-        getGovernmentScholarshipSummary(selectedYear),
-        getGovernmentScholarshipDistribution(selectedYear),
-        getGovernmentScholarshipCategories(selectedYear),
+        getGovernmentScholarshipSummary(yearParam),
+        getGovernmentScholarshipDistribution(yearParam),
+        getGovernmentScholarshipCategories(yearParam),
         getGovernmentScholarshipYearlyTrend(),
       ]);
 
@@ -136,7 +160,8 @@ const AdminDashboard = () => {
 
   const fetchSummaryData = async () => {
     try {
-      const data = await getSummary(selectedYear);
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+      const data = await getSummary(yearParam);
       const summary = [
         {
           title: "Jumlah Pendaftar",
@@ -163,12 +188,26 @@ const AdminDashboard = () => {
 
   const fetchChartData = async () => {
     try {
-      const [fakultas, departemen, tahun, gender] = await Promise.all([
-        getFacultyDistribution(selectedYear),
-        getDepartmentDistribution(selectedYear),
-        getYearlyTrend(),
-        getGenderDistribution(selectedYear),
-      ]);
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+
+      const chartPromises = isFacultyRole
+        ? [
+            Promise.resolve([]),
+            getDepartmentDistribution(yearParam),
+            getYearlyTrend(),
+            getGenderDistribution(yearParam),
+            getScholarshipPerformance(yearParam),
+          ]
+        : [
+            getFacultyDistribution(yearParam),
+            getDepartmentDistribution(yearParam),
+            getYearlyTrend(),
+            getGenderDistribution(yearParam),
+            Promise.resolve([]),
+          ];
+
+      const [fakultas, departemen, tahun, gender, scholarship] =
+        await Promise.all(chartPromises);
 
       const defaultGenderData = [
         { label: "Laki-laki", value: 0, color: "#2D60FF" },
@@ -186,6 +225,7 @@ const AdminDashboard = () => {
       setDepartemenData(departemen || []);
       setTahunData(tahun || []);
       setGenderData(mergedGenderData);
+      setScholarshipPerformance(scholarship || []);
     } catch (err) {
       error("Gagal!", "Gagal memuat data grafik");
     }
@@ -193,11 +233,16 @@ const AdminDashboard = () => {
 
   const fetchStatusAndActivities = async () => {
     try {
+      const yearParam = selectedYear === "all" ? null : selectedYear;
+
       const [statusData, secondaryData] = await Promise.all([
-        getStatusSummary(selectedYear),
+        getStatusSummary(yearParam),
         role === "SUPERADMIN"
           ? getActivities()
-          : getApplicationsList({ limit: 5, year: selectedYear }),
+          : getApplicationsList({
+              limit: 5,
+              year: yearParam || new Date().getFullYear(),
+            }),
       ]);
 
       setStatusCounts(statusData || []);
@@ -228,63 +273,68 @@ const AdminDashboard = () => {
         position="top-right"
       />
 
-      {/* Filter Section */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          {/* Scholarship Type Toggle */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setScholarshipType("NON-APBN")}
-              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
-                scholarshipType === "NON-APBN"
-                  ? "bg-[#2D60FF] text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Non-APBN
-            </button>
-            <button
-              onClick={() => setScholarshipType("APBN")}
-              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
-                scholarshipType === "APBN"
-                  ? "bg-[#2D60FF] text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              APBN
-            </button>
-          </div>
+          {canSeeAPBN && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setScholarshipType("NON-APBN")}
+                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                  scholarshipType === "NON-APBN"
+                    ? "bg-[#2D60FF] text-white shadow-md"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Non-APBN
+              </button>
+              <button
+                onClick={() => setScholarshipType("APBN")}
+                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                  scholarshipType === "APBN"
+                    ? "bg-[#2D60FF] text-white shadow-md"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                APBN
+              </button>
+            </div>
+          )}
 
-          {/* Year Selector */}
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-700">Tahun:</label>
             <Select
               value={selectedYear}
               onChange={setSelectedYear}
-              style={{ width: 120 }}
+              style={{ width: 150 }}
               className="rounded-lg"
             >
-              {yearOptions.map((year) => (
-                <Option key={year} value={year}>
-                  {year}
+              {yearOptions.map((option) => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
                 </Option>
               ))}
             </Select>
           </div>
         </div>
 
-        {/* Info Badge */}
         <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
           <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
           <span className="text-sm text-blue-700 font-medium">
-            {scholarshipType === "NON-APBN"
-              ? "Beasiswa Non-APBN"
+            {!canSeeAPBN
+              ? `Beasiswa Non-APBN ${
+                  isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
+                }`
+              : scholarshipType === "NON-APBN"
+              ? `Beasiswa Non-APBN ${
+                  isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
+                }`
               : "Beasiswa Pemerintah (APBN)"}
+            {" • "}
+            {selectedYear === "all" ? "Semua Tahun" : `Tahun ${selectedYear}`}
           </span>
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {(scholarshipType === "NON-APBN" ? summaryData : govSummaryData).map(
           (item, idx) => (
@@ -300,21 +350,30 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Charts Section */}
       {scholarshipType === "NON-APBN" ? (
         <>
-          {/* Non-APBN Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {chartsLoading ? (
               <>
-                <Card
-                  title="Pendaftar Berdasarkan Fakultas"
-                  description="Distribusi pendaftar beasiswa per fakultas"
-                >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
-                  </div>
-                </Card>
+                {isFacultyRole ? (
+                  <Card
+                    title="Performa Beasiswa"
+                    description="Tingkat keberhasilan per beasiswa di fakultas Anda"
+                  >
+                    <div className="flex justify-center items-center py-12">
+                      <Spin size="large" />
+                    </div>
+                  </Card>
+                ) : (
+                  <Card
+                    title="Pendaftar Berdasarkan Fakultas"
+                    description="Distribusi pendaftar beasiswa per fakultas"
+                  >
+                    <div className="flex justify-center items-center py-12">
+                      <Spin size="large" />
+                    </div>
+                  </Card>
+                )}
                 <Card
                   title="Pendaftar Berdasarkan Departemen"
                   description="Distribusi pendaftar beasiswa per departemen"
@@ -327,11 +386,19 @@ const AdminDashboard = () => {
             ) : (
               <>
                 <div className="flex flex-col h-full">
-                  <HorizontalBarChart
-                    data={fakultasData}
-                    title="Pendaftar Berdasarkan Fakultas"
-                    description="Distribusi pendaftar beasiswa per fakultas"
-                  />
+                  {isFacultyRole ? (
+                    <PerformanceBarChart
+                      data={scholarshipPerformance}
+                      title="Performa Beasiswa"
+                      description="Tingkat keberhasilan per beasiswa di fakultas Anda"
+                    />
+                  ) : (
+                    <HorizontalBarChart
+                      data={fakultasData}
+                      title="Pendaftar Berdasarkan Fakultas"
+                      description="Distribusi pendaftar beasiswa per fakultas"
+                    />
+                  )}
                 </div>
                 <div className="flex flex-col h-full">
                   <HorizontalBarChart
@@ -429,7 +496,6 @@ const AdminDashboard = () => {
         </>
       ) : (
         <>
-          {/* APBN Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {chartsLoading ? (
               <>

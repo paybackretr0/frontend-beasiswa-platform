@@ -1,28 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Input,
   Select,
   DatePicker,
   Upload,
-  message,
   Spin,
   Alert,
   Button,
   Modal,
-  Form,
 } from "antd";
 import {
   UploadOutlined,
   SaveOutlined,
   SendOutlined,
   ArrowLeftOutlined,
-  FileTextOutlined,
-  NumberOutlined,
-  CalendarOutlined,
-  FileOutlined,
-  UnorderedListOutlined,
-  AlignLeftOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
@@ -32,7 +24,9 @@ import {
   getScholarshipForm,
   submitApplication,
   saveDraft,
+  submitRevision,
 } from "../../services/pendaftaranService";
+import { getApplicationDetailUser } from "../../services/applicationService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
@@ -54,13 +48,12 @@ const statusApplications = {
   VERIFIED: "TERVERIFIKASI - MENUNGGU VALIDASI",
   REJECTED: "DITOLAK",
   VALIDATED: "DISETUJUI",
+  REVISION_NEEDED: "PERLU REVISI",
 };
 
 const getCleanFileName = (filePath) => {
   if (!filePath) return "Unknown file";
-
   const fullFileName = filePath.split("\\").pop();
-
   const match = fullFileName.match(/^\d+-(.+)$/);
   return match ? match[1] : fullFileName;
 };
@@ -68,9 +61,15 @@ const getCleanFileName = (filePath) => {
 const FormApplication = () => {
   const { id: scholarshipId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const schemaIdFromUrl = searchParams.get("schema");
+  const revisionIdFromUrl = searchParams.get("revision");
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [scholarship, setScholarship] = useState(null);
+  const [selectedSchema, setSelectedSchema] = useState(null);
+  const [availableSchemas, setAvailableSchemas] = useState([]);
   const [formFields, setFormFields] = useState([]);
   const [answers, setAnswers] = useState({});
   const [hasExistingApplication, setHasExistingApplication] = useState(false);
@@ -78,54 +77,112 @@ const FormApplication = () => {
   const [errors, setErrors] = useState({});
   const [helpModalVisible, setHelpModalVisible] = useState(false);
 
-  const { alerts, success, warning, error, removeAlert } = useAlert();
+  const [isRevisionMode, setIsRevisionMode] = useState(false);
+  const [revisionApplicationId, setRevisionApplicationId] = useState(null);
 
-  const typeIcons = {
-    TEXT: <FileTextOutlined className="text-blue-500" />,
-    NUMBER: <NumberOutlined className="text-green-500" />,
-    DATE: <CalendarOutlined className="text-purple-500" />,
-    TEXTAREA: <AlignLeftOutlined className="text-orange-500" />,
-    FILE: <FileOutlined className="text-red-500" />,
-    SELECT: <UnorderedListOutlined className="text-indigo-500" />,
-  };
+  const { alerts, success, warning, error, removeAlert } = useAlert();
 
   useEffect(() => {
     loadForm();
-  }, [scholarshipId]);
+  }, [scholarshipId, schemaIdFromUrl, revisionIdFromUrl]);
 
   const loadForm = async () => {
     try {
       setLoading(true);
-      const data = await getScholarshipForm(scholarshipId);
 
-      setScholarship(data.scholarship);
-      setFormFields(data.form_fields);
-      setHasExistingApplication(data.has_existing_application);
-      setExistingStatus(data.existing_application_status);
+      if (revisionIdFromUrl) {
+        setIsRevisionMode(true);
+        setRevisionApplicationId(revisionIdFromUrl);
 
-      const initialAnswers = {};
-      data.form_fields.forEach((field) => {
-        const existingAnswer = data.existing_answers?.[field.id];
+        const revisionData = await getApplicationDetailUser(revisionIdFromUrl);
 
-        if (existingAnswer) {
-          if (field.type === "FILE") {
-            initialAnswers[field.id] = existingAnswer.file_path
-              ? {
-                  name: getCleanFileName(existingAnswer.file_path),
-                  path: existingAnswer.file_path,
-                }
-              : null;
-          } else {
-            initialAnswers[field.id] = existingAnswer.answer_text || "";
-          }
-        } else {
-          initialAnswers[field.id] = field.type === "FILE" ? null : "";
+        const scholarshipId = revisionData.scholarship_id;
+        const schemaId = revisionData.schema_id;
+
+        if (!scholarshipId || !schemaId) {
+          throw new Error("Data beasiswa tidak lengkap");
         }
-      });
 
-      setAnswers(initialAnswers);
-      document.title = `Daftar ${data.scholarship.name} - UNAND`;
+        const formData = await getScholarshipForm(scholarshipId, schemaId);
+
+        setScholarship(formData.scholarship);
+        setSelectedSchema(formData.selected_schema);
+        setAvailableSchemas(formData.available_schemas);
+        setFormFields(formData.form_fields);
+
+        const existingAnswers = {};
+
+        if (
+          revisionData.formAnswers &&
+          Array.isArray(revisionData.formAnswers)
+        ) {
+          revisionData.formAnswers.forEach((ans) => {
+            if (ans.field_id) {
+              if (ans.answer_text) {
+                existingAnswers[ans.field_id] = ans.answer_text;
+              } else if (ans.file_path) {
+                existingAnswers[ans.field_id] = {
+                  path: ans.file_path,
+                  name: getCleanFileName(ans.file_path),
+                  mime_type: ans.mime_type,
+                };
+              }
+            }
+          });
+        }
+
+        if (revisionData.documents && Array.isArray(revisionData.documents)) {
+          revisionData.documents.forEach((doc) => {
+            if (doc.field_id && !existingAnswers[doc.field_id]) {
+              existingAnswers[doc.field_id] = {
+                path: doc.filePath || doc.file_path,
+                name:
+                  doc.fileName ||
+                  getCleanFileName(doc.filePath || doc.file_path),
+                mime_type: doc.mimeType || doc.mime_type,
+              };
+            }
+          });
+        }
+
+        setAnswers(existingAnswers);
+
+        document.title = `Revisi Pendaftaran ${formData.scholarship.name}`;
+      } else {
+        const data = await getScholarshipForm(scholarshipId, schemaIdFromUrl);
+
+        setScholarship(data.scholarship);
+        setSelectedSchema(data.selected_schema);
+        setAvailableSchemas(data.available_schemas);
+        setFormFields(data.form_fields);
+        setHasExistingApplication(data.has_existing_application);
+        setExistingStatus(data.existing_application_status);
+
+        const initialAnswers = {};
+        data.form_fields.forEach((field) => {
+          const existingAnswer = data.existing_answers?.[field.id];
+
+          if (existingAnswer) {
+            if (field.type === "FILE") {
+              initialAnswers[field.id] = existingAnswer.file_path
+                ? {
+                    name: getCleanFileName(existingAnswer.file_path),
+                    path: existingAnswer.file_path,
+                  }
+                : null;
+            } else {
+              initialAnswers[field.id] = existingAnswer.answer_text || "";
+            }
+          } else {
+            initialAnswers[field.id] = field.type === "FILE" ? null : "";
+          }
+        });
+
+        setAnswers(initialAnswers);
+        document.title = `Daftar ${data.scholarship.name} - ${data.selected_schema.name}`;
+      }
     } catch (err) {
+      console.error("Error loading form:", err);
       error("Gagal!", err.message || "Gagal memuat form pendaftaran.");
       setTimeout(() => {
         navigate("/scholarship");
@@ -182,7 +239,7 @@ const FormApplication = () => {
   const handleSaveDraft = async () => {
     try {
       setSubmitting(true);
-      await saveDraft(scholarshipId, answers);
+      await saveDraft(scholarshipId, selectedSchema.id, answers);
       success("Berhasil!", "Draft berhasil disimpan");
     } catch (err) {
       error("Gagal!", err.message || "Gagal menyimpan draft.");
@@ -196,13 +253,27 @@ const FormApplication = () => {
 
     try {
       setSubmitting(true);
-      await submitApplication(scholarshipId, answers, false);
-      success("Berhasil!", "Aplikasi berhasil disubmit!");
-      setTimeout(() => {
-        navigate("/history");
-      }, 1200);
+
+      if (isRevisionMode) {
+        await submitRevision(revisionApplicationId, answers);
+        success("Berhasil!", "Revisi berhasil disubmit!");
+        setTimeout(() => {
+          navigate("/history");
+        }, 1200);
+      } else {
+        await submitApplication(
+          scholarshipId,
+          selectedSchema.id,
+          answers,
+          false,
+        );
+        success("Berhasil!", "Pendaftaran berhasil disubmit!");
+        setTimeout(() => {
+          navigate("/history");
+        }, 1200);
+      }
     } catch (err) {
-      error("Gagal!", err.message || "Gagal mengirim aplikasi.");
+      error("Gagal!", err.message || "Gagal mengirim pendaftaran.");
     } finally {
       setSubmitting(false);
     }
@@ -299,7 +370,7 @@ const FormApplication = () => {
                 handleAnswerChange(field.id, null);
               }}
               maxCount={1}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              accept=".pdf"
               fileList={
                 value
                   ? [
@@ -371,7 +442,7 @@ const FormApplication = () => {
             <li>
               Anda dapat menyimpan draft terlebih dahulu sebelum submit final
             </li>
-            <li>Setelah submit, aplikasi tidak dapat diubah lagi</li>
+            <li>Setelah submit, pendaftaran tidak dapat diubah lagi</li>
           </ul>
         </div>
 
@@ -380,7 +451,7 @@ const FormApplication = () => {
             Petunjuk Upload File:
           </h4>
           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-            <li>Format yang didukung: PDF, DOC, DOCX, JPG, JPEG, PNG</li>
+            <li>Format yang didukung: PDF</li>
             <li>Ukuran maksimal file: 5MB</li>
             <li>File yang diunggah harus jelas dan dapat dibaca</li>
             <li>Pastikan file tidak corrupt atau rusak</li>
@@ -403,7 +474,7 @@ const FormApplication = () => {
         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
             <strong>Penting:</strong> Pastikan koneksi internet stabil saat
-            mengupload file dan submit aplikasi untuk menghindari kegagalan
+            mengupload file dan submit pendaftaran untuk menghindari kegagalan
             pengiriman.
           </p>
         </div>
@@ -435,7 +506,14 @@ const FormApplication = () => {
                   <div>
                     <p className="mb-4">
                       Anda sudah mendaftar beasiswa{" "}
-                      <strong>{scholarship?.name}</strong> dengan status:
+                      <strong>{scholarship?.name}</strong>
+                      {selectedSchema && (
+                        <>
+                          {" "}
+                          dengan skema <strong>{selectedSchema.name}</strong>
+                        </>
+                      )}{" "}
+                      dengan status:
                     </p>
                     <div className="text-lg font-bold text-blue-600 mb-4">
                       {statusApplications[existingStatus] || existingStatus}
@@ -470,6 +548,22 @@ const FormApplication = () => {
       />
       <GuestLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
+          {isRevisionMode && (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-300 rounded-lg">
+              <div className="flex items-center">
+                <InfoCircleOutlined className="text-orange-600 mr-2 text-xl" />
+                <div>
+                  <h4 className="font-semibold text-orange-800 mb-1">
+                    Revisi Pendaftaran
+                  </h4>
+                  <p className="text-orange-700 text-sm">
+                    Anda sedang merevisi pendaftaran beasiswa. Pastikan semua
+                    data yang diminta sudah diperbaiki sesuai catatan revisi.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="mb-6">
             <Button
               icon={<ArrowLeftOutlined />}
@@ -482,8 +576,8 @@ const FormApplication = () => {
 
           <Card>
             <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex justify-between items-start">
-                <div>
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
                   <h1 className="text-2xl font-bold text-gray-800 mb-2">
                     Formulir Pendaftaran Beasiswa
                   </h1>
@@ -495,7 +589,7 @@ const FormApplication = () => {
                       Penyelenggara: {scholarship?.organizer}
                     </div>
                     {scholarship?.end_date && (
-                      <div className="text-sm text-orange-600 font-medium">
+                      <div className="text-sm text-orange-600 font-medium mb-3">
                         Batas Pendaftaran:{" "}
                         {new Date(scholarship.end_date).toLocaleDateString(
                           "id-ID",
@@ -504,7 +598,25 @@ const FormApplication = () => {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
-                          }
+                          },
+                        )}
+                      </div>
+                    )}
+
+                    {selectedSchema && (
+                      <div className="bg-white border border-blue-300 rounded-lg p-4 mt-3">
+                        <div className="flex items-center mb-2">
+                          <h3 className="font-semibold text-blue-900 flex items-center">
+                            Skema yang Dipilih
+                          </h3>
+                        </div>
+                        <div className="text-blue-800 font-medium mb-2">
+                          {selectedSchema.name}
+                        </div>
+                        {selectedSchema.description && (
+                          <p className="text-sm text-gray-600 mb-3">
+                            {selectedSchema.description}
+                          </p>
                         )}
                       </div>
                     )}
@@ -524,7 +636,6 @@ const FormApplication = () => {
               {formFields.map((field, index) => (
                 <div key={field.id} className="space-y-2">
                   <label className="flex items-center text-sm font-medium text-gray-700">
-                    <span className="mr-2">{typeIcons[field.type]}</span>
                     <span>{field.label}</span>
                     {field.is_required && (
                       <span className="text-red-500 ml-1 text-base">*</span>
@@ -541,27 +652,29 @@ const FormApplication = () => {
 
                   {field.type === "FILE" && (
                     <div className="text-xs text-gray-500">
-                      Format: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 5MB)
+                      Format: PDF (Max: 5MB)
                     </div>
                   )}
                 </div>
               ))}
             </form>
 
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center mt-8 pt-6 border-t border-gray-200 gap-4">
               <div className="text-sm text-gray-500">
                 <span className="text-red-500">*</span> Field wajib diisi
               </div>
 
-              <div className="space-x-4">
-                <Button
-                  icon={<SaveOutlined />}
-                  onClick={handleSaveDraft}
-                  loading={submitting}
-                  disabled={submitting}
-                >
-                  {submitting ? "Menyimpan..." : "Simpan Draft"}
-                </Button>
+              <div className="space-x-4 ml-auto">
+                {!isRevisionMode && (
+                  <Button
+                    icon={<SaveOutlined />}
+                    onClick={handleSaveDraft}
+                    loading={submitting}
+                    disabled={submitting}
+                  >
+                    {submitting ? "Menyimpan..." : "Simpan Draft"}
+                  </Button>
+                )}
 
                 <Button
                   type="primary"
@@ -570,7 +683,11 @@ const FormApplication = () => {
                   loading={submitting}
                   disabled={submitting}
                 >
-                  {submitting ? "Mengirim..." : "Submit Aplikasi"}
+                  {submitting
+                    ? "Mengirim..."
+                    : isRevisionMode
+                      ? "Submit Revisi"
+                      : "Submit Pendaftaran"}
                 </Button>
               </div>
             </div>

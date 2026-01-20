@@ -14,6 +14,10 @@ import { getApplicationDetailUser } from "../../services/applicationService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
+import {
+  formatToWIB,
+  isDeadlinePassed as checkDeadlinePassed,
+} from "../../utils/timezone";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -85,16 +89,20 @@ const History = () => {
     setSelectedApplication(null);
   };
 
-  // TAMBAHAN: Fungsi untuk melengkapi pendaftaran draft
+  const isRevisionDeadlinePassed = (deadline) => {
+    return checkDeadlinePassed(deadline);
+  };
+
   const handleCompleteDraft = (record) => {
     success(
       "Mengalihkan...",
-      `Mengarahkan ke form pendaftaran ${record.beasiswa}`
+      `Mengarahkan ke form pendaftaran ${record.beasiswa}`,
     );
 
-    // Redirect ke form aplikasi dengan scholarship_id
     setTimeout(() => {
-      navigate(`/scholarship/${record.scholarship_id}/apply`);
+      navigate(
+        `/scholarship/${record.scholarship_id}/apply?schema=${record.schema_id}`,
+      );
     }, 1000);
   };
 
@@ -108,7 +116,8 @@ const History = () => {
         REJECTED: { color: "red", text: "Ditolak" },
         MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
         VERIFIED: { color: "cyan", text: "Terverifikasi - Menunggu Validasi" },
-        DRAFT: { color: "orange", text: "Draft" }, // Update warna untuk draft
+        DRAFT: { color: "orange", text: "Draft" },
+        REVISION_NEEDED: { color: "purple", text: "Perlu Revisi" },
       };
 
       const config = statusConfig[status] || { color: "default", text: status };
@@ -120,6 +129,7 @@ const History = () => {
       { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
       { text: "Terverifikasi - Menunggu Validasi", value: "VERIFIED" },
       { text: "Draft", value: "DRAFT" },
+      { text: "Perlu Revisi", value: "REVISION_NEEDED" },
     ],
     onFilter: (value, record) => record.status === value,
   });
@@ -136,6 +146,16 @@ const History = () => {
       ),
     },
     {
+      title: "Skema",
+      dataIndex: "skema",
+      key: "skema",
+      render: (text) => (
+        <Tag color="blue" className="text-xs">
+          {text || "-"}
+        </Tag>
+      ),
+    },
+    {
       title: "Penyelenggara",
       dataIndex: "penyelenggara",
       key: "penyelenggara",
@@ -147,7 +167,11 @@ const History = () => {
       title: "Tanggal Daftar",
       dataIndex: "tanggalDaftar",
       key: "tanggalDaftar",
-      sorter: (a, b) => new Date(a.tanggalDaftar) - new Date(b.tanggalDaftar),
+      sorter: (a, b) => {
+        if (!a.tanggalDaftar) return 1;
+        if (!b.tanggalDaftar) return -1;
+        return new Date(a.tanggalDaftar) - new Date(b.tanggalDaftar);
+      },
       render: (date) =>
         date ? (
           <div className="text-gray-600 text-sm">
@@ -158,17 +182,67 @@ const History = () => {
             })}
           </div>
         ) : (
-          <span className="text-gray-400">-</span>
+          <span className="text-gray-400 text-xs">Belum disubmit</span>
         ),
     },
-    createStatusColumn(),
     {
-      title: "Tahapan",
-      dataIndex: "tahapan",
-      key: "tahapan",
-      render: () => <Tag color="default">-</Tag>,
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status, record) => {
+        const statusConfig = {
+          VALIDATED: { color: "green", text: "Divalidasi" },
+          REJECTED: { color: "red", text: "Ditolak" },
+          MENUNGGU_VERIFIKASI: { color: "blue", text: "Menunggu Verifikasi" },
+          VERIFIED: {
+            color: "cyan",
+            text: "Terverifikasi - Menunggu Validasi",
+          },
+          DRAFT: { color: "orange", text: "Draft" },
+          REVISION_NEEDED: { color: "purple", text: "Perlu Revisi" },
+        };
+
+        const config = statusConfig[status] || {
+          color: "default",
+          text: status,
+        };
+
+        return (
+          <div>
+            <Tag color={config.color}>{config.text}</Tag>
+            {status === "REVISION_NEEDED" && record.revision_deadline && (
+              <div className="mt-1">
+                <div
+                  className={`text-xs font-medium ${
+                    isRevisionDeadlinePassed(record.revision_deadline)
+                      ? "text-red-600"
+                      : "text-orange-600"
+                  }`}
+                >
+                  Deadline:{" "}
+                  {formatToWIB(record.revision_deadline, "DD MMM YYYY, HH:mm")}{" "}
+                  WIB
+                </div>
+                {isRevisionDeadlinePassed(record.revision_deadline) && (
+                  <Tag color="red" className="text-xs mt-1">
+                    Deadline Sudah Lewat
+                  </Tag>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      },
+      filters: [
+        { text: "Divalidasi", value: "VALIDATED" },
+        { text: "Ditolak", value: "REJECTED" },
+        { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
+        { text: "Terverifikasi - Menunggu Validasi", value: "VERIFIED" },
+        { text: "Draft", value: "DRAFT" },
+        { text: "Perlu Revisi", value: "REVISION_NEEDED" },
+      ],
+      onFilter: (value, record) => record.status === value,
     },
-    // PERBAIKAN: Update action column dengan conditional buttons
     createActionColumn([
       {
         key: "detail",
@@ -176,20 +250,29 @@ const History = () => {
         icon: <EyeOutlined />,
         type: "default",
         onClick: handleDetail,
+        hidden: (record) => record.status === "DRAFT",
       },
       {
         key: "complete",
-        label: "Lengkapi Pendaftaran",
+        label: "Lengkapi",
         icon: <FormOutlined />,
         type: "primary",
-        // TAMBAHAN: Hanya tampil untuk status DRAFT
         hidden: (record) => record.status !== "DRAFT",
         onClick: handleCompleteDraft,
-        style: {
-          backgroundColor: "#f59e0b",
-          borderColor: "#f59e0b",
-          color: "white",
-        },
+      },
+      {
+        key: "revision",
+        label: "Revisi",
+        icon: <FormOutlined />,
+        type: "default",
+        danger: true,
+        hidden: (record) =>
+          record.status !== "REVISION_NEEDED" ||
+          isRevisionDeadlinePassed(record.revision_deadline),
+        onClick: (record) =>
+          navigate(
+            `/scholarship/${record.scholarship_id}/apply?revision=${record.id}&schema=${record.schema_id}`,
+          ),
       },
     ]),
   ];
@@ -198,12 +281,12 @@ const History = () => {
     <div className="flex gap-4">
       <Select
         placeholder="Filter Status"
-        style={{ width: 150 }}
+        style={{ width: 180 }}
         allowClear
         onChange={(value) => {
           if (value) {
             const filtered = applications.filter(
-              (item) => item.status === value
+              (item) => item.status === value,
             );
             setFilteredData(filtered);
           } else {
@@ -216,6 +299,7 @@ const History = () => {
         <Option value="MENUNGGU_VERIFIKASI">Menunggu Verifikasi</Option>
         <Option value="VERIFIED">Terverifikasi</Option>
         <Option value="DRAFT">Draft</Option>
+        <Option value="REVISION_NEEDED">Perlu Revisi</Option>
       </Select>
 
       <RangePicker
@@ -225,6 +309,7 @@ const History = () => {
           if (dates && dates[0] && dates[1]) {
             const [startDate, endDate] = dates;
             const filtered = applications.filter((item) => {
+              if (!item.tanggalDaftar) return false;
               const itemDate = new Date(item.tanggalDaftar);
               return (
                 itemDate >= startDate.toDate() && itemDate <= endDate.toDate()
@@ -241,18 +326,14 @@ const History = () => {
 
   const totalApplications = applications.length;
   const validatedCount = applications.filter(
-    (item) => item.status === "VALIDATED"
+    (item) => item.status === "VALIDATED",
   ).length;
   const inProgressCount = applications.filter(
-    (item) => !["VALIDATED", "REJECTED", "DRAFT"].includes(item.status)
+    (item) => !["VALIDATED", "REJECTED", "DRAFT"].includes(item.status),
   ).length;
-  // TAMBAHAN: Hitung draft count
   const draftCount = applications.filter(
-    (item) => item.status === "DRAFT"
+    (item) => item.status === "DRAFT",
   ).length;
-  const totalValue = applications
-    .filter((item) => item.status === "VALIDATED")
-    .reduce((total, item) => total + (item.scholarship_value || 0), 0);
 
   if (loading) {
     return (
@@ -341,9 +422,8 @@ const History = () => {
                       Anda memiliki {draftCount} pendaftaran yang belum selesai
                     </h4>
                     <p className="text-orange-700 text-sm">
-                      Klik tombol "Lengkapi Pendaftaran" pada tabel di bawah
-                      untuk melanjutkan pendaftaran yang tersimpan sebagai
-                      draft.
+                      Klik tombol "Lengkapi" pada tabel di bawah untuk
+                      melanjutkan pendaftaran yang tersimpan sebagai draft.
                     </p>
                   </div>
                 </div>
@@ -355,11 +435,11 @@ const History = () => {
                 title="Riwayat Pendaftaran Beasiswa"
                 data={filteredData}
                 columns={columns}
-                searchFields={["beasiswa", "organizer"]}
-                searchPlaceholder="Cari nama beasiswa atau penyelenggara..."
+                searchFields={["beasiswa", "penyelenggara", "skema"]}
+                searchPlaceholder="Cari nama beasiswa, skema, atau penyelenggara..."
                 customFilters={customFilters}
                 pageSize={10}
-                scroll={{ x: 1200 }}
+                scroll={{ x: 1400 }}
                 loading={loading}
               />
               <ApplicationDetailModal
