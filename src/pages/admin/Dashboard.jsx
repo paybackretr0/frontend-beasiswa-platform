@@ -61,7 +61,7 @@ const AdminDashboard = () => {
   const role = user?.role?.toUpperCase() || null;
 
   const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
-    role
+    role,
   );
 
   const canSeeAPBN = [
@@ -141,12 +141,6 @@ const AdminDashboard = () => {
           title: "Total Program",
           value: summary.totalProgram || 0,
         },
-        {
-          title: "Total Nominal (Rp)",
-          value: summary.totalNominal
-            ? `${(summary.totalNominal / 1000000).toFixed(1)}M`
-            : 0,
-        },
       ];
 
       setGovSummaryData(govSummary);
@@ -216,7 +210,7 @@ const AdminDashboard = () => {
 
       const mergedGenderData = defaultGenderData.map((defaultItem) => {
         const existingItem = gender.find(
-          (item) => item.label === defaultItem.label
+          (item) => item.label === defaultItem.label,
         );
         return existingItem || defaultItem;
       });
@@ -325,17 +319,21 @@ const AdminDashboard = () => {
                   isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
                 }`
               : scholarshipType === "NON-APBN"
-              ? `Beasiswa Non-APBN ${
-                  isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
-                }`
-              : "Beasiswa Pemerintah (APBN)"}
+                ? `Beasiswa Non-APBN ${
+                    isFacultyRole
+                      ? `(Fakultas ${user?.faculty?.name || ""})`
+                      : ""
+                  }`
+                : "Beasiswa Pemerintah (APBN)"}
             {" • "}
             {selectedYear === "all" ? "Semua Tahun" : `Tahun ${selectedYear}`}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div
+        className={`grid ${scholarshipType === "NON-APBN" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-3"} gap-6`}
+      >
         {(scholarshipType === "NON-APBN" ? summaryData : govSummaryData).map(
           (item, idx) => (
             <Card key={idx}>
@@ -346,7 +344,7 @@ const AdminDashboard = () => {
                 </span>
               </div>
             </Card>
-          )
+          ),
         )}
       </div>
 

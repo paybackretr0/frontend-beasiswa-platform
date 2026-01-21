@@ -4,6 +4,7 @@ import AdminDashboard from "../pages/admin/Dashboard";
 import ApplicationsAdmin from "../pages/admin/applications/ApplicationsAdmin";
 import ReportsAdmin from "../pages/admin/reports/ReportsAdmin";
 import InfoScholarship from "../pages/admin/info-scholarships/InfoScholarship";
+import GovernmentScholarship from "../pages/admin/government/GovernmentScholarship";
 
 import AccountsRoutes from "./accounts.routes";
 import ScholarshipRoutes from "./scholarship.routes";
@@ -24,7 +25,6 @@ const AdminRoutes = () => (
     }
   >
     <Route path="dashboard" element={<AdminDashboard />} />
-
     <Route
       path="registration"
       element={
@@ -33,7 +33,6 @@ const AdminRoutes = () => (
         </RoleRoute>
       }
     />
-
     <Route
       path="report"
       element={
@@ -42,7 +41,7 @@ const AdminRoutes = () => (
         </RoleRoute>
       }
     />
-
+    <Route path="government-scholarship" element={<GovernmentScholarship />} />{" "}
     <Route
       path="informasi-beasiswa"
       element={
@@ -51,7 +50,6 @@ const AdminRoutes = () => (
         </RoleRoute>
       }
     />
-
     <Route path="accounts/*" element={<AccountsRoutes />} />
     <Route path="scholarship/*" element={<ScholarshipRoutes />} />
     <Route path="reference/*" element={<ReferenceRoutes />} />
