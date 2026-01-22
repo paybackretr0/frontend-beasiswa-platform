@@ -51,6 +51,7 @@ const AdminDashboard = () => {
   const [govDistributionData, setGovDistributionData] = useState([]);
   const [govCategoriesData, setGovCategoriesData] = useState([]);
   const [govYearlyData, setGovYearlyData] = useState([]);
+  const [statusData, setStatusData] = useState([]);
 
   const { alerts, error, removeAlert } = useAlert();
 
@@ -147,6 +148,27 @@ const AdminDashboard = () => {
       setGovDistributionData(distribution || []);
       setGovCategoriesData(categories || []);
       setGovYearlyData(yearly || []);
+
+      if (summary.statusBreakdown) {
+        const statusDistribution = [
+          {
+            label: "Normal",
+            value: summary.statusBreakdown.normal || 0,
+            color: "#22c55e",
+          },
+          {
+            label: "Warning",
+            value: summary.statusBreakdown.warning || 0,
+            color: "#f59e0b",
+          },
+          {
+            label: "Revoked",
+            value: summary.statusBreakdown.revoked || 0,
+            color: "#ef4444",
+          },
+        ];
+        setStatusData(statusDistribution);
+      }
     } catch (err) {
       throw err;
     }
@@ -534,22 +556,44 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {chartsLoading ? (
-              <Card
-                title="Tren Penerima Tahun ke Tahun"
-                description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
-              >
-                <div className="flex justify-center items-center py-12">
-                  <Spin size="large" />
-                </div>
-              </Card>
+              <>
+                <Card
+                  title="Tren Penerima Tahun ke Tahun"
+                  description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+                <Card
+                  title="Status Akademik"
+                  description="Distribusi status akademik penerima"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+              </>
             ) : (
-              <LineChart
-                data={govYearlyData}
-                title="Tren Penerima Tahun ke Tahun"
-                description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
-              />
+              <>
+                <div className="flex flex-col h-full">
+                  <LineChart
+                    data={govYearlyData}
+                    title="Tren Penerima Tahun ke Tahun"
+                    description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
+                  />
+                </div>
+
+                <div className="flex flex-col h-full">
+                  <PieChart
+                    data={statusData}
+                    title="Status Akademik Penerima"
+                    description="Distribusi berdasarkan status akademik mahasiswa"
+                  />
+                </div>
+              </>
             )}
           </div>
         </>
