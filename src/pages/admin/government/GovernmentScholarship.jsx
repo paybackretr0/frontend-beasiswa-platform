@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Select,
-  Spin,
   Tag,
   Modal,
   Upload,
@@ -47,6 +46,11 @@ import {
 } from "../../../services/governmentService";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
+import {
+  SkeletonCard,
+  SkeletonChart,
+  SkeletonTable,
+} from "../../../components/common/skeleton";
 
 const { Option } = Select;
 
@@ -248,33 +252,6 @@ const GovernmentScholarship = () => {
       "Fitur dalam pengembangan",
       "Fitur sinkronisasi IPK sedang dalam pengembangan.",
     );
-    // try {
-    //   setSyncingIPK(true);
-    //   info("Sinkronisasi IPK", "Memproses sinkronisasi data IPK mahasiswa...");
-    //   const result = await syncGovernmentScholarshipIPK(
-    //     selectedYear === "all" ? null : selectedYear,
-    //   );
-    //   clearAlerts();
-    //   success(
-    //     "Sinkronisasi Berhasil!",
-    //     `${result.updated} data IPK berhasil diperbarui. ` +
-    //       `${result.status_changed} status akademik berubah.`,
-    //   );
-    //   if (result.summary) {
-    //     setTimeout(() => {
-    //       info(
-    //         "Detail Perubahan",
-    //         `Normal: ${result.summary.normal} | Warning: ${result.summary.warning} | Revoked: ${result.summary.revoked}`,
-    //       );
-    //     }, 1000);
-    //   }
-    //   fetchAllData();
-    // } catch (err) {
-    //   clearAlerts();
-    //   error("Gagal!", err.message || "Gagal melakukan sinkronisasi IPK");
-    // } finally {
-    //   setSyncingIPK(false);
-    // }
   };
 
   const handleYearChange = (year) => {
@@ -634,8 +611,65 @@ const GovernmentScholarship = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
+      <div className="space-y-6">
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+
+        <div className="flex justify-between items-center">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-64 animate-pulse mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-36 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, idx) => (
+            <SkeletonCard key={idx} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SkeletonChart
+            type="line"
+            title="Loading..."
+            description="Memuat data..."
+          />
+          <SkeletonChart
+            type="horizontal-bar"
+            title="Loading..."
+            description="Memuat data..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SkeletonChart
+            type="horizontal-bar"
+            title="Loading..."
+            description="Memuat data..."
+          />
+          <SkeletonChart
+            type="pie"
+            title="Loading..."
+            description="Memuat data..."
+          />
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="h-6 bg-gray-200 rounded w-64 animate-pulse"></div>
+            <div className="h-10 w-48 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+
+          <SkeletonTable rows={10} columns={11} />
+        </div>
       </div>
     );
   }
@@ -708,19 +742,16 @@ const GovernmentScholarship = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
-            <Card title="Tren Tahunan" description="Jumlah penerima per tahun">
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-            <Card
+            <SkeletonChart
+              type="line"
+              title="Tren Tahunan"
+              description="Jumlah penerima per tahun"
+            />
+            <SkeletonChart
+              type="horizontal-bar"
               title="Distribusi per Program Studi"
               description="Top 10 program studi"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
+            />
           </>
         ) : (
           <>
@@ -741,22 +772,16 @@ const GovernmentScholarship = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
-            <Card
+            <SkeletonChart
+              type="horizontal-bar"
               title="Skema Bantuan"
               description="Distribusi berdasarkan skema"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-            <Card
+            />
+            <SkeletonChart
+              type="pie"
               title="Status Akademik"
               description="Distribusi status mahasiswa"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
+            />
           </>
         ) : (
           <>

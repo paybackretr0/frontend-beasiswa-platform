@@ -11,11 +11,12 @@ import UniversalModal from "../../../components/Modal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 import { getAllBackups, createBackup } from "../../../services/extraService";
+import { SkeletonBackup } from "../../../components/common/skeleton";
 
 const BackupAdmin = () => {
   const [backupData, setBackupData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const pageSize = 6;
@@ -126,7 +127,7 @@ const BackupAdmin = () => {
         position="top-right"
       />
 
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Backup Data</h1>
           <p className="text-gray-600 mt-1">
@@ -135,7 +136,7 @@ const BackupAdmin = () => {
         </div>
         <Button
           onClick={() => setModalVisible(true)}
-          disabled={isCreatingBackup}
+          disabled={isCreatingBackup || isLoading}
           className="flex items-center gap-2"
         >
           <DatabaseOutlined />
@@ -143,89 +144,89 @@ const BackupAdmin = () => {
         </Button>
       </div>
 
-      <div className="space-y-4 mt-6">
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Memuat data backup...</p>
-          </div>
-        ) : currentBackups.length === 0 ? (
-          <div className="text-center py-12">
-            <DatabaseOutlined className="text-4xl text-gray-400 mb-4" />
-            <p className="text-gray-500">Belum ada history backup</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {currentBackups.map((backup) => (
-              <Card key={backup.id}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        {getFileName(backup.file_path)}
-                      </h3>
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          backup.status === "SUCCESS"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {backup.status}
-                      </span>
-                      <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
-                        {getBackupType(backup.file_path)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>{formatDate(backup.createdAt)}</span>
-                      <span>•</span>
-                      <span>{getFileSize(backup.message)}</span>
-                      {backup.User && (
-                        <>
-                          <span>•</span>
-                          <span>
-                            oleh {backup.User.full_name || backup.User.email}
-                          </span>
-                        </>
+      {isLoading ? (
+        <SkeletonBackup items={6} />
+      ) : (
+        <div className="space-y-4">
+          {currentBackups.length === 0 ? (
+            <div className="text-center py-12">
+              <DatabaseOutlined className="text-4xl text-gray-400 mb-4" />
+              <p className="text-gray-500">Belum ada history backup</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {currentBackups.map((backup) => (
+                <Card key={backup.id}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {getFileName(backup.file_path)}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            backup.status === "SUCCESS"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {backup.status}
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                          {getBackupType(backup.file_path)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span>{formatDate(backup.createdAt)}</span>
+                        <span>•</span>
+                        <span>{getFileSize(backup.message)}</span>
+                        {backup.User && (
+                          <>
+                            <span>•</span>
+                            <span>
+                              oleh {backup.User.full_name || backup.User.email}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {backup.message && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          {backup.message}
+                        </p>
                       )}
                     </div>
-                    {backup.message && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        {backup.message}
-                      </p>
+                    {backup.status === "SUCCESS" && backup.file_path && (
+                      <Button
+                        onClick={() => handleDownload(backup)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm"
+                      >
+                        <DownloadOutlined />
+                        Download
+                      </Button>
                     )}
                   </div>
-                  {backup.status === "SUCCESS" && backup.file_path && (
-                    <Button
-                      onClick={() => handleDownload(backup)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm"
-                    >
-                      <DownloadOutlined />
-                      Download
-                    </Button>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+                </Card>
+              ))}
+            </div>
+          )}
 
-        {backupData.length > pageSize && (
-          <div className="flex justify-center pt-6">
-            <Pagination
-              current={currentPage}
-              total={backupData.length}
-              pageSize={pageSize}
-              onChange={handlePageChange}
-              showSizeChanger={false}
-              showQuickJumper={true}
-              showTotal={(total, range) =>
-                `${range[0]}-${range[1]} dari ${total} backup`
-              }
-            />
-          </div>
-        )}
-      </div>
+          {backupData.length > pageSize && (
+            <div className="flex justify-center pt-6">
+              <Pagination
+                current={currentPage}
+                total={backupData.length}
+                pageSize={pageSize}
+                onChange={handlePageChange}
+                showSizeChanger={false}
+                showQuickJumper={true}
+                showTotal={(total, range) =>
+                  `${range[0]}-${range[1]} dari ${total} backup`
+                }
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <UniversalModal
         visible={modalVisible}

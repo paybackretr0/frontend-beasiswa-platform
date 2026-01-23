@@ -19,10 +19,11 @@ import {
   deactivateUser,
   activateUser,
 } from "../../../services/userService";
+import { SkeletonAccount } from "../../../components/common/skeleton";
 
 const PimpinanDitmawa = () => {
   const [pimpinanDitmawaData, setPimpinanDitmawaData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -207,6 +208,19 @@ const PimpinanDitmawa = () => {
       },
     ]),
   ];
+
+  if (loading) {
+    return (
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <SkeletonAccount />
+      </>
+    );
+  }
 
   return (
     <>

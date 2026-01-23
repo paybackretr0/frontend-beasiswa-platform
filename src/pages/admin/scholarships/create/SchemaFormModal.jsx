@@ -115,7 +115,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     setStages(
       sortedStages.length > 0
         ? sortedStages
-        : [{ id: 1, name: "ADMINISTRASI", order_no: 1 }]
+        : [{ id: 1, name: "ADMINISTRASI", order_no: 1 }],
     );
 
     setSelectedFaculties(data.faculties || []);
@@ -186,7 +186,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
 
   const updateRequirement = (id, field, value) => {
     setRequirements(
-      requirements.map((r) => (r.id === id ? { ...r, [field]: value } : r))
+      requirements.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
     );
   };
 
@@ -194,8 +194,8 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     if (file) {
       setRequirements(
         requirements.map((r) =>
-          r.id === id ? { ...r, file: file, fileName: file.name } : r
-        )
+          r.id === id ? { ...r, file: file, fileName: file.name } : r,
+        ),
       );
     }
   };
@@ -203,8 +203,8 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   const removeRequirementFile = (id) => {
     setRequirements(
       requirements.map((r) =>
-        r.id === id ? { ...r, file: null, fileName: "" } : r
-      )
+        r.id === id ? { ...r, file: null, fileName: "" } : r,
+      ),
     );
   };
 
@@ -230,7 +230,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
 
   const toggleDocument = (doc) => {
     setDocuments((prev) =>
-      prev.includes(doc) ? prev.filter((d) => d !== doc) : [...prev, doc]
+      prev.includes(doc) ? prev.filter((d) => d !== doc) : [...prev, doc],
     );
   };
 
@@ -283,14 +283,14 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
         .filter((dept) => dept.faculty_id === facultyId)
         .map((dept) => dept.id);
       const newSelectedDepartments = selectedDepartments.filter(
-        (id) => !facultyDepartments.includes(id)
+        (id) => !facultyDepartments.includes(id),
       );
       setSelectedDepartments(newSelectedDepartments);
       const departmentPrograms = studyPrograms
         .filter((prog) => facultyDepartments.includes(prog.department_id))
         .map((prog) => prog.id);
       const newSelectedPrograms = selectedStudyPrograms.filter(
-        (id) => !departmentPrograms.includes(id)
+        (id) => !departmentPrograms.includes(id),
       );
       setSelectedStudyPrograms(newSelectedPrograms);
     }
@@ -308,13 +308,13 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       setSelectedStudyPrograms(newSelectedPrograms);
     } else {
       setSelectedDepartments(
-        selectedDepartments.filter((id) => id !== departmentId)
+        selectedDepartments.filter((id) => id !== departmentId),
       );
       const departmentPrograms = studyPrograms
         .filter((prog) => prog.department_id === departmentId)
         .map((prog) => prog.id);
       const newSelectedPrograms = selectedStudyPrograms.filter(
-        (id) => !departmentPrograms.includes(id)
+        (id) => !departmentPrograms.includes(id),
       );
       setSelectedStudyPrograms(newSelectedPrograms);
     }
@@ -325,7 +325,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       setSelectedStudyPrograms([...selectedStudyPrograms, studyProgramId]);
     } else {
       setSelectedStudyPrograms(
-        selectedStudyPrograms.filter((id) => id !== studyProgramId)
+        selectedStudyPrograms.filter((id) => id !== studyProgramId),
       );
     }
   };
@@ -370,17 +370,17 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       .filter((dept) => selectedFaculties.includes(dept.faculty_id))
       .map((dept) => dept.id);
     const newSelectedDepartments = selectedDepartments.filter((id) =>
-      facultyDepartmentIds.includes(id)
+      facultyDepartmentIds.includes(id),
     );
     setSelectedDepartments(newSelectedDepartments);
     const clearedDepartmentIds = selectedDepartments.filter(
-      (id) => !facultyDepartmentIds.includes(id)
+      (id) => !facultyDepartmentIds.includes(id),
     );
     const clearedDepartmentPrograms = studyPrograms
       .filter((prog) => clearedDepartmentIds.includes(prog.department_id))
       .map((prog) => prog.id);
     const newSelectedPrograms = selectedStudyPrograms.filter(
-      (id) => !clearedDepartmentPrograms.includes(id)
+      (id) => !clearedDepartmentPrograms.includes(id),
     );
     setSelectedStudyPrograms(newSelectedPrograms);
   };
@@ -396,7 +396,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       .filter(
         (prog) =>
           !selectedFaculties.includes(prog.department?.faculty_id) &&
-          !allSelectedDepartmentIds.includes(prog.department_id)
+          !allSelectedDepartmentIds.includes(prog.department_id),
       )
       .map((prog) => prog.id);
     const newSelectedPrograms = [
@@ -416,11 +416,11 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       .filter(
         (prog) =>
           selectedFaculties.includes(prog.department?.faculty_id) ||
-          allSelectedDepartmentIds.includes(prog.department_id)
+          allSelectedDepartmentIds.includes(prog.department_id),
       )
       .map((prog) => prog.id);
     const newSelectedPrograms = selectedStudyPrograms.filter((id) =>
-      protectedProgramIds.includes(id)
+      protectedProgramIds.includes(id),
     );
     setSelectedStudyPrograms(newSelectedPrograms);
   };
@@ -434,14 +434,14 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   const isAllDepartmentsSelected = () => {
     if (departments.length === 0) return false;
     const availableDepartments = departments.filter(
-      (dept) => !selectedFaculties.includes(dept.faculty_id)
+      (dept) => !selectedFaculties.includes(dept.faculty_id),
     );
     if (availableDepartments.length === 0) {
       return selectedDepartments.length === departments.length;
     }
     const availableIds = availableDepartments.map((d) => d.id);
     const allAvailableSelected = availableIds.every((id) =>
-      selectedDepartments.includes(id)
+      selectedDepartments.includes(id),
     );
     return allAvailableSelected;
   };
@@ -457,14 +457,14 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     const availablePrograms = studyPrograms.filter(
       (prog) =>
         !selectedFaculties.includes(prog.department?.faculty_id) &&
-        !allSelectedDepartmentIds.includes(prog.department_id)
+        !allSelectedDepartmentIds.includes(prog.department_id),
     );
     if (availablePrograms.length === 0) {
       return selectedStudyPrograms.length === studyPrograms.length;
     }
     const availableIds = availablePrograms.map((p) => p.id);
     const allAvailableSelected = availableIds.every((id) =>
-      selectedStudyPrograms.includes(id)
+      selectedStudyPrograms.includes(id),
     );
     return allAvailableSelected;
   };
@@ -473,7 +473,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     if (!formData.name || !formData.semester_minimum) {
       warning(
         "Data Belum Lengkap",
-        "Nama skema dan semester minimum wajib diisi"
+        "Nama skema dan semester minimum wajib diisi",
       );
       return;
     }
@@ -501,7 +501,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     if (allDocuments.length === 0) {
       warning(
         "Dokumen Wajib",
-        "Pilih minimal 1 dokumen yang wajib diunggah mahasiswa"
+        "Pilih minimal 1 dokumen yang wajib diunggah mahasiswa",
       );
       return;
     }
@@ -672,7 +672,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
                           onChange={(e) =>
                             handleRequirementFileChange(
                               req.id,
-                              e.target.files[0]
+                              e.target.files[0],
                             )
                           }
                           className="hidden"
@@ -937,7 +937,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
                   {departments.map((dept) => {
                     const isDisabled = selectedFaculties.includes(
-                      dept.faculty_id
+                      dept.faculty_id,
                     );
 
                     return (
@@ -1011,10 +1011,10 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
                   {studyPrograms.map((prog) => {
                     const isDisabledByFaculty = selectedFaculties.includes(
-                      prog.department?.faculty_id
+                      prog.department?.faculty_id,
                     );
                     const isDisabledByDepartment = selectedDepartments.includes(
-                      prog.department_id
+                      prog.department_id,
                     );
                     const isDisabled =
                       isDisabledByFaculty || isDisabledByDepartment;

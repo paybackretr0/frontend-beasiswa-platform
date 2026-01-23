@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Spin, Tag } from "antd";
+import { Tag } from "antd";
 import UniversalTable, {
   createNumberColumn,
   createActionColumn,
@@ -30,6 +30,10 @@ import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 import RevisionRejectModal from "../../../components/RevisionRejectModal";
+import {
+  SkeletonCard,
+  SkeletonTable,
+} from "../../../components/common/skeleton";
 
 const ApplicationsAdmin = () => {
   const [applications, setApplications] = useState([]);
@@ -539,8 +543,38 @@ const ApplicationsAdmin = () => {
 
   if (loading && summaryLoading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
+      <div className="space-y-6">
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+
+        {(role === "VERIFIKATOR_FAKULTAS" ||
+          role === "VERIFIKATOR_DITMAWA") && (
+          <div className="bg-gray-100 rounded-lg p-4 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, idx) => (
+            <SkeletonCard key={idx} />
+          ))}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+          </div>
+
+          <div className="flex gap-4 mb-4">
+            <div className="flex-1 h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        <SkeletonTable rows={10} columns={9} />
       </div>
     );
   }
@@ -577,13 +611,7 @@ const ApplicationsAdmin = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         {summaryLoading
-          ? Array.from({ length: 6 }).map((_, idx) => (
-              <Card key={idx}>
-                <div className="flex flex-col items-center py-4">
-                  <Spin size="small" />
-                </div>
-              </Card>
-            ))
+          ? [...Array(6)].map((_, idx) => <SkeletonCard key={idx} />)
           : summaryData.map((item, idx) => (
               <Card key={idx} className={item.bgColor}>
                 <div className="flex flex-col items-center py-4">

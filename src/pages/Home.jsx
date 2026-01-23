@@ -17,7 +17,6 @@ const Home = () => {
   return (
     <GuestLayout>
       <section className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between min-h-[70vh] gap-8 px-6 md:px-12 py-12">
-        {/* Kiri: Teks */}
         <div className="flex-1 mb-8 md:mb-0">
           <h1 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
             <span className="text-neutral-800 block mb-2">
@@ -31,7 +30,6 @@ const Home = () => {
             Lihat Beasiswa
           </Button>
         </div>
-        {/* Kanan: Ilustrasi */}
         <div className="flex-1 flex justify-center">
           <img
             src={Illustration}

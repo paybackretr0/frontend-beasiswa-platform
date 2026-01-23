@@ -27,7 +27,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
       if (!allowedTypes.includes(file.type)) {
         warning(
           "Peringatan!",
-          "Format file tidak didukung. Gunakan PNG, JPG, atau JPEG."
+          "Format file tidak didukung. Gunakan PNG, JPG, atau JPEG.",
         );
         e.target.value = "";
         return;
@@ -55,7 +55,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
     ) {
       warning(
         "Data Belum Lengkap",
-        "Mohon lengkapi semua field yang wajib diisi sebelum melanjutkan"
+        "Mohon lengkapi semua field yang wajib diisi sebelum melanjutkan",
       );
       return;
     }

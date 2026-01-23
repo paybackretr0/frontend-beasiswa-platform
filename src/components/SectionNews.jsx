@@ -4,6 +4,7 @@ import Button from "./Button";
 import { useNavigate } from "react-router-dom";
 import { getLatestInformation } from "../services/websiteService";
 import EmptyInformation from "../assets/empty-state-news.svg";
+import { SkeletonNewsCard } from "./common/skeleton";
 
 const SectionNews = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const SectionNews = () => {
           <h2 className="text-3xl font-bold text-center text-gray-700 mb-10">
             Seputar Beasiswa
           </h2>
-          <p className="text-center text-gray-500">Memuat berita...</p>
+          <SkeletonNewsCard items={3} />
         </div>
       </section>
     );
@@ -72,7 +73,7 @@ const SectionNews = () => {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
-                }
+                },
               )}
               description={information.content.slice(0, 100) + "..."}
               className="cursor-pointer hover:shadow-lg transition-shadow"

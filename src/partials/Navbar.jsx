@@ -9,6 +9,7 @@ import {
 } from "react-icons/md";
 import { logout } from "../services/authService";
 import { ROLE_ACCESS } from "../config/roleAccess";
+import unandLogo from "../assets/partners/logo1.png";
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -50,11 +51,24 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 backdrop-blur bg-white/70">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-12 py-3">
-        <div className="font-bold text-xl">
-          <NavLink to="/" className="no-underline text-gray-800">
-            BeasiswaApp
-          </NavLink>
-        </div>
+        <NavLink to="/" className="flex items-center gap-3 no-underline group">
+          {/* Logo Unand */}
+          <img
+            src={unandLogo}
+            alt="Logo Universitas Andalas"
+            className="h-10 w-10 object-contain transition-transform group-hover:scale-105"
+          />
+
+          {/* Brand Name */}
+          <div className="flex flex-col">
+            <span className="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition-colors">
+              BeasiswaApp
+            </span>
+            <span className="text-xs text-gray-500 hidden sm:block">
+              Universitas Andalas
+            </span>
+          </div>
+        </NavLink>
 
         <div className="hidden lg:flex gap-8">
           {isAuthenticated ? (

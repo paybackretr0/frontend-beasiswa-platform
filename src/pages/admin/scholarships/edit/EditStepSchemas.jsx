@@ -34,7 +34,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
   const handleSaveSchema = (schemaData) => {
     if (editingSchema) {
       const updatedSchemas = schemas.map((s) =>
-        s.id === editingSchema.id ? { ...editingSchema, ...schemaData } : s
+        s.id === editingSchema.id ? { ...editingSchema, ...schemaData } : s,
       );
       setSchemas(updatedSchemas);
       successAlert("Berhasil!", "Skema berhasil diperbarui");
@@ -56,7 +56,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
     }
 
     const confirmDelete = window.confirm(
-      "Yakin ingin menghapus skema ini? Data skema akan hilang."
+      "Yakin ingin menghapus skema ini? Data skema akan hilang.",
     );
 
     if (confirmDelete) {
@@ -75,7 +75,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
       if (!schema.name || !schema.semester_minimum) {
         warning(
           "Data Skema Tidak Lengkap",
-          "Semua skema harus memiliki nama dan semester minimum"
+          "Semua skema harus memiliki nama dan semester minimum",
         );
         return;
       }
@@ -83,7 +83,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
       if (!schema.requirements || schema.requirements.length === 0) {
         warning(
           "Syarat Tidak Lengkap",
-          `Skema "${schema.name}" harus memiliki minimal 1 syarat`
+          `Skema "${schema.name}" harus memiliki minimal 1 syarat`,
         );
         return;
       }
@@ -91,7 +91,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
       if (!schema.documents || schema.documents.length === 0) {
         warning(
           "Dokumen Tidak Lengkap",
-          `Skema "${schema.name}" harus memiliki minimal 1 dokumen`
+          `Skema "${schema.name}" harus memiliki minimal 1 dokumen`,
         );
         return;
       }
@@ -99,7 +99,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
       if (!schema.stages || schema.stages.length === 0) {
         warning(
           "Tahapan Tidak Lengkap",
-          `Skema "${schema.name}" harus memiliki minimal 1 tahapan`
+          `Skema "${schema.name}" harus memiliki minimal 1 tahapan`,
         );
         return;
       }

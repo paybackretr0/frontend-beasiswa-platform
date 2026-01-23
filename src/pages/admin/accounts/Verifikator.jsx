@@ -20,11 +20,12 @@ import {
   activateUser,
 } from "../../../services/userService";
 import { getFaculties } from "../../../services/facultyService";
+import { SkeletonAccount } from "../../../components/common/skeleton";
 
 const Verifikator = () => {
   const [verifikatorData, setVerifikatorData] = useState([]);
   const [faculties, setFaculties] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -313,6 +314,19 @@ const Verifikator = () => {
 
     return baseFields;
   };
+
+  if (loading) {
+    return (
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <SkeletonAccount />
+      </>
+    );
+  }
 
   return (
     <>

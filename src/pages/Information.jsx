@@ -13,6 +13,7 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 import { getAllInformations } from "../services/websiteService";
 import { Link } from "react-router-dom";
+import { SkeletonInformation } from "../components/common/skeleton";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -64,7 +65,7 @@ const Information = () => {
       filtered = filtered.filter(
         (info) =>
           info.title.toLowerCase().includes(query) ||
-          info.content.toLowerCase().includes(query)
+          info.content.toLowerCase().includes(query),
       );
     }
 
@@ -93,18 +94,17 @@ const Information = () => {
     setCurrentPage(1);
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentInformations = filteredInformations.slice(
-    indexOfFirstItem,
-    indexOfLastItem
+  const displayedInformations = filteredInformations.slice(
+    0,
+    currentPage * itemsPerPage,
   );
-  const totalPages = Math.ceil(filteredInformations.length / itemsPerPage);
+
+  const hasMore = filteredInformations.length > currentPage * itemsPerPage;
+  const remainingItems =
+    filteredInformations.length - currentPage * itemsPerPage;
 
   const handleLoadMore = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+    setCurrentPage(currentPage + 1);
   };
 
   const formatDate = (dateString) => {
@@ -137,34 +137,6 @@ const Information = () => {
     setSortBy("newest");
   };
 
-  if (loading) {
-    return (
-      <GuestLayout>
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-          <div className="flex justify-center items-center min-h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Memuat daftar informasi...</p>
-            </div>
-          </div>
-        </div>
-      </GuestLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <GuestLayout>
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-          <div className="text-center py-12">
-            <div className="text-red-500 text-lg mb-4">⚠️ {error}</div>
-            <Button onClick={loadInformations}>Coba Lagi</Button>
-          </div>
-        </div>
-      </GuestLayout>
-    );
-  }
-
   return (
     <GuestLayout>
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
@@ -178,165 +150,176 @@ const Information = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <SearchOutlined className="mr-1" />
-                Cari Informasi
-              </label>
-              <Search
-                placeholder="Cari berdasarkan judul atau konten..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                allowClear
-                size="large"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FilterOutlined className="mr-1" />
-                Tipe
-              </label>
-              <Select
-                value={typeFilter}
-                onChange={setTypeFilter}
-                className="w-full"
-                size="large"
-              >
-                <Option value="ALL">Semua Tipe</Option>
-                <Option value="NEWS">Berita</Option>
-                <Option value="ARTICLE">Artikel</Option>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <SortAscendingOutlined className="mr-1" />
-                Urutkan
-              </label>
-              <Select
-                value={sortBy}
-                onChange={setSortBy}
-                className="w-full"
-                size="large"
-              >
-                <Option value="newest">Terbaru</Option>
-                <Option value="oldest">Terlama</Option>
-                <Option value="title_asc">Judul A-Z</Option>
-                <Option value="title_desc">Judul Z-A</Option>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>
-                Menampilkan{" "}
-                <span className="font-semibold text-gray-800">
-                  {Math.min(indexOfLastItem, filteredInformations.length)}
-                </span>{" "}
-                dari{" "}
-                <span className="font-semibold text-gray-800">
-                  {filteredInformations.length}
-                </span>{" "}
-                informasi
-              </span>
-              {(typeFilter !== "ALL" || searchQuery) && (
-                <span className="text-blue-600">
-                  (dari {allInformations.length} total)
-                </span>
-              )}
-            </div>
-            {(typeFilter !== "ALL" || searchQuery || sortBy !== "newest") && (
-              <Button
-                onClick={clearFilters}
-                className="text-sm bg-red-500 text-white hover:bg-red-700 px-4 py-2"
-              >
-                Reset Filter
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {filteredInformations.length === 0 ? (
+        {loading ? (
+          <SkeletonInformation items={9} />
+        ) : error ? (
           <div className="text-center py-12">
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <div className="text-gray-500">
-                  {searchQuery || typeFilter !== "ALL"
-                    ? "Tidak ada informasi yang sesuai dengan filter"
-                    : "Belum ada informasi tersedia"}
-                </div>
-              }
-            >
-              {searchQuery || typeFilter !== "ALL" || (
-                <Button onClick={clearFilters}>Reset Filter</Button>
-              )}
-            </Empty>
+            <div className="text-red-500 text-lg mb-4">⚠️ {error}</div>
+            <Button onClick={loadInformations}>Coba Lagi</Button>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-              {currentInformations.map((information) => (
-                <Card
-                  key={information.id}
-                  image={getImageSource(information.cover_url)}
-                  title={information.title}
-                  subtitle={
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center text-gray-500">
-                        <CalendarOutlined className="mr-1" />
-                        {formatDate(
-                          information.published_at || information.createdAt
-                        )}
-                      </span>
-                    </div>
-                  }
-                  description={information.content.slice(0, 120) + "..."}
-                >
-                  <div className="mt-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Tag
-                          color={
-                            information.type === "NEWS" ? "blue" : "purple"
-                          }
-                          icon={getTypeIcon(information.type)}
-                        >
-                          {getTypeLabel(information.type)}
-                        </Tag>
-                      </div>
-                    </div>
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div className="lg:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <SearchOutlined className="mr-1" />
+                    Cari Informasi
+                  </label>
+                  <Search
+                    placeholder="Cari berdasarkan judul atau konten..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    allowClear
+                    size="large"
+                  />
+                </div>
 
-                    <div className="pt-2">
-                      <Link
-                        to={`/informations/${information.slug}`}
-                        className="block w-full text-center px-4 py-2 text-sm bg-[#2D60FF] text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Baca Selengkapnya
-                      </Link>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FilterOutlined className="mr-1" />
+                    Tipe
+                  </label>
+                  <Select
+                    value={typeFilter}
+                    onChange={setTypeFilter}
+                    className="w-full"
+                    size="large"
+                  >
+                    <Option value="ALL">Semua Tipe</Option>
+                    <Option value="NEWS">Berita</Option>
+                    <Option value="ARTICLE">Artikel</Option>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <SortAscendingOutlined className="mr-1" />
+                    Urutkan
+                  </label>
+                  <Select
+                    value={sortBy}
+                    onChange={setSortBy}
+                    className="w-full"
+                    size="large"
+                  >
+                    <Option value="newest">Terbaru</Option>
+                    <Option value="oldest">Terlama</Option>
+                    <Option value="title_asc">Judul A-Z</Option>
+                    <Option value="title_desc">Judul Z-A</Option>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span>
+                    Menampilkan{" "}
+                    <span className="font-semibold text-gray-800">
+                      {displayedInformations.length}
+                    </span>{" "}
+                    dari{" "}
+                    <span className="font-semibold text-gray-800">
+                      {filteredInformations.length}
+                    </span>{" "}
+                    informasi
+                  </span>
+                  {(typeFilter !== "ALL" || searchQuery) && (
+                    <span className="text-blue-600">
+                      (dari {allInformations.length} total)
+                    </span>
+                  )}
+                </div>
+                {(typeFilter !== "ALL" ||
+                  searchQuery ||
+                  sortBy !== "newest") && (
+                  <Button
+                    onClick={clearFilters}
+                    className="text-sm bg-red-500 text-white hover:bg-red-700 px-4 py-2"
+                  >
+                    Reset Filter
+                  </Button>
+                )}
+              </div>
             </div>
 
-            {currentPage < totalPages && (
-              <div className="flex justify-center">
-                <Button onClick={handleLoadMore}>
-                  Lihat Lebih Banyak (
-                  {filteredInformations.length - indexOfLastItem} tersisa)
-                </Button>
+            {filteredInformations.length === 0 ? (
+              <div className="text-center py-12">
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <div className="text-gray-500">
+                      {searchQuery || typeFilter !== "ALL"
+                        ? "Tidak ada informasi yang sesuai dengan filter"
+                        : "Belum ada informasi tersedia"}
+                    </div>
+                  }
+                >
+                  {searchQuery || typeFilter !== "ALL" ? (
+                    <Button onClick={clearFilters}>Reset Filter</Button>
+                  ) : null}
+                </Empty>
               </div>
-            )}
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                  {displayedInformations.map((information) => (
+                    <Card
+                      key={information.id}
+                      image={getImageSource(information.cover_url)}
+                      title={information.title}
+                      subtitle={
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center text-gray-500">
+                            <CalendarOutlined className="mr-1" />
+                            {formatDate(
+                              information.published_at || information.createdAt,
+                            )}
+                          </span>
+                        </div>
+                      }
+                      description={information.content.slice(0, 120) + "..."}
+                    >
+                      <div className="mt-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Tag
+                              color={
+                                information.type === "NEWS" ? "blue" : "purple"
+                              }
+                              icon={getTypeIcon(information.type)}
+                            >
+                              {getTypeLabel(information.type)}
+                            </Tag>
+                          </div>
+                        </div>
 
-            {totalPages > 1 && (
-              <div className="text-center mt-6 text-sm text-gray-500">
-                Halaman {currentPage} dari {totalPages}
-              </div>
+                        <div className="pt-2">
+                          <Link
+                            to={`/informations/${information.slug}`}
+                            className="block w-full text-center px-4 py-2 text-sm bg-[#2D60FF] text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            Baca Selengkapnya
+                          </Link>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div className="flex justify-center">
+                    <Button onClick={handleLoadMore}>Lihat Lebih Banyak</Button>
+                  </div>
+                )}
+
+                {displayedInformations.length > itemsPerPage && (
+                  <div className="text-center mt-6 text-sm text-gray-500">
+                    Menampilkan {displayedInformations.length} dari{" "}
+                    {filteredInformations.length} informasi
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

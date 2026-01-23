@@ -20,10 +20,11 @@ import {
 import { getFaculties } from "../../../services/facultyService";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
+import { SkeletonTable } from "../../../components/common/skeleton";
 
 const Departemen = () => {
   const [filteredDepartments, setFilteredDepartments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [fakultasOptions, setFakultasOptions] = useState(["Semua"]);
@@ -201,6 +202,32 @@ const Departemen = () => {
 
     setFilteredDepartments(filtered);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-40 animate-pulse"></div>
+          </div>
+
+          <div className="flex gap-4 mb-4">
+            <div className="flex-1 h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        <SkeletonTable rows={10} columns={5} />
+      </div>
+    );
+  }
 
   const departmentColumns = [
     createNumberColumn(),
