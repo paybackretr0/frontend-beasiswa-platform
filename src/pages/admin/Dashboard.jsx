@@ -51,6 +51,7 @@ const AdminDashboard = () => {
   const [govDistributionData, setGovDistributionData] = useState([]);
   const [govCategoriesData, setGovCategoriesData] = useState([]);
   const [govYearlyData, setGovYearlyData] = useState([]);
+  const [statusData, setStatusData] = useState([]);
 
   const { alerts, error, removeAlert } = useAlert();
 
@@ -61,7 +62,7 @@ const AdminDashboard = () => {
   const role = user?.role?.toUpperCase() || null;
 
   const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
-    role
+    role,
   );
 
   const canSeeAPBN = [
@@ -141,18 +142,33 @@ const AdminDashboard = () => {
           title: "Total Program",
           value: summary.totalProgram || 0,
         },
-        {
-          title: "Total Nominal (Rp)",
-          value: summary.totalNominal
-            ? `${(summary.totalNominal / 1000000).toFixed(1)}M`
-            : 0,
-        },
       ];
 
       setGovSummaryData(govSummary);
       setGovDistributionData(distribution || []);
       setGovCategoriesData(categories || []);
       setGovYearlyData(yearly || []);
+
+      if (summary.statusBreakdown) {
+        const statusDistribution = [
+          {
+            label: "Normal",
+            value: summary.statusBreakdown.normal || 0,
+            color: "#22c55e",
+          },
+          {
+            label: "Warning",
+            value: summary.statusBreakdown.warning || 0,
+            color: "#f59e0b",
+          },
+          {
+            label: "Revoked",
+            value: summary.statusBreakdown.revoked || 0,
+            color: "#ef4444",
+          },
+        ];
+        setStatusData(statusDistribution);
+      }
     } catch (err) {
       throw err;
     }
@@ -216,7 +232,7 @@ const AdminDashboard = () => {
 
       const mergedGenderData = defaultGenderData.map((defaultItem) => {
         const existingItem = gender.find(
-          (item) => item.label === defaultItem.label
+          (item) => item.label === defaultItem.label,
         );
         return existingItem || defaultItem;
       });
@@ -325,17 +341,21 @@ const AdminDashboard = () => {
                   isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
                 }`
               : scholarshipType === "NON-APBN"
-              ? `Beasiswa Non-APBN ${
-                  isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
-                }`
-              : "Beasiswa Pemerintah (APBN)"}
+                ? `Beasiswa Non-APBN ${
+                    isFacultyRole
+                      ? `(Fakultas ${user?.faculty?.name || ""})`
+                      : ""
+                  }`
+                : "Beasiswa Pemerintah (APBN)"}
             {" • "}
             {selectedYear === "all" ? "Semua Tahun" : `Tahun ${selectedYear}`}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div
+        className={`grid ${scholarshipType === "NON-APBN" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-3"} gap-6`}
+      >
         {(scholarshipType === "NON-APBN" ? summaryData : govSummaryData).map(
           (item, idx) => (
             <Card key={idx}>
@@ -346,7 +366,7 @@ const AdminDashboard = () => {
                 </span>
               </div>
             </Card>
-          )
+          ),
         )}
       </div>
 
@@ -536,22 +556,44 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {chartsLoading ? (
-              <Card
-                title="Tren Penerima Tahun ke Tahun"
-                description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
-              >
-                <div className="flex justify-center items-center py-12">
-                  <Spin size="large" />
-                </div>
-              </Card>
+              <>
+                <Card
+                  title="Tren Penerima Tahun ke Tahun"
+                  description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+                <Card
+                  title="Status Akademik"
+                  description="Distribusi status akademik penerima"
+                >
+                  <div className="flex justify-center items-center py-12">
+                    <Spin size="large" />
+                  </div>
+                </Card>
+              </>
             ) : (
-              <LineChart
-                data={govYearlyData}
-                title="Tren Penerima Tahun ke Tahun"
-                description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
-              />
+              <>
+                <div className="flex flex-col h-full">
+                  <LineChart
+                    data={govYearlyData}
+                    title="Tren Penerima Tahun ke Tahun"
+                    description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
+                  />
+                </div>
+
+                <div className="flex flex-col h-full">
+                  <PieChart
+                    data={statusData}
+                    title="Status Akademik Penerima"
+                    description="Distribusi berdasarkan status akademik mahasiswa"
+                  />
+                </div>
+              </>
             )}
           </div>
         </>

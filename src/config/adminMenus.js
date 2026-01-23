@@ -8,6 +8,7 @@ import {
   MdMenuBook,
   MdMoreHoriz,
   MdInfo,
+  MdOutlineLocationCity,
 } from "react-icons/md";
 
 export const ADMIN_MENUS = [
@@ -33,6 +34,13 @@ export const ADMIN_MENUS = [
   },
 
   { key: "report", label: "Pelaporan", to: "/admin/report", icon: MdBarChart },
+
+  {
+    key: "government",
+    label: "Beasiswa APBN",
+    to: "/admin/government-scholarship",
+    icon: MdOutlineLocationCity,
+  },
 
   {
     key: "infoScholarship",
