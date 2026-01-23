@@ -151,7 +151,7 @@ export const verifyResetCode = async (data) => {
 
   if (!res.ok) {
     throw new Error(
-      response.message || "Kode reset salah atau sudah kadaluarsa"
+      response.message || "Kode reset salah atau sudah kadaluarsa",
     );
   }
 

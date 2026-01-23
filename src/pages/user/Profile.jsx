@@ -281,7 +281,6 @@ const Profile = () => {
       <GuestLayout>
         <div className="min-h-screen py-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header Section */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-800 text-center">
                 Profil Saya
@@ -289,9 +288,7 @@ const Profile = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left Sidebar */}
               <div className="lg:col-span-4 space-y-6">
-                {/* Profile Card */}
                 <Card className="text-center">
                   <div className="relative">
                     <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -310,7 +307,6 @@ const Profile = () => {
                   </div>
                 </Card>
 
-                {/* Quick Info Card */}
                 <Card>
                   <h3 className="font-semibold text-gray-800 mb-4">
                     Informasi Kontak
@@ -363,9 +359,7 @@ const Profile = () => {
                 </Card>
               </div>
 
-              {/* Main Content */}
               <div className="lg:col-span-8">
-                {/* Info Notice Card */}
                 <Card className="mb-6 bg-blue-50 border-blue-200">
                   <div className="flex items-start gap-3">
                     <InfoCircleOutlined className="text-blue-600 mt-1 flex-shrink-0" />
@@ -414,7 +408,6 @@ const Profile = () => {
 
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Nama Lengkap */}
                       <div className="md:col-span-2">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Nama Lengkap
@@ -429,7 +422,6 @@ const Profile = () => {
                         />
                       </div>
 
-                      {/* Email */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Email Unand
@@ -444,7 +436,6 @@ const Profile = () => {
                         />
                       </div>
 
-                      {/* NIM */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           NIM
@@ -459,7 +450,6 @@ const Profile = () => {
                         />
                       </div>
 
-                      {/* Tempat Lahir */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Tempat Lahir
@@ -474,7 +464,6 @@ const Profile = () => {
                         />
                       </div>
 
-                      {/* Tanggal Lahir */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Tanggal Lahir
@@ -488,7 +477,6 @@ const Profile = () => {
                         />
                       </div>
 
-                      {/* No. Telepon - Editable */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           No. Telepon ✏️
@@ -503,8 +491,8 @@ const Profile = () => {
                             !isEditing
                               ? "bg-gray-50 text-gray-600 border-gray-200"
                               : errors.phone_number
-                              ? "border-red-300 focus:ring-red-500"
-                              : "border-gray-300 hover:border-gray-400"
+                                ? "border-red-300 focus:ring-red-500"
+                                : "border-gray-300 hover:border-gray-400"
                           }`}
                           placeholder="Contoh: +62 812 3456 7890"
                         />
@@ -515,7 +503,6 @@ const Profile = () => {
                         )}
                       </div>
 
-                      {/* Jenis Kelamin - Editable */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Jenis Kelamin ✏️
@@ -538,7 +525,6 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {/* Fakultas, Departemen & Program Studi */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -583,7 +569,6 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
                     {isEditing && (
                       <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
                         <Button
@@ -614,7 +599,6 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Change Password Section */}
             <div className="mt-8 p-6 bg-white rounded-2xl border border-[#DFEAF2]">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">
                 Ubah Password
