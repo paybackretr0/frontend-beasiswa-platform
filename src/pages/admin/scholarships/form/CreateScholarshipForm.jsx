@@ -241,7 +241,7 @@ const CreateScholarshipForm = () => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const typeIcons = {
@@ -353,7 +353,7 @@ const CreateScholarshipForm = () => {
       }
       if (field.type === "SELECT" && field.options.length === 0) {
         message.error(
-          `Field dropdown "${field.label}" harus memiliki minimal satu opsi`
+          `Field dropdown "${field.label}" harus memiliki minimal satu opsi`,
         );
         return false;
       }
@@ -361,7 +361,7 @@ const CreateScholarshipForm = () => {
         for (let j = 0; j < field.options.length; j++) {
           if (!field.options[j].trim()) {
             message.error(
-              `Opsi ${j + 1} pada field "${field.label}" tidak boleh kosong`
+              `Opsi ${j + 1} pada field "${field.label}" tidak boleh kosong`,
             );
             return false;
           }

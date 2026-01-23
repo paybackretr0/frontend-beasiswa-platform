@@ -18,6 +18,7 @@ import {
   formatToWIB,
   isDeadlinePassed as checkDeadlinePassed,
 } from "../../utils/timezone";
+import { SkeletonHistory } from "../../components/common/skeleton";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -307,19 +308,6 @@ const History = () => {
     (item) => item.status === "DRAFT",
   ).length;
 
-  if (loading) {
-    return (
-      <GuestLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Memuat data riwayat pendaftaran...</p>
-          </div>
-        </div>
-      </GuestLayout>
-    );
-  }
-
   return (
     <>
       <AlertContainer
@@ -339,89 +327,96 @@ const History = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <Card className="text-center bg-white">
-                <div className="p-4">
-                  <div className="text-2xl font-bold text-blue-600 mb-1">
-                    {totalApplications}
-                  </div>
-                  <div className="text-xs text-gray-600 font-medium">
-                    Total Pendaftaran
-                  </div>
-                </div>
-              </Card>
+            {loading ? (
+              <SkeletonHistory />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                  <Card className="text-center bg-white">
+                    <div className="p-4">
+                      <div className="text-2xl font-bold text-blue-600 mb-1">
+                        {totalApplications}
+                      </div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        Total Pendaftaran
+                      </div>
+                    </div>
+                  </Card>
 
-              <Card className="text-center bg-white">
-                <div className="p-4">
-                  <div className="text-2xl font-bold text-green-600 mb-1">
-                    {validatedCount}
-                  </div>
-                  <div className="text-xs text-gray-600 font-medium">
-                    Divalidasi
-                  </div>
-                </div>
-              </Card>
+                  <Card className="text-center bg-white">
+                    <div className="p-4">
+                      <div className="text-2xl font-bold text-green-600 mb-1">
+                        {validatedCount}
+                      </div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        Divalidasi
+                      </div>
+                    </div>
+                  </Card>
 
-              <Card className="text-center bg-white">
-                <div className="p-4">
-                  <div className="text-2xl font-bold text-blue-500 mb-1">
-                    {inProgressCount}
-                  </div>
-                  <div className="text-xs text-gray-600 font-medium">
-                    Dalam Proses
-                  </div>
-                </div>
-              </Card>
+                  <Card className="text-center bg-white">
+                    <div className="p-4">
+                      <div className="text-2xl font-bold text-blue-500 mb-1">
+                        {inProgressCount}
+                      </div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        Dalam Proses
+                      </div>
+                    </div>
+                  </Card>
 
-              <Card className="text-center bg-white">
-                <div className="p-4">
-                  <div className="text-2xl font-bold text-orange-600 mb-1">
-                    {draftCount}
-                  </div>
-                  <div className="text-xs text-gray-600 font-medium">
-                    Draft Belum Selesai
-                  </div>
+                  <Card className="text-center bg-white">
+                    <div className="p-4">
+                      <div className="text-2xl font-bold text-orange-600 mb-1">
+                        {draftCount}
+                      </div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        Draft Belum Selesai
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-              </Card>
-            </div>
 
-            {draftCount > 0 && (
-              <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-center">
-                  <FormOutlined className="text-orange-600 mr-2 text-lg" />
-                  <div>
-                    <h4 className="font-semibold text-orange-800">
-                      Anda memiliki {draftCount} pendaftaran yang belum selesai
-                    </h4>
-                    <p className="text-orange-700 text-sm">
-                      Klik tombol "Lengkapi" pada tabel di bawah untuk
-                      melanjutkan pendaftaran yang tersimpan sebagai draft.
-                    </p>
+                {draftCount > 0 && (
+                  <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center">
+                      <FormOutlined className="text-orange-600 mr-2 text-lg" />
+                      <div>
+                        <h4 className="font-semibold text-orange-800">
+                          Anda memiliki {draftCount} pendaftaran yang belum
+                          selesai
+                        </h4>
+                        <p className="text-orange-700 text-sm">
+                          Klik tombol "Lengkapi" pada tabel di bawah untuk
+                          melanjutkan pendaftaran yang tersimpan sebagai draft.
+                        </p>
+                      </div>
+                    </div>
                   </div>
+                )}
+
+                <div className="bg-white rounded-lg shadow-sm">
+                  <UniversalTable
+                    title="Riwayat Pendaftaran Beasiswa"
+                    data={filteredData}
+                    columns={columns}
+                    searchFields={["beasiswa", "penyelenggara", "skema"]}
+                    searchPlaceholder="Cari nama beasiswa, skema, atau penyelenggara..."
+                    customFilters={customFilters}
+                    pageSize={10}
+                    scroll={{ x: 1400 }}
+                    loading={loading}
+                  />
+                  <ApplicationDetailModal
+                    visible={detailModalVisible}
+                    onClose={handleCloseDetailModal}
+                    applicationDetail={selectedApplication}
+                    loading={detailLoading}
+                    role={role}
+                  />
                 </div>
-              </div>
+              </>
             )}
-
-            <div className="bg-white rounded-lg shadow-sm">
-              <UniversalTable
-                title="Riwayat Pendaftaran Beasiswa"
-                data={filteredData}
-                columns={columns}
-                searchFields={["beasiswa", "penyelenggara", "skema"]}
-                searchPlaceholder="Cari nama beasiswa, skema, atau penyelenggara..."
-                customFilters={customFilters}
-                pageSize={10}
-                scroll={{ x: 1400 }}
-                loading={loading}
-              />
-              <ApplicationDetailModal
-                visible={detailModalVisible}
-                onClose={handleCloseDetailModal}
-                applicationDetail={selectedApplication}
-                loading={detailLoading}
-                role={role}
-              />
-            </div>
           </div>
         </div>
       </GuestLayout>

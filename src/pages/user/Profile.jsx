@@ -22,6 +22,7 @@ import {
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
+import { SkeletonProfile } from "../../components/common/skeleton";
 
 const ProfileWithVerification = () => {
   return (
@@ -260,14 +261,26 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <GuestLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-          <div className="text-center">
-            <LoadingOutlined className="text-4xl text-blue-600 mb-4" spin />
-            <p className="text-gray-600">Memuat profil...</p>
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <GuestLayout>
+          <div className="min-h-screen py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-800 text-center">
+                  Profil Saya
+                </h1>
+              </div>
+
+              <SkeletonProfile />
+            </div>
           </div>
-        </div>
-      </GuestLayout>
+        </GuestLayout>
+      </>
     );
   }
 

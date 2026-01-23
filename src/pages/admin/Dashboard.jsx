@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Spin, Select } from "antd";
+import { Select } from "antd";
 import Card from "../../components/Card";
 import {
   LineChart,
@@ -27,6 +27,7 @@ import {
 } from "../../services/governmentService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
+import { SkeletonDashboard } from "../../components/common/skeleton";
 
 const { Option } = Select;
 
@@ -275,9 +276,10 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
-      </div>
+      <SkeletonDashboard
+        type={scholarshipType}
+        cardCount={scholarshipType === "NON-APBN" ? 4 : 3}
+      />
     );
   }
 
@@ -380,8 +382,13 @@ const AdminDashboard = () => {
                     title="Performa Beasiswa"
                     description="Tingkat keberhasilan per beasiswa di fakultas Anda"
                   >
-                    <div className="flex justify-center items-center py-12">
-                      <Spin size="large" />
+                    <div className="animate-pulse space-y-3 py-4">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="h-8 bg-gray-200 rounded flex-1"></div>
+                          <div className="h-8 w-16 bg-gray-200 rounded"></div>
+                        </div>
+                      ))}
                     </div>
                   </Card>
                 ) : (
@@ -389,8 +396,13 @@ const AdminDashboard = () => {
                     title="Pendaftar Berdasarkan Fakultas"
                     description="Distribusi pendaftar beasiswa per fakultas"
                   >
-                    <div className="flex justify-center items-center py-12">
-                      <Spin size="large" />
+                    <div className="animate-pulse space-y-3 py-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="h-6 bg-gray-200 rounded flex-1"></div>
+                          <div className="h-6 w-12 bg-gray-200 rounded"></div>
+                        </div>
+                      ))}
                     </div>
                   </Card>
                 )}
@@ -398,8 +410,13 @@ const AdminDashboard = () => {
                   title="Pendaftar Berdasarkan Departemen"
                   description="Distribusi pendaftar beasiswa per departemen"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse space-y-3 py-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="h-6 bg-gray-200 rounded flex-1"></div>
+                        <div className="h-6 w-12 bg-gray-200 rounded"></div>
+                      </div>
+                    ))}
                   </div>
                 </Card>
               </>
@@ -438,16 +455,16 @@ const AdminDashboard = () => {
                   title="Pendaftar Tahun ke Tahun"
                   description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse py-4">
+                    <div className="h-64 bg-gray-200 rounded"></div>
                   </div>
                 </Card>
                 <Card
                   title="Pendaftar Berdasarkan Gender"
                   description="Distribusi pendaftar beasiswa berdasarkan gender"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse py-4 flex justify-center">
+                    <div className="h-64 w-64 bg-gray-200 rounded-full"></div>
                   </div>
                 </Card>
               </>
@@ -475,8 +492,10 @@ const AdminDashboard = () => {
                     title="Aktivitas Terbaru"
                     description="Aktivitas sistem dalam 24 jam terakhir"
                   >
-                    <div className="flex justify-center items-center py-12">
-                      <Spin size="large" />
+                    <div className="animate-pulse space-y-3 py-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                      ))}
                     </div>
                   </Card>
                 ) : (
@@ -484,8 +503,10 @@ const AdminDashboard = () => {
                     title="Pendaftaran Terbaru"
                     description="5 pendaftaran beasiswa terbaru"
                   >
-                    <div className="flex justify-center items-center py-12">
-                      <Spin size="large" />
+                    <div className="animate-pulse space-y-3 py-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                      ))}
                     </div>
                   </Card>
                 )}
@@ -493,8 +514,10 @@ const AdminDashboard = () => {
                   title="Status Pendaftaran"
                   description="Ringkasan status pendaftaran beasiswa"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse space-y-3 py-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                    ))}
                   </div>
                 </Card>
               </>
@@ -523,16 +546,21 @@ const AdminDashboard = () => {
                   title="Distribusi Berdasarkan Program Studi"
                   description="Distribusi penerima beasiswa APBN per program studi"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse space-y-3 py-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="h-6 bg-gray-200 rounded flex-1"></div>
+                        <div className="h-6 w-12 bg-gray-200 rounded"></div>
+                      </div>
+                    ))}
                   </div>
                 </Card>
                 <Card
                   title="Kategori Beasiswa"
                   description="Distribusi berdasarkan kategori beasiswa"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse py-4 flex justify-center">
+                    <div className="h-64 w-64 bg-gray-200 rounded-full"></div>
                   </div>
                 </Card>
               </>
@@ -563,16 +591,16 @@ const AdminDashboard = () => {
                   title="Tren Penerima Tahun ke Tahun"
                   description="Perbandingan penerima beasiswa APBN dari tahun ke tahun"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse py-4">
+                    <div className="h-64 bg-gray-200 rounded"></div>
                   </div>
                 </Card>
                 <Card
                   title="Status Akademik"
                   description="Distribusi status akademik penerima"
                 >
-                  <div className="flex justify-center items-center py-12">
-                    <Spin size="large" />
+                  <div className="animate-pulse py-4 flex justify-center">
+                    <div className="h-64 w-64 bg-gray-200 rounded-full"></div>
                   </div>
                 </Card>
               </>

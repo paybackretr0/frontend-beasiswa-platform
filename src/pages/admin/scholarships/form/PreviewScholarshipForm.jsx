@@ -12,7 +12,6 @@ import {
   Row,
   Col,
   Tag,
-  Spin,
   Empty,
 } from "antd";
 import {
@@ -28,6 +27,7 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import { getFormFields } from "../../../../services/formService";
+import { SkeletonFormBuilder } from "../../../../components/common/skeleton";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -115,11 +115,7 @@ const PreviewScholarshipForm = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
-      </div>
-    );
+    return <SkeletonFormBuilder fieldCount={5} />;
   }
 
   return (

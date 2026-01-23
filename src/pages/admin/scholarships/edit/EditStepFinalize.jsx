@@ -31,7 +31,7 @@ const EditStepFinalize = ({
           id: i + 1,
           text: typeof b === "string" ? b : b.benefit_text || "",
         }))
-      : [{ id: 1, text: "" }]
+      : [{ id: 1, text: "" }],
   );
 
   const { warning, alerts, removeAlert } = useAlert();
@@ -56,7 +56,7 @@ const EditStepFinalize = ({
             id: i + 1,
             text: typeof b === "string" ? b : b.benefit_text || "",
           }))
-        : [{ id: 1, text: "" }]
+        : [{ id: 1, text: "" }],
     );
   }, [initialData]);
 
@@ -84,7 +84,7 @@ const EditStepFinalize = ({
     if (!formData.start_date || !formData.end_date) {
       warning(
         "Data Belum Lengkap",
-        "Tanggal mulai dan selesai pendaftaran wajib diisi"
+        "Tanggal mulai dan selesai pendaftaran wajib diisi",
       );
       return;
     }
@@ -108,7 +108,7 @@ const EditStepFinalize = ({
     if (!phoneRegex.test(formData.contact_person_phone)) {
       warning(
         "Format Telepon Tidak Valid",
-        "Mohon masukkan nomor telepon yang valid"
+        "Mohon masukkan nomor telepon yang valid",
       );
       return;
     }
@@ -116,7 +116,7 @@ const EditStepFinalize = ({
     if (!formData.scholarship_value || !formData.duration_semesters) {
       warning(
         "Data Belum Lengkap",
-        "Nilai beasiswa dan durasi pemberian wajib diisi"
+        "Nilai beasiswa dan durasi pemberian wajib diisi",
       );
       return;
     }
@@ -134,7 +134,7 @@ const EditStepFinalize = ({
     if (isExternal && !formData.website_url) {
       warning(
         "Data Belum Lengkap",
-        "Website URL wajib diisi untuk beasiswa eksternal"
+        "Website URL wajib diisi untuk beasiswa eksternal",
       );
       return;
     }
@@ -143,7 +143,7 @@ const EditStepFinalize = ({
     if (validBenefits.length === 0) {
       warning(
         "Benefit Tidak Valid",
-        "Minimal harus ada 1 benefit/manfaat yang diisi"
+        "Minimal harus ada 1 benefit/manfaat yang diisi",
       );
       return;
     }

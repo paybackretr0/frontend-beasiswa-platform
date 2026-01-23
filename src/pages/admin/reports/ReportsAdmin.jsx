@@ -31,13 +31,18 @@ import { getApplicationDetail } from "../../../services/applicationService";
 import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
+import {
+  SkeletonCard,
+  SkeletonChart,
+  SkeletonTable,
+} from "../../../components/common/skeleton";
 
 const { Option } = Select;
 
 const currentYear = new Date().getFullYear();
 const years = Array.from(
   { length: currentYear - 2025 + 1 },
-  (_, i) => 2025 + i
+  (_, i) => 2025 + i,
 );
 
 const ReportsAdmin = () => {
@@ -92,7 +97,7 @@ const ReportsAdmin = () => {
   const role = user?.role?.toUpperCase() || null;
 
   const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
-    role
+    role,
   );
 
   useEffect(() => {
@@ -228,9 +233,8 @@ const ReportsAdmin = () => {
             getMonthlyTrend(selectedYear),
           ];
 
-      const [fakultas, departemen, tahun, gender, monthly] = await Promise.all(
-        chartPromises
-      );
+      const [fakultas, departemen, tahun, gender, monthly] =
+        await Promise.all(chartPromises);
 
       setFakultasData(fakultas || []);
       setDepartemenData(departemen || []);
@@ -470,8 +474,91 @@ const ReportsAdmin = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
+      <div className="space-y-6">
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+
+        <div className="flex justify-between items-center">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-56 animate-pulse mb-2"></div>
+            {isFacultyRole && (
+              <div className="h-4 bg-gray-200 rounded w-40 animate-pulse"></div>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-36 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-40 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, idx) => (
+            <SkeletonCard key={idx} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, idx) => (
+            <SkeletonCard key={idx} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SkeletonChart
+            type="line"
+            title="Tren Bulanan"
+            description="Memuat data..."
+          />
+          <SkeletonChart
+            type="line"
+            title="Pendaftar Tahun ke Tahun"
+            description="Memuat data..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SkeletonChart
+            type="horizontal-bar"
+            title="Performa Beasiswa"
+            description="Memuat data..."
+          />
+          <SkeletonChart
+            type="horizontal-bar"
+            title="Fakultas/Departemen Terbaik"
+            description="Memuat data..."
+          />
+        </div>
+
+        {!isFacultyRole && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <SkeletonChart
+              type="horizontal-bar"
+              title="Pendaftar Berdasarkan Fakultas"
+              description="Memuat data..."
+            />
+            <SkeletonChart
+              type="horizontal-bar"
+              title="Pendaftar Berdasarkan Departemen"
+              description="Memuat data..."
+            />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-6">
+          <SkeletonChart
+            type="pie"
+            title="Pendaftar Berdasarkan Gender"
+            description="Memuat data..."
+          />
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="h-6 bg-gray-200 rounded w-48 animate-pulse mb-4"></div>
+          <SkeletonTable rows={8} columns={8} />
+        </div>
       </div>
     );
   }
@@ -549,22 +636,16 @@ const ReportsAdmin = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
-            <Card
+            <SkeletonChart
+              type="line"
               title="Tren Bulanan"
               description="Pendaftar per bulan tahun ini"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-            <Card
+            />
+            <SkeletonChart
+              type="line"
               title="Pendaftar Tahun ke Tahun"
               description="Perbandingan pendaftar beasiswa dari tahun ke tahun"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
+            />
           </>
         ) : (
           <>
@@ -585,15 +666,13 @@ const ReportsAdmin = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
-            <Card
+            <SkeletonChart
+              type="horizontal-bar"
               title="Performa Beasiswa"
               description="Tingkat penerimaan per beasiswa"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
-            <Card
+            />
+            <SkeletonChart
+              type="horizontal-bar"
               title={
                 isFacultyRole ? "Performa per Departemen" : "Fakultas Terbaik"
               }
@@ -602,11 +681,7 @@ const ReportsAdmin = () => {
                   ? "Tingkat keberhasilan per departemen"
                   : "Fakultas dengan tingkat keberhasilan tertinggi"
               }
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
+            />
           </>
         ) : (
           <>
@@ -636,70 +711,63 @@ const ReportsAdmin = () => {
         )}
       </div>
 
-      <div
-        className={`grid grid-cols-1 ${
-          !isFacultyRole ? "md:grid-cols-2" : ""
-        } gap-6`}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartsLoading ? (
           <>
             {!isFacultyRole && (
-              <Card
-                title="Pendaftar Berdasarkan Fakultas"
-                description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
-              >
-                <div className="flex justify-center items-center py-12">
-                  <Spin size="large" />
-                </div>
-              </Card>
+              <>
+                <SkeletonChart
+                  type="horizontal-bar"
+                  title="Pendaftar Berdasarkan Fakultas"
+                  description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
+                />
+                <SkeletonChart
+                  type="horizontal-bar"
+                  title="Pendaftar Berdasarkan Departemen"
+                  description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
+                />
+              </>
             )}
-            {!isFacultyRole && (
-              <Card
-                title="Pendaftar Berdasarkan Departemen"
-                description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
-              >
-                <div className="flex justify-center items-center py-12">
-                  <Spin size="large" />
-                </div>
-              </Card>
-            )}
-            <Card
-              title="Pendaftar Berdasarkan Gender"
-              description="Distribusi pendaftar beasiswa berdasarkan gender"
-            >
-              <div className="flex justify-center items-center py-12">
-                <Spin size="large" />
-              </div>
-            </Card>
           </>
         ) : (
           <>
             {!isFacultyRole && (
-              <div className="flex flex-col h-full">
-                <HorizontalBarChart
-                  data={fakultasData}
-                  title="Pendaftar Berdasarkan Fakultas"
-                  description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
-                />
-              </div>
+              <>
+                <div className="flex flex-col h-full">
+                  <HorizontalBarChart
+                    data={fakultasData}
+                    title="Pendaftar Berdasarkan Fakultas"
+                    description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
+                  />
+                </div>
+                <div className="flex flex-col h-full">
+                  <HorizontalBarChart
+                    data={departemenData}
+                    title="Pendaftar Berdasarkan Departemen"
+                    description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
+                  />
+                </div>
+              </>
             )}
-            {!isFacultyRole && (
-              <div className="flex flex-col h-full">
-                <HorizontalBarChart
-                  data={departemenData}
-                  title="Pendaftar Berdasarkan Departemen"
-                  description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
-                />
-              </div>
-            )}
-            <div className="flex flex-col h-full">
-              <PieChart
-                data={genderData}
-                title="Pendaftar Berdasarkan Gender"
-                description="Distribusi pendaftar beasiswa berdasarkan gender"
-              />
-            </div>
           </>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        {chartsLoading ? (
+          <SkeletonChart
+            type="pie"
+            title="Pendaftar Berdasarkan Gender"
+            description="Distribusi pendaftar beasiswa berdasarkan gender"
+          />
+        ) : (
+          <div className="flex flex-col h-full">
+            <PieChart
+              data={genderData}
+              title="Pendaftar Berdasarkan Gender"
+              description="Distribusi pendaftar beasiswa berdasarkan gender"
+            />
+          </div>
         )}
       </div>
 

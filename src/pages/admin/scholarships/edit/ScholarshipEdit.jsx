@@ -9,6 +9,7 @@ import {
 } from "../../../../services/scholarshipService";
 import useAlert from "../../../../hooks/useAlert";
 import AlertContainer from "../../../../components/AlertContainer";
+import { SkeletonScholarshipEdit } from "../../../../components/common/skeleton";
 
 const ScholarshipEdit = () => {
   const { id } = useParams();
@@ -154,12 +155,14 @@ const ScholarshipEdit = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat data beasiswa...</p>
-        </div>
-      </div>
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <SkeletonScholarshipEdit step={currentStep} />
+      </>
     );
   }
 

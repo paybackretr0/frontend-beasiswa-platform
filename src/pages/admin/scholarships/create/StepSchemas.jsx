@@ -30,7 +30,7 @@ const StepSchemas = ({ onNext, onBack, initialData = {} }) => {
     if (schemas.length === 1) {
       warning(
         "Tidak Dapat Dihapus",
-        "Minimal harus ada 1 skema untuk beasiswa ini"
+        "Minimal harus ada 1 skema untuk beasiswa ini",
       );
       return;
     }
@@ -56,7 +56,7 @@ const StepSchemas = ({ onNext, onBack, initialData = {} }) => {
     if (schemas.length === 0) {
       warning(
         "Skema Belum Ada",
-        "Mohon tambahkan minimal 1 skema beasiswa sebelum melanjutkan"
+        "Mohon tambahkan minimal 1 skema beasiswa sebelum melanjutkan",
       );
       return;
     }
@@ -66,13 +66,13 @@ const StepSchemas = ({ onNext, onBack, initialData = {} }) => {
         !schema.name ||
         !schema.semester_minimum ||
         schema.stages?.length === 0 ||
-        schema.documents?.length === 0
+        schema.documents?.length === 0,
     );
 
     if (invalidSchema) {
       warning(
         "Skema Tidak Lengkap",
-        "Setiap skema harus memiliki nama, semester minimum, tahapan, dan dokumen"
+        "Setiap skema harus memiliki nama, semester minimum, tahapan, dan dokumen",
       );
       return;
     }

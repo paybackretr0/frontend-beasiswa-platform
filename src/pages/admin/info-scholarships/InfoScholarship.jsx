@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Spin,
-  Input,
-  Button,
-  Tabs,
-  Tag,
-  Collapse,
-  Modal as AntModal,
-} from "antd";
+import { Input, Button, Tabs, Tag, Collapse, Modal as AntModal } from "antd";
 import {
   MdSearch,
   MdShare,
@@ -15,7 +7,6 @@ import {
   MdAttachMoney,
   MdSchool,
   MdCheckCircle,
-  MdInfo,
 } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
 import {
@@ -29,6 +20,7 @@ import Card from "../../../components/Card";
 import { fetchActiveScholarshipsForInfo } from "../../../services/scholarshipService";
 import useAlert from "../../../hooks/useAlert";
 import AlertContainer from "../../../components/AlertContainer";
+import { SkeletonInfoScholarship } from "../../../components/common/skeleton";
 
 const InfoScholarship = () => {
   const [loading, setLoading] = useState(true);
@@ -57,8 +49,8 @@ const InfoScholarship = () => {
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
           scholarship.schemas?.some((schema) =>
-            schema.name.toLowerCase().includes(searchQuery.toLowerCase())
-          )
+            schema.name.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
       );
       setFilteredScholarships(filtered);
     }
@@ -125,7 +117,7 @@ const InfoScholarship = () => {
 
     const scholarshipValue = scholarship.scholarship_value
       ? `Rp ${parseFloat(scholarship.scholarship_value).toLocaleString(
-          "id-ID"
+          "id-ID",
         )}`
       : "Tidak disebutkan";
 
@@ -214,7 +206,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   const getShareTemplate = () => {
     if (!selectedScholarship || !selectedSchemaId) return "";
     const schema = selectedScholarship.schemas.find(
-      (s) => s.id === selectedSchemaId
+      (s) => s.id === selectedSchemaId,
     );
     if (!schema) return "";
     return generateShareTemplate(selectedScholarship, schema);
@@ -258,9 +250,14 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
-      </div>
+      <>
+        <AlertContainer
+          alerts={alerts}
+          removeAlert={removeAlert}
+          position="top-right"
+        />
+        <SkeletonInfoScholarship items={4} />
+      </>
     );
   }
 
@@ -292,7 +289,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
             <span className="text-sm font-medium text-green-700">
               {filteredScholarships.reduce(
                 (sum, s) => sum + (s.total_schemas || 0),
-                0
+                0,
               )}{" "}
               Skema
             </span>
@@ -444,7 +441,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                                                 req.requirement_file,
                                                 `Persyaratan_${schema.name}_${
                                                   i + 1
-                                                }.pdf`
+                                                }.pdf`,
                                               )
                                             }
                                             className="p-0 h-auto text-blue-600 hover:text-blue-800"
@@ -483,7 +480,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                                       onClick={() =>
                                         handleDownloadFile(
                                           doc.template_file,
-                                          `Template_${doc.document_name}.pdf`
+                                          `Template_${doc.document_name}.pdf`,
                                         )
                                       }
                                       className="p-0 h-auto text-blue-600 hover:text-blue-800"
@@ -536,9 +533,9 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                     getDaysRemaining(scholarship.end_date).includes("hari")
                       ? "bg-yellow-100 text-yellow-800"
                       : getDaysRemaining(scholarship.end_date) === "Besok" ||
-                        getDaysRemaining(scholarship.end_date) === "Hari ini"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-gray-100 text-gray-800"
+                          getDaysRemaining(scholarship.end_date) === "Hari ini"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-800"
                   }`}
                 >
                   {getDaysRemaining(scholarship.end_date)}

@@ -18,10 +18,11 @@ import {
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 import { useNavigate } from "react-router-dom";
+import { SkeletonTable } from "../../../components/common/skeleton";
 
 const ScholarshipAdmin = () => {
   const [scholarships, setScholarships] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const { alerts, success, error, removeAlert } = useAlert();
@@ -65,7 +66,7 @@ const ScholarshipAdmin = () => {
       console.error("Error fetching scholarships:", err);
       error(
         "Gagal Memuat Data",
-        err.message || "Gagal mengambil data beasiswa"
+        err.message || "Gagal mengambil data beasiswa",
       );
     } finally {
       setLoading(false);
@@ -81,7 +82,7 @@ const ScholarshipAdmin = () => {
       console.error("Error activating scholarship:", err);
       error(
         "Gagal Mengaktifkan Beasiswa",
-        err.message || "Gagal mengaktifkan beasiswa"
+        err.message || "Gagal mengaktifkan beasiswa",
       );
     }
   };
@@ -95,7 +96,7 @@ const ScholarshipAdmin = () => {
       console.error("Error deactivating scholarship:", err);
       error(
         "Gagal Menonaktifkan Beasiswa",
-        err.message || "Gagal menonaktifkan beasiswa"
+        err.message || "Gagal menonaktifkan beasiswa",
       );
     }
   };
@@ -162,7 +163,7 @@ const ScholarshipAdmin = () => {
         Nonaktif: { color: "red" },
         "Segera Berakhir": { color: "orange" },
       },
-      "12%"
+      "12%",
     ),
     {
       title: "Batas Waktu",
@@ -203,9 +204,35 @@ const ScholarshipAdmin = () => {
           hidden: (record) => record.status === "Nonaktif",
         },
       ],
-      "15%"
+      "15%",
     ),
   ];
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-40 animate-pulse"></div>
+          </div>
+
+          <div className="flex gap-4 mb-4">
+            <div className="flex-1 h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        <SkeletonTable rows={10} columns={8} />
+      </div>
+    );
+  }
 
   return (
     <>

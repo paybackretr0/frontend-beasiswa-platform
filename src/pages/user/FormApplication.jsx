@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Input,
-  Select,
-  DatePicker,
-  Upload,
-  Spin,
-  Alert,
-  Button,
-  Modal,
-} from "antd";
+import { Input, Select, DatePicker, Upload, Alert, Button, Modal } from "antd";
 import {
   UploadOutlined,
   SaveOutlined,
@@ -30,6 +21,7 @@ import { getApplicationDetailUser } from "../../services/applicationService";
 import AlertContainer from "../../components/AlertContainer";
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
+import { SkeletonFormApplication } from "../../components/common/skeleton";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -484,13 +476,16 @@ const FormApplication = () => {
 
   if (loading) {
     return (
-      <GuestLayout>
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="flex justify-center items-center min-h-96">
-            <Spin size="large" tip="Memuat form pendaftaran..." />
-          </div>
-        </div>
-      </GuestLayout>
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <GuestLayout>
+          <SkeletonFormApplication fieldCount={5} />
+        </GuestLayout>
+      </>
     );
   }
 

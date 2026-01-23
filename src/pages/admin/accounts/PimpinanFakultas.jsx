@@ -20,10 +20,11 @@ import {
   activateUser,
 } from "../../../services/userService";
 import { getFaculties } from "../../../services/facultyService";
+import { SkeletonAccount } from "../../../components/common/skeleton";
 
 const PimpinanFakultas = () => {
   const [pimpinanFakultasData, setPimpinanFakultasData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [faculties, setFaculties] = useState([]);
@@ -226,6 +227,19 @@ const PimpinanFakultas = () => {
       },
     ]),
   ];
+
+  if (loading) {
+    return (
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <SkeletonAccount />
+      </>
+    );
+  }
 
   return (
     <>

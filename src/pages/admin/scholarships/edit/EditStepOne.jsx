@@ -20,7 +20,7 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
 
   const [logoFile, setLogoFile] = useState(null);
   const [existingLogo, setExistingLogo] = useState(
-    initialData.existingLogo || null
+    initialData.existingLogo || null,
   );
 
   const { warning, alerts, removeAlert } = useAlert();
@@ -56,7 +56,7 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
       if (!allowedTypes.includes(file.type)) {
         warning(
           "Peringatan!",
-          "Format file tidak didukung. Gunakan PNG, JPG, atau JPEG."
+          "Format file tidak didukung. Gunakan PNG, JPG, atau JPEG.",
         );
         e.target.value = "";
         return;

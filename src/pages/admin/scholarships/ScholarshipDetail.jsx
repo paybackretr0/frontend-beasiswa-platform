@@ -6,7 +6,7 @@ import {
   deactivateSchema,
 } from "../../../services/scholarshipService";
 import { checkScholarshipForm } from "../../../services/formService";
-import { Spin, Divider, Tag, Timeline, Collapse, Empty } from "antd";
+import { Divider, Tag, Timeline, Collapse, Empty } from "antd";
 import {
   EditOutlined,
   UserOutlined,
@@ -25,6 +25,7 @@ import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
+import { SkeletonDetailScholarship } from "../../../components/common/skeleton";
 
 const { Panel } = Collapse;
 
@@ -84,7 +85,7 @@ const ScholarshipDetail = () => {
       console.error("Error checking form status:", err);
       error(
         "Gagal Memeriksa Status Form",
-        err.message || "Gagal memeriksa status form"
+        err.message || "Gagal memeriksa status form",
       );
     }
   };
@@ -95,7 +96,7 @@ const ScholarshipDetail = () => {
       schemas: prev.schemas.map((schema) =>
         schema.id === schemaId
           ? { ...schema, is_active: !currentStatus }
-          : schema
+          : schema,
       ),
     }));
 
@@ -119,13 +120,13 @@ const ScholarshipDetail = () => {
         schemas: prev.schemas.map((schema) =>
           schema.id === schemaId
             ? { ...schema, is_active: currentStatus }
-            : schema
+            : schema,
         ),
       }));
 
       error(
         "Gagal Mengubah Status",
-        err.message || "Gagal mengubah status schema"
+        err.message || "Gagal mengubah status schema",
       );
     }
   };
@@ -139,22 +140,50 @@ const ScholarshipDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
-      </div>
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                className="text-gray-600 hover:text-blue-500 cursor-pointer"
+                onClick={() => navigate("/admin/scholarship")}
+              >
+                <ArrowLeftOutlined />
+              </button>
+              <h1 className="text-2xl font-bold text-gray-800">
+                Detail Beasiswa
+              </h1>
+            </div>
+          </div>
+
+          <SkeletonDetailScholarship isAdminView={true} />
+        </div>
+      </>
     );
   }
 
   if (!scholarship) {
     return (
-      <div className="text-center py-12">
-        <div className="text-gray-500 text-lg mb-4">
-          Beasiswa tidak ditemukan
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <div className="text-center py-12">
+          <div className="text-gray-500 text-lg mb-4">
+            Beasiswa tidak ditemukan
+          </div>
+          <Button onClick={() => navigate("/admin/scholarship")}>
+            Kembali ke Daftar Beasiswa
+          </Button>
         </div>
-        <Button onClick={() => navigate("/admin/scholarship")}>
-          Kembali ke Daftar Beasiswa
-        </Button>
-      </div>
+      </>
     );
   }
 
@@ -225,8 +254,8 @@ const ScholarshipDetail = () => {
                         {scholarship.verification_level === "DITMAWA"
                           ? "Verifikasi dari Ditmawa"
                           : scholarship.verification_level === "FACULTY"
-                          ? "Verifikasi dari Fakultas"
-                          : scholarship.verification_level}
+                            ? "Verifikasi dari Fakultas"
+                            : scholarship.verification_level}
                       </Tag>
                     </div>
                     <p className="text-gray-700 leading-relaxed break-words whitespace-pre-wrap">
@@ -294,7 +323,7 @@ const ScholarshipDetail = () => {
                                   handleSchemaToggle(
                                     schema.id,
                                     schema.is_active,
-                                    schema.name
+                                    schema.name,
                                   )
                                 }
                                 className={

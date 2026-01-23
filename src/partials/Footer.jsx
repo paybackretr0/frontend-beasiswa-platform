@@ -22,6 +22,7 @@ const Footer = () => {
               <a
                 href="https://www.instagram.com/ditmawaunand/"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
               >
                 <FaInstagram className="text-sm" />
@@ -56,22 +57,6 @@ const Footer = () => {
                   Berita & Artikel
                 </button>
               </li>
-              <li>
-                <button
-                  onClick={() => navigate("/contact")}
-                  className="text-blue-100 hover:text-white transition-colors cursor-pointer"
-                >
-                  Panduan
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/contact")}
-                  className="text-blue-100 hover:text-white transition-colors cursor-pointer"
-                >
-                  Kontak
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -91,7 +76,7 @@ const Footer = () => {
               <div className="flex items-center gap-3">
                 <MdEmail className="text-blue-200 flex-shrink-0" />
                 <span className="text-blue-100 text-sm">
-                  beasiswa@unand.ac.id
+                  kemahasiswaan@unand.ac.id
                 </span>
               </div>
             </div>
@@ -99,10 +84,21 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-white/20 mt-8 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3">
             <p className="text-blue-100 text-sm">
               &copy; {new Date().getFullYear()} BeasiswaApp - Universitas
               Andalas. All rights reserved.
+            </p>
+            <p className="text-blue-100 text-sm">
+              Developed by{" "}
+              <a
+                href="https://www.neotelemetri.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white hover:text-blue-200 font-semibold underline decoration-dotted underline-offset-4 transition-colors"
+              >
+                Neo Telemetri
+              </a>
             </p>
           </div>
         </div>

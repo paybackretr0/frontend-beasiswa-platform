@@ -53,7 +53,7 @@ const ScholarshipAdd = () => {
       await createScholarship(finalData);
       success(
         "Berhasil!",
-        `Beasiswa "${finalData.name}" dengan ${finalData.schemas.length} schema telah berhasil ditambahkan.`
+        `Beasiswa "${finalData.name}" dengan ${finalData.schemas.length} schema telah berhasil ditambahkan.`,
       );
 
       setTimeout(() => {

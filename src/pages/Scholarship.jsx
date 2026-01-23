@@ -12,6 +12,7 @@ import Button from "../components/Button";
 import { fetchActiveScholarships } from "../services/scholarshipService";
 import { Link } from "react-router-dom";
 import EmptyInformation from "../assets/empty-state-news.svg";
+import { SkeletonScholarshipCard } from "../components/common/skeleton";
 
 const Scholarship = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -126,12 +127,15 @@ const Scholarship = () => {
     return (
       <GuestLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-          <div className="flex justify-center items-center min-h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Memuat daftar beasiswa...</p>
-            </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+            Daftar Beasiswa
+          </h1>
+
+          <div className="text-center mb-10">
+            <div className="h-5 bg-gray-200 rounded w-64 mx-auto animate-pulse"></div>
           </div>
+
+          <SkeletonScholarshipCard items={9} />
         </div>
       </GuestLayout>
     );
@@ -219,12 +223,10 @@ const Scholarship = () => {
               subtitle={`${scholarship.organizer} • ${scholarship.year}`}
             >
               <div className="mt-4 space-y-3">
-                {/* Status Tags */}
                 <div className="flex flex-wrap gap-2">
                   {getStatusTag(scholarship.is_active, scholarship.end_date)}
                 </div>
 
-                {/* Schema Info */}
                 {scholarship.total_schemas > 0 && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <div className="text-xs text-blue-700 space-y-1">
@@ -256,7 +258,6 @@ const Scholarship = () => {
                   </div>
                 )}
 
-                {/* Main Info */}
                 <div className="text-sm text-gray-600 space-y-1">
                   <div className="flex justify-between">
                     <span>Nilai:</span>
@@ -304,7 +305,6 @@ const Scholarship = () => {
                   </Tooltip>
                 )}
 
-                {/* CTA Button */}
                 <div className="pt-2">
                   <Link
                     to={`/scholarship/${scholarship.id}`}

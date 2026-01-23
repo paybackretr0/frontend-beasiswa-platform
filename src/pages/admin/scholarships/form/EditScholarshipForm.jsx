@@ -12,7 +12,6 @@ import {
   Row,
   Col,
   Tag,
-  Spin,
 } from "antd";
 import {
   PlusOutlined,
@@ -52,6 +51,7 @@ import {
 } from "../../../../services/formService";
 import AlertContainer from "../../../../components/AlertContainer";
 import useAlert from "../../../../hooks/useAlert";
+import { SkeletonFormBuilder } from "../../../../components/common/skeleton";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -240,7 +240,7 @@ const EditScholarshipForm = () => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const typeIcons = {
@@ -283,7 +283,7 @@ const EditScholarshipForm = () => {
                 is_required: true,
                 options: [],
               },
-            ]
+            ],
       );
     } catch (err) {
       console.error("Error fetching form fields:", err);
@@ -373,7 +373,7 @@ const EditScholarshipForm = () => {
       if (field.type === "SELECT" && field.options.length === 0) {
         warning(
           "Peringatan!",
-          `Field dropdown "${field.label}" harus memiliki minimal satu opsi`
+          `Field dropdown "${field.label}" harus memiliki minimal satu opsi`,
         );
         return false;
       }
@@ -382,7 +382,7 @@ const EditScholarshipForm = () => {
           if (!field.options[j].trim()) {
             warning(
               "Peringatan!",
-              `Opsi ${j + 1} pada field "${field.label}" tidak boleh kosong`
+              `Opsi ${j + 1} pada field "${field.label}" tidak boleh kosong`,
             );
             return false;
           }
@@ -433,9 +433,14 @@ const EditScholarshipForm = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <Spin size="large" />
-      </div>
+      <>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
+        <SkeletonFormBuilder fieldCount={3} />
+      </>
     );
   }
 

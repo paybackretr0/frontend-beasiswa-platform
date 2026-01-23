@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import {
-  Empty,
-  Spin,
-  Tag,
-  Timeline,
-  Divider,
-  Tabs,
-  Card as AntCard,
-} from "antd";
+import { Empty, Tag, Timeline, Divider, Tabs, Card as AntCard } from "antd";
 import {
   HomeOutlined,
   ReloadOutlined,
@@ -36,6 +28,7 @@ import {
 } from "../services/scholarshipService";
 import useAlert from "../hooks/useAlert";
 import AlertContainer from "../components/AlertContainer";
+import { SkeletonDetailScholarship } from "../components/common/skeleton";
 
 const DetailScholarship = () => {
   const { id } = useParams();
@@ -426,13 +419,7 @@ const DetailScholarship = () => {
           setAlert={setAlert}
           position="top-right"
         />
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-          <div className="flex justify-center items-center min-h-96">
-            <Spin size="large" tip="Memuat detail beasiswa...">
-              <div className="p-12" />
-            </Spin>
-          </div>
-        </div>
+        <SkeletonDetailScholarship />
       </GuestLayout>
     );
   }
@@ -709,7 +696,7 @@ const DetailScholarship = () => {
                             </p>
                             <div className="text-xs font-semibold text-green-600">
                               {formatCurrency(
-                                otherScholarship.scholarship_value
+                                otherScholarship.scholarship_value,
                               )}
                             </div>
                           </div>
