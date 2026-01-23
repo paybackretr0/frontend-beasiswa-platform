@@ -58,7 +58,7 @@ const BackupAdmin = () => {
       clearAlerts();
       error(
         "Gagal Membuat Backup",
-        err.message || `Gagal membuat backup ${backupTypeText}`
+        err.message || `Gagal membuat backup ${backupTypeText}`,
       );
     } finally {
       setIsCreatingBackup(false);
@@ -239,17 +239,17 @@ const BackupAdmin = () => {
             label: "Jenis Backup",
             type: "select",
             options: [
-              {
-                label: (
-                  <div className="flex items-center gap-2">
-                    <DatabaseOutlined />
-                    <span>
-                      SQL Database - File .sql lengkap dengan struktur
-                    </span>
-                  </div>
-                ),
-                value: "sql",
-              },
+              // {
+              //   label: (
+              //     <div className="flex items-center gap-2">
+              //       <DatabaseOutlined />
+              //       <span>
+              //         SQL Database - File .sql lengkap dengan struktur
+              //       </span>
+              //     </div>
+              //   ),
+              //   value: "sql",
+              // },
               {
                 label: (
                   <div className="flex items-center gap-2">
