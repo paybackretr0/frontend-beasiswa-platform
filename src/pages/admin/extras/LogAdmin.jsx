@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { message, Pagination, Select, Input, DatePicker } from "antd";
+import { Pagination, Select, Input, DatePicker } from "antd";
 import {
   DownloadOutlined,
   FileTextOutlined,
@@ -20,7 +20,9 @@ const { RangePicker } = DatePicker;
 const roleOptions = [
   { label: "Semua Role", value: "Semua" },
   { label: "Mahasiswa", value: "MAHASISWA" },
-  { label: "Verifikator", value: "VERIFIKATOR" },
+  { label: "Verifikator Fakultas", value: "VERIFIKATOR_FAKULTAS" },
+  { label: "Verifikator Ditmawa", value: "VERIFIKATOR_DITMAWA" },
+  { label: "Validator Ditmawa", value: "VALIDATOR_DITMAWA" },
   { label: "Pimpinan Fakultas", value: "PIMPINAN_FAKULTAS" },
   { label: "Pimpinan Ditmawa", value: "PIMPINAN_DITMAWA" },
   { label: "Super Admin", value: "SUPERADMIN" },
@@ -67,7 +69,7 @@ const LogAdmin = () => {
       console.error("Error fetching activity logs:", err);
       error(
         "Gagal Memuat Log Aktivitas",
-        err.message || "Gagal memuat log aktivitas"
+        err.message || "Gagal memuat log aktivitas",
       );
     } finally {
       setIsLoading(false);
@@ -91,7 +93,7 @@ const LogAdmin = () => {
       clearAlerts();
       success(
         "Berhasil Mengekspor Log Aktivitas",
-        "Log aktivitas berhasil diekspor"
+        "Log aktivitas berhasil diekspor",
       );
 
       const downloadUrl = `${
@@ -134,8 +136,12 @@ const LogAdmin = () => {
     switch (role) {
       case "MAHASISWA":
         return "Mahasiswa";
-      case "VERIFIKATOR":
-        return "Verifikator";
+      case "VERIFIKATOR_FAKULTAS":
+        return "Verifikator Fakultas";
+      case "VERIFIKATOR_DITMAWA":
+        return "Verifikator Ditmawa";
+      case "VALIDATOR_DITMAWA":
+        return "Validator Ditmawa";
       case "PIMPINAN_FAKULTAS":
         return "Pimpinan Fakultas";
       case "PIMPINAN_DITMAWA":
@@ -154,7 +160,6 @@ const LogAdmin = () => {
         onRemove={removeAlert}
         position="top-right"
       />
-      {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Log Aktivitas</h1>
@@ -172,7 +177,6 @@ const LogAdmin = () => {
         </Button>
       </div>
 
-      {/* Search and Filter Section */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-center">
           <div className="lg:col-span-2">
@@ -214,7 +218,6 @@ const LogAdmin = () => {
         </div>
       </div>
 
-      {/* Log History Cards - Minimalist Design */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-700">
@@ -280,7 +283,6 @@ const LogAdmin = () => {
           </div>
         )}
 
-        {/* Pagination */}
         {totalRecords > pageSize && (
           <div className="flex justify-center pt-6">
             <Pagination

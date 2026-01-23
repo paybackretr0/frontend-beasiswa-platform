@@ -154,8 +154,38 @@ export const exportGovernmentScholarships = async (year = null) => {
   }
 };
 
-export const importGovernmentScholarships = async (formData) => {
+export const validateGovernmentScholarshipFile = async (formData) => {
   try {
+    const response = await authFetch(
+      `${API_BASE_URL}/government-scholarships/validate`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    if (!response.success) {
+      throw new Error(response.message || "Gagal memvalidasi file");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error validating file:", error);
+    throw new Error(
+      error.message ||
+        error.response?.data?.message ||
+        "Gagal memvalidasi file",
+    );
+  }
+};
+
+export const importGovernmentScholarships = async (
+  formData,
+  mode = "replace",
+) => {
+  try {
+    formData.append("mode", mode);
+
     const response = await authFetch(
       `${API_BASE_URL}/government-scholarships/import`,
       {
@@ -171,7 +201,6 @@ export const importGovernmentScholarships = async (formData) => {
     return response.data;
   } catch (error) {
     console.error("Error importing government scholarships:", error);
-
     throw new Error(
       error.message || error.response?.data?.message || "Gagal mengimport data",
     );

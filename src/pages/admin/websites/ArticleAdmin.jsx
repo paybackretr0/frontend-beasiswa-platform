@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { message, Tag, Image, Upload } from "antd";
+import { Tag, Image, Upload, Modal } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
   SendOutlined,
   InboxOutlined,
+  ExclamationCircleOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import UniversalTable, { createActionColumn } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
@@ -28,6 +30,10 @@ const ArticleAdmin = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
   const [editingArticle, setEditingArticle] = useState(null);
+
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const { alerts, success, error, removeAlert, warning } = useAlert();
 
@@ -113,46 +119,85 @@ const ArticleAdmin = () => {
     setModalVisible(true);
   };
 
-  const handleDeleteArticle = async (id) => {
-    setLoading(true);
+  const showDeleteConfirm = (record) => {
+    setConfirmAction({
+      type: "delete",
+      record: record,
+      title: "Hapus Artikel",
+      content: `Apakah Anda yakin ingin menghapus artikel "${record.title}"? Tindakan ini tidak dapat dibatalkan.`,
+      okText: "Hapus",
+      okType: "danger",
+      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
+    });
+    setConfirmModalVisible(true);
+  };
+
+  const showPublishConfirm = (record) => {
+    setConfirmAction({
+      type: "publish",
+      record: record,
+      title: "Publikasikan Artikel",
+      content: `Apakah Anda yakin ingin mempublikasikan artikel "${record.title}"? Artikel akan terlihat oleh publik.`,
+      okText: "Publikasikan",
+      okType: "primary",
+      icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
+    });
+    setConfirmModalVisible(true);
+  };
+
+  const showArchiveConfirm = (record) => {
+    setConfirmAction({
+      type: "archive",
+      record: record,
+      title: "Arsipkan Artikel",
+      content: `Apakah Anda yakin ingin mengarsipkan artikel "${record.title}"? Artikel tidak akan terlihat oleh publik.`,
+      okText: "Arsipkan",
+      okType: "default",
+      icon: <InboxOutlined style={{ color: "#faad14" }} />,
+    });
+    setConfirmModalVisible(true);
+  };
+
+  const handleConfirmOk = async () => {
+    if (!confirmAction) return;
+
     try {
-      await deleteInformation(id);
-      success("Berhasil!", "Artikel berhasil dihapus");
+      setConfirmLoading(true);
+
+      switch (confirmAction.type) {
+        case "delete":
+          await deleteInformation(confirmAction.record.id);
+          success("Berhasil!", "Artikel berhasil dihapus");
+          break;
+
+        case "publish":
+          await publishInformation(confirmAction.record.id);
+          success("Berhasil!", "Artikel berhasil dipublikasikan");
+          break;
+
+        case "archive":
+          await archiveInformation(confirmAction.record.id);
+          success("Berhasil!", "Artikel berhasil diarsipkan");
+          break;
+
+        default:
+          break;
+      }
+
+      setConfirmModalVisible(false);
+      setConfirmAction(null);
       fetchArticle();
     } catch (err) {
-      console.error("Error deleting article:", err);
-      error("Gagal!", err.message || "Gagal menghapus artikel");
+      console.error(`Error ${confirmAction.type}ing article:`, err);
+      error("Gagal!", err.message || `Gagal ${confirmAction.type} artikel`);
     } finally {
-      setLoading(false);
+      setConfirmLoading(false);
     }
   };
 
-  const handlePublishArticle = async (id) => {
-    setLoading(true);
-    try {
-      await publishInformation(id);
-      success("Berhasil!", "Artikel berhasil dipublikasikan");
-      fetchArticle();
-    } catch (err) {
-      console.error("Error publishing article:", err);
-      error("Gagal!", err.message || "Gagal mempublikasikan artikel");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleArchiveArticle = async (id) => {
-    setLoading(true);
-    try {
-      await archiveInformation(id);
-      success("Berhasil!", "Artikel berhasil diarsipkan");
-      fetchArticle();
-    } catch (err) {
-      console.error("Error archiving article:", err);
-      error("Gagal!", err.message || "Gagal mengarsipkan artikel");
-    } finally {
-      setLoading(false);
-    }
+  const handleConfirmCancel = () => {
+    setConfirmModalVisible(false);
+    setConfirmAction(null);
   };
 
   const resetForm = () => {
@@ -223,8 +268,8 @@ const ArticleAdmin = () => {
           status === "PUBLISHED"
             ? "green"
             : status === "DRAFT"
-            ? "orange"
-            : "red";
+              ? "orange"
+              : "red";
         return <Tag color={color}>{status}</Tag>;
       },
       filters: [
@@ -279,23 +324,23 @@ const ArticleAdmin = () => {
         key: "publish",
         label: "Publish",
         icon: <SendOutlined />,
-        onClick: (record) => handlePublishArticle(record.id),
-        className: (record) => (record.status === "PUBLISHED" ? "hidden" : ""),
+        onClick: (record) => showPublishConfirm(record),
+        hidden: (record) => record.status === "PUBLISHED",
       },
       {
         key: "archive",
         label: "Archive",
         icon: <InboxOutlined />,
-        onClick: (record) => handleArchiveArticle(record.id),
-        className: (record) =>
-          !record.published_at || record.status === "ARCHIVED" ? "hidden" : "",
+        onClick: (record) => showArchiveConfirm(record),
+        hidden: (record) =>
+          !record.published_at || record.status === "ARCHIVED",
       },
       {
         key: "delete",
         label: "Hapus",
         icon: <DeleteOutlined />,
         danger: true,
-        onClick: (record) => handleDeleteArticle(record.id),
+        onClick: (record) => showDeleteConfirm(record),
       },
     ]),
   ];
@@ -421,6 +466,27 @@ const ArticleAdmin = () => {
           },
         ]}
       />
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            {confirmAction?.icon}
+            <span>{confirmAction?.title}</span>
+          </div>
+        }
+        open={confirmModalVisible}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        confirmLoading={confirmLoading}
+        okText={confirmAction?.okText || "OK"}
+        cancelText="Batal"
+        okButtonProps={{
+          danger: confirmAction?.okType === "danger",
+          loading: confirmLoading,
+        }}
+      >
+        <p className="text-gray-700">{confirmAction?.content}</p>
+      </Modal>
     </>
   );
 };

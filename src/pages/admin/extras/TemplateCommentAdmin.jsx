@@ -129,7 +129,7 @@ const TemplateCommentAdmin = () => {
             confirmAction.type === "deactivate"
               ? "menonaktifkan"
               : "mengaktifkan"
-          } template`
+          } template`,
       );
     } finally {
       setConfirmLoading(false);

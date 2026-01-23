@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
-import { Select, Spin, Tag, Modal, Upload, message } from "antd";
+import {
+  Select,
+  Spin,
+  Tag,
+  Modal,
+  Upload,
+  Table,
+  Radio,
+  Alert,
+  Space,
+  Divider,
+} from "antd";
 import {
   UploadOutlined,
   EyeOutlined,
@@ -10,6 +21,8 @@ import {
   BookOutlined,
   WarningOutlined,
   SyncOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
@@ -29,6 +42,7 @@ import {
   getGovernmentScholarshipYearlyTrend,
   getGovernmentScholarshipList,
   exportGovernmentScholarships,
+  validateGovernmentScholarshipFile,
   importGovernmentScholarships,
 } from "../../../services/governmentService";
 import AlertContainer from "../../../components/AlertContainer";
@@ -48,6 +62,11 @@ const GovernmentScholarship = () => {
   const [chartsLoading, setChartsLoading] = useState(true);
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  const [importStep, setImportStep] = useState(1);
+  const [validationResult, setValidationResult] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [importMode, setImportMode] = useState("replace");
 
   const [summaryData, setSummaryData] = useState([]);
 
@@ -281,35 +300,87 @@ const GovernmentScholarship = () => {
   };
 
   const handleImport = () => {
+    setImportStep(1);
+    setValidationResult(null);
+    setSelectedFile(null);
+    setImportMode("replace");
     setImportModalVisible(true);
   };
 
-  const handleUpload = async (file) => {
+  const handleFileSelect = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       setUploading(true);
-      const result = await importGovernmentScholarships(formData);
+      setSelectedFile(file);
+
+      info("Memvalidasi file", "Mohon tunggu...");
+
+      const result = await validateGovernmentScholarshipFile(formData);
 
       clearAlerts();
 
-      success(
-        "Import Berhasil!",
-        `${result.imported} data berhasil diimport untuk periode ${result.period}/${result.fiscal_year}. ` +
-          `${result.deleted > 0 ? `(Menggantikan ${result.deleted} data lama)` : ""}`,
-      );
+      setValidationResult(result);
+      setImportStep(2);
 
-      if (result.summary) {
-        setTimeout(() => {
-          info(
-            "Ringkasan Import",
-            `Normal: ${result.summary.normal_status} | Warning: ${result.summary.warning_status}`,
-          );
-        }, 1000);
+      if (result.error_count > 0) {
+        error(
+          "Ditemukan Error",
+          `${result.error_count} baris memiliki error. Periksa detail di bawah.`,
+        );
+      } else {
+        success(
+          "Validasi Berhasil",
+          `${result.valid_count} data valid siap diimport`,
+        );
+      }
+    } catch (err) {
+      clearAlerts();
+      error("Gagal!", err.message || "Gagal memvalidasi file");
+      setImportStep(1);
+      setSelectedFile(null);
+    } finally {
+      setUploading(false);
+    }
+
+    return false;
+  };
+
+  const handleConfirmImport = async () => {
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      setUploading(true);
+
+      info("Import Data", "Memproses import...");
+
+      const result = await importGovernmentScholarships(formData, importMode);
+
+      clearAlerts();
+
+      if (importMode === "replace") {
+        success(
+          "Import Berhasil!",
+          `${result.imported} data berhasil diimport untuk periode ${result.period}/${result.fiscal_year}. ` +
+            `${result.deleted > 0 ? `(Menggantikan ${result.deleted} data lama)` : ""}`,
+        );
+      } else {
+        success(
+          "Import Berhasil!",
+          `${result.new} data baru ditambahkan, ${result.updated} data diperbarui ` +
+            `untuk periode ${result.period}/${result.fiscal_year}.`,
+        );
       }
 
       setImportModalVisible(false);
+      setImportStep(1);
+      setValidationResult(null);
+      setSelectedFile(null);
+
       fetchAllData();
     } catch (err) {
       clearAlerts();
@@ -317,9 +388,43 @@ const GovernmentScholarship = () => {
     } finally {
       setUploading(false);
     }
-
-    return false;
   };
+
+  const handleCancelImport = () => {
+    setImportModalVisible(false);
+    setImportStep(1);
+    setValidationResult(null);
+    setSelectedFile(null);
+  };
+
+  const previewColumns = [
+    { title: "NIM", dataIndex: "nim", key: "nim", width: 120 },
+    {
+      title: "Nama",
+      dataIndex: "student_name",
+      key: "student_name",
+      width: 200,
+    },
+    {
+      title: "Prodi",
+      dataIndex: "study_program",
+      key: "study_program",
+      width: 150,
+    },
+    {
+      title: "Angkatan",
+      dataIndex: "student_batch",
+      key: "student_batch",
+      width: 100,
+    },
+    { title: "Semester", dataIndex: "semester", key: "semester", width: 80 },
+  ];
+
+  const errorColumns = [
+    { title: "Baris", dataIndex: "row", key: "row", width: 80 },
+    { title: "Field", dataIndex: "field", key: "field", width: 100 },
+    { title: "Error", dataIndex: "message", key: "message" },
+  ];
 
   const handleExport = async () => {
     try {
@@ -728,48 +833,166 @@ const GovernmentScholarship = () => {
       </div>
 
       <Modal
-        title="Import Data Beasiswa APBN"
+        title={
+          importStep === 1
+            ? "Upload File Excel"
+            : importStep === 2
+              ? "Preview & Validasi Data"
+              : "Konfirmasi Import"
+        }
         open={importModalVisible}
-        onCancel={() => setImportModalVisible(false)}
+        onCancel={handleCancelImport}
         footer={null}
-        width={500}
+        width={importStep === 1 ? 500 : 900}
+        destroyOnHidden
       >
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <FileExcelOutlined className="mr-2" />
-              Upload file Excel (.xlsx) yang berisi data penerima beasiswa APBN
-            </p>
-          </div>
+          {importStep === 1 && (
+            <>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <FileExcelOutlined className="mr-2" />
+                  Upload file Excel (.xlsx) yang berisi data penerima beasiswa
+                  APBN
+                </p>
+              </div>
 
-          <Upload.Dragger
-            name="file"
-            accept=".xlsx,.xls"
-            beforeUpload={handleUpload}
-            maxCount={1}
-            disabled={uploading}
-          >
-            <p className="ant-upload-drag-icon">
-              <FileExcelOutlined style={{ color: "#2D60FF" }} />
-            </p>
-            <p className="ant-upload-text">Klik atau drag file untuk upload</p>
-            <p className="ant-upload-hint">Support format: .xlsx, .xls</p>
-          </Upload.Dragger>
+              <Upload.Dragger
+                name="file"
+                accept=".xlsx,.xls"
+                beforeUpload={handleFileSelect}
+                maxCount={1}
+                disabled={uploading}
+                fileList={[]}
+              >
+                <p className="ant-upload-drag-icon">
+                  <FileExcelOutlined style={{ color: "#2D60FF" }} />
+                </p>
+                <p className="ant-upload-text">
+                  Klik atau drag file untuk upload
+                </p>
+                <p className="ant-upload-hint">Support format: .xlsx, .xls</p>
+              </Upload.Dragger>
 
-          <div className="text-xs text-gray-500">
-            <p className="font-semibold mb-2">Format Excel yang diperlukan:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>NIM (wajib)</li>
-              <li>Nama Mahasiswa (wajib)</li>
-              <li>Angkatan</li>
-              <li>Program Studi</li>
-              <li>Semester</li>
-              <li>IPK</li>
-              <li>Tahun Fiskal (wajib)</li>
-              <li>Periode</li>
-              <li>Skema Bantuan</li>
-            </ul>
-          </div>
+              <div className="text-xs text-gray-500">
+                <p className="font-semibold mb-2">
+                  Format Excel yang diperlukan:
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>NIM (wajib)</li>
+                  <li>Nama Mahasiswa (wajib)</li>
+                  <li>Angkatan</li>
+                  <li>Program Studi</li>
+                  <li>Semester</li>
+                  <li>IPK</li>
+                  <li>Tahun Fiskal (wajib)</li>
+                  <li>Periode</li>
+                  <li>Skema Bantuan</li>
+                </ul>
+              </div>
+            </>
+          )}
+
+          {importStep === 2 && validationResult && (
+            <>
+              <Alert
+                message={`Periode: ${validationResult.period}/${validationResult.fiscal_year}`}
+                description={
+                  <div>
+                    <p>
+                      Total baris diproses: {validationResult.total_rows} |{" "}
+                      Valid: {validationResult.valid_count} | Error:{" "}
+                      {validationResult.error_count}
+                    </p>
+                    {validationResult.existing_count > 0 && (
+                      <p className="mt-2 text-orange-600">
+                        Sudah ada {validationResult.existing_count} data untuk
+                        periode ini
+                      </p>
+                    )}
+                  </div>
+                }
+                type={validationResult.error_count > 0 ? "warning" : "success"}
+                showIcon
+                icon={
+                  validationResult.error_count > 0 ? (
+                    <ExclamationCircleOutlined />
+                  ) : (
+                    <CheckCircleOutlined />
+                  )
+                }
+              />
+
+              {validationResult.error_count > 0 && (
+                <div>
+                  <h4 className="font-semibold text-red-600 mb-2">
+                    Data Error ({validationResult.error_count})
+                  </h4>
+                  <Table
+                    dataSource={validationResult.errors}
+                    columns={errorColumns}
+                    pagination={{ pageSize: 5 }}
+                    size="small"
+                    rowKey={(record, index) => index}
+                  />
+                </div>
+              )}
+
+              {validationResult.valid_count > 0 && (
+                <div>
+                  <h4 className="font-semibold text-green-600 mb-2">
+                    Preview Data Valid (10 teratas dari{" "}
+                    {validationResult.valid_count})
+                  </h4>
+                  <Table
+                    dataSource={validationResult.preview}
+                    columns={previewColumns}
+                    pagination={false}
+                    size="small"
+                    rowKey={(record, index) => index}
+                  />
+                </div>
+              )}
+
+              <Divider />
+
+              <div className="space-y-3">
+                <h4 className="font-semibold">Mode Import:</h4>
+                <Radio.Group
+                  value={importMode}
+                  onChange={(e) => setImportMode(e.target.value)}
+                >
+                  <Space direction="vertical">
+                    <Radio value="replace">
+                      <strong>Replace (Ganti)</strong> - Hapus semua data
+                      periode {validationResult.period}/
+                      {validationResult.fiscal_year} dan ganti dengan data baru
+                    </Radio>
+                    <Radio value="append">
+                      <strong>Append (Tambah/Update)</strong> - Update data yang
+                      sudah ada, tambahkan yang baru
+                    </Radio>
+                  </Space>
+                </Radio.Group>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <Button onClick={handleCancelImport}>Batal</Button>
+                <Button
+                  type="primary"
+                  onClick={handleConfirmImport}
+                  disabled={
+                    validationResult.valid_count === 0 ||
+                    validationResult.error_count > 0
+                  }
+                  loading={uploading}
+                  icon={<UploadOutlined />}
+                >
+                  {uploading ? "Mengimport..." : "Import Sekarang"}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
     </div>
