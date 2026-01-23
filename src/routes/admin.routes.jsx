@@ -5,6 +5,7 @@ import ApplicationsAdmin from "../pages/admin/applications/ApplicationsAdmin";
 import ReportsAdmin from "../pages/admin/reports/ReportsAdmin";
 import InfoScholarship from "../pages/admin/info-scholarships/InfoScholarship";
 import GovernmentScholarship from "../pages/admin/government/GovernmentScholarship";
+import ChangePassword from "../pages/admin/ChangePassword";
 
 import AccountsRoutes from "./accounts.routes";
 import ScholarshipRoutes from "./scholarship.routes";
@@ -55,6 +56,7 @@ const AdminRoutes = () => (
     <Route path="reference/*" element={<ReferenceRoutes />} />
     <Route path="website/*" element={<WebsiteRoutes />} />
     <Route path="extra/*" element={<ExtraRoutes />} />
+    <Route path="change-password" element={<ChangePassword />} />
   </Route>
 );
 

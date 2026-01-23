@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { message, Select } from "antd";
-import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
+import { Switch, Modal } from "antd";
+import {
+  EditOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import UniversalTable, {
   createNumberColumn,
-  createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
@@ -28,6 +31,10 @@ const Departemen = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState(null);
 
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+
   const { alerts, success, error, removeAlert } = useAlert();
 
   useEffect(() => {
@@ -42,11 +49,13 @@ const Departemen = () => {
       const data = await getDepartments();
       const formattedData = data.map((department) => ({
         key: department.id,
+        id: department.id,
         nama: department.name,
         kode: department.code,
         fakultas: department.faculty ? department.faculty.name : "-",
         fakultasId: department.faculty ? department.faculty.id : null,
         status: department.is_active ? "Aktif" : "Nonaktif",
+        is_active: department.is_active,
       }));
       setDepartments(formattedData);
       setFilteredDepartments(formattedData);
@@ -59,7 +68,7 @@ const Departemen = () => {
       console.error("Error fetching departments:", err);
       error(
         "Gagal memuat data",
-        err.message || "Gagal mengambil daftar departemen"
+        err.message || "Gagal mengambil daftar departemen",
       );
     } finally {
       setLoading(false);
@@ -74,7 +83,7 @@ const Departemen = () => {
       console.error("Error fetching faculties:", err);
       error(
         "Gagal memuat data",
-        err.message || "Gagal mengambil daftar fakultas"
+        err.message || "Gagal mengambil daftar fakultas",
       );
     }
   };
@@ -110,32 +119,62 @@ const Departemen = () => {
     }
   };
 
-  const handleActivateDepartment = async (id) => {
-    setLoading(true);
+  const handleToggleStatus = (record) => {
+    const actionText = record.is_active ? "nonaktifkan" : "aktifkan";
+    const actionTextCapital = record.is_active ? "Nonaktifkan" : "Aktifkan";
+
+    setConfirmAction({
+      type: record.is_active ? "deactivate" : "activate",
+      record: record,
+      title: `${actionTextCapital} Departemen`,
+      content: `Apakah Anda yakin ingin ${actionText} departemen "${record.nama}"?`,
+      okText: actionTextCapital,
+      okType: record.is_active ? "danger" : "primary",
+      icon: record.is_active ? (
+        <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+      ) : (
+        <CheckCircleOutlined style={{ color: "#52c41a" }} />
+      ),
+    });
+
+    setConfirmModalVisible(true);
+  };
+
+  const handleConfirmOk = async () => {
+    if (!confirmAction) return;
+
     try {
-      await activateDepartment(id);
-      success("Berhasil!", "Departemen berhasil diaktifkan");
-      await fetchDepartments();
+      setConfirmLoading(true);
+
+      if (confirmAction.type === "deactivate") {
+        await deactivateDepartment(confirmAction.record.id);
+        success("Berhasil!", "Departemen berhasil dinonaktifkan");
+      } else {
+        await activateDepartment(confirmAction.record.id);
+        success("Berhasil!", "Departemen berhasil diaktifkan");
+      }
+
+      setConfirmModalVisible(false);
+      setConfirmAction(null);
+      fetchDepartments();
     } catch (err) {
-      console.error("Error activating department:", err);
-      error("Gagal", err.message || "Gagal mengaktifkan departemen");
+      error(
+        "Gagal!",
+        err.message ||
+          `Gagal ${
+            confirmAction.type === "deactivate"
+              ? "menonaktifkan"
+              : "mengaktifkan"
+          } departemen`,
+      );
     } finally {
-      setLoading(false);
+      setConfirmLoading(false);
     }
   };
 
-  const handleDeactivateDepartment = async (id) => {
-    setLoading(true);
-    try {
-      await deactivateDepartment(id);
-      success("Berhasil!", "Departemen berhasil dinonaktifkan");
-      await fetchDepartments();
-    } catch (err) {
-      console.error("Error deactivating department:", err);
-      error("Gagal", err.message || "Gagal menonaktifkan departemen");
-    } finally {
-      setLoading(false);
-    }
+  const handleConfirmCancel = () => {
+    setConfirmModalVisible(false);
+    setConfirmAction(null);
   };
 
   const handleAdd = () => {
@@ -151,19 +190,12 @@ const Departemen = () => {
   const handleSearch = (searchValue) => {
     let filtered = departments;
 
-    if (statusFilter !== "Semua") {
-      filtered = filtered.filter((item) => item.status === statusFilter);
-    }
-    if (fakultasFilter !== "Semua") {
-      filtered = filtered.filter((item) => item.fakultas === fakultasFilter);
-    }
-
     if (searchValue) {
       filtered = filtered.filter(
         (item) =>
           item.nama?.toLowerCase().includes(searchValue.toLowerCase()) ||
           item.fakultas?.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.kode?.toLowerCase().includes(searchValue.toLowerCase())
+          item.kode?.toLowerCase().includes(searchValue.toLowerCase()),
       );
     }
 
@@ -199,27 +231,42 @@ const Departemen = () => {
         })),
       onFilter: (value, record) => record.fakultas === value,
     },
-    createStatusColumn({
-      Aktif: { color: "green" },
-      Nonaktif: { color: "red" },
-    }),
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      key: "is_active",
+      render: (is_active, record) => (
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              is_active
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {is_active ? "Aktif" : "Nonaktif"}
+          </span>
+          <Switch
+            checked={is_active}
+            onChange={() => handleToggleStatus(record)}
+            checkedChildren={<CheckCircleOutlined />}
+            unCheckedChildren={<CloseCircleOutlined />}
+            size="small"
+          />
+        </div>
+      ),
+      filters: [
+        { text: "Aktif", value: true },
+        { text: "Nonaktif", value: false },
+      ],
+      onFilter: (value, record) => record.is_active === value,
+      width: "20%",
+    },
     createActionColumn([
       {
         key: "edit",
         icon: <EditOutlined />,
         onClick: handleEdit,
-      },
-      {
-        key: "toggleStatus",
-        label: (record) =>
-          record.status === "Aktif" ? "Nonaktifkan" : "Aktifkan",
-        icon: (record) =>
-          record.status === "Aktif" ? <DeleteOutlined /> : <CheckOutlined />,
-        danger: (record) => record.status === "Aktif",
-        onClick: (record) =>
-          record.status === "Aktif"
-            ? handleDeactivateDepartment(record.key)
-            : handleActivateDepartment(record.key),
       },
     ]),
   ];
@@ -243,6 +290,7 @@ const Departemen = () => {
         pageSize={10}
         onSearch={handleSearch}
       />
+
       <UniversalModal
         visible={modalVisible}
         onCancel={() => {
@@ -296,6 +344,27 @@ const Departemen = () => {
           },
         ]}
       />
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            {confirmAction?.icon}
+            <span>{confirmAction?.title}</span>
+          </div>
+        }
+        open={confirmModalVisible}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        confirmLoading={confirmLoading}
+        okText={confirmAction?.okText || "OK"}
+        cancelText="Batal"
+        okButtonProps={{
+          danger: confirmAction?.okType === "danger",
+          loading: confirmLoading,
+        }}
+      >
+        <p>{confirmAction?.content}</p>
+      </Modal>
     </>
   );
 };

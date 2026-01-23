@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { message } from "antd";
-import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
+import { Switch, Modal } from "antd";
+import {
+  EditOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import UniversalTable, {
   createNumberColumn,
-  createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
@@ -26,6 +29,10 @@ const Fakultas = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState(null);
 
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+
   const { alerts, success, error, removeAlert } = useAlert();
 
   useEffect(() => {
@@ -39,10 +46,12 @@ const Fakultas = () => {
       const data = await getFaculties();
       const formattedData = data.map((faculty, index) => ({
         key: faculty.id,
+        id: faculty.id,
         nama: faculty.name,
         kode: faculty.code,
         jumlahDepartemen: faculty.departments_count || 0,
         status: faculty.is_active ? "Aktif" : "Nonaktif",
+        is_active: faculty.is_active,
       }));
       setFaculties(formattedData);
       setFilteredFaculties(formattedData);
@@ -84,32 +93,62 @@ const Fakultas = () => {
     }
   };
 
-  const handleActivateFaculty = async (id) => {
-    setLoading(true);
+  const handleToggleStatus = (record) => {
+    const actionText = record.is_active ? "nonaktifkan" : "aktifkan";
+    const actionTextCapital = record.is_active ? "Nonaktifkan" : "Aktifkan";
+
+    setConfirmAction({
+      type: record.is_active ? "deactivate" : "activate",
+      record: record,
+      title: `${actionTextCapital} Fakultas`,
+      content: `Apakah Anda yakin ingin ${actionText} fakultas "${record.nama}"?`,
+      okText: actionTextCapital,
+      okType: record.is_active ? "danger" : "primary",
+      icon: record.is_active ? (
+        <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+      ) : (
+        <CheckCircleOutlined style={{ color: "#52c41a" }} />
+      ),
+    });
+
+    setConfirmModalVisible(true);
+  };
+
+  const handleConfirmOk = async () => {
+    if (!confirmAction) return;
+
     try {
-      await activateFaculty(id);
-      success("Berhasil!", "Fakultas berhasil diaktifkan");
-      await fetchFaculties();
+      setConfirmLoading(true);
+
+      if (confirmAction.type === "deactivate") {
+        await deactivateFaculty(confirmAction.record.id);
+        success("Berhasil!", "Fakultas berhasil dinonaktifkan");
+      } else {
+        await activateFaculty(confirmAction.record.id);
+        success("Berhasil!", "Fakultas berhasil diaktifkan");
+      }
+
+      setConfirmModalVisible(false);
+      setConfirmAction(null);
+      fetchFaculties();
     } catch (err) {
-      console.error("Error activating faculty:", err);
-      error("Gagal", err.message || "Gagal mengaktifkan fakultas");
+      error(
+        "Gagal!",
+        err.message ||
+          `Gagal ${
+            confirmAction.type === "deactivate"
+              ? "menonaktifkan"
+              : "mengaktifkan"
+          } fakultas`,
+      );
     } finally {
-      setLoading(false);
+      setConfirmLoading(false);
     }
   };
 
-  const handleDeactivateFaculty = async (id) => {
-    setLoading(true);
-    try {
-      await deactivateFaculty(id);
-      success("Berhasil!", "Fakultas berhasil dinonaktifkan");
-      await fetchFaculties();
-    } catch (err) {
-      console.error("Error deactivating faculty:", err);
-      error("Gagal", err.message || "Gagal menonaktifkan fakultas");
-    } finally {
-      setLoading(false);
-    }
+  const handleConfirmCancel = () => {
+    setConfirmModalVisible(false);
+    setConfirmAction(null);
   };
 
   const handleAdd = () => {
@@ -125,7 +164,7 @@ const Fakultas = () => {
 
     if (searchValue) {
       filtered = filtered.filter((item) =>
-        item.nama?.toLowerCase().includes(searchValue.toLowerCase())
+        item.nama?.toLowerCase().includes(searchValue.toLowerCase()),
       );
     }
 
@@ -156,10 +195,37 @@ const Fakultas = () => {
       width: "20%",
       align: "center",
     },
-    createStatusColumn({
-      Aktif: { color: "green" },
-      Nonaktif: { color: "red" },
-    }),
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      key: "is_active",
+      render: (is_active, record) => (
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              is_active
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {is_active ? "Aktif" : "Nonaktif"}
+          </span>
+          <Switch
+            checked={is_active}
+            onChange={() => handleToggleStatus(record)}
+            checkedChildren={<CheckCircleOutlined />}
+            unCheckedChildren={<CloseCircleOutlined />}
+            size="small"
+          />
+        </div>
+      ),
+      filters: [
+        { text: "Aktif", value: true },
+        { text: "Nonaktif", value: false },
+      ],
+      onFilter: (value, record) => record.is_active === value,
+      width: "20%",
+    },
     createActionColumn([
       {
         key: "edit",
@@ -168,16 +234,6 @@ const Fakultas = () => {
           setEditingFaculty(record);
           setModalVisible(true);
         },
-      },
-      {
-        key: "toggleStatus",
-        icon: (record) =>
-          record.status === "Aktif" ? <DeleteOutlined /> : <CheckOutlined />,
-        danger: (record) => record.status === "Aktif",
-        onClick: (record) =>
-          record.status === "Aktif"
-            ? handleDeactivateFaculty(record.key)
-            : handleActivateFaculty(record.key),
       },
     ]),
   ];
@@ -244,6 +300,27 @@ const Fakultas = () => {
           },
         ]}
       />
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            {confirmAction?.icon}
+            <span>{confirmAction?.title}</span>
+          </div>
+        }
+        open={confirmModalVisible}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        confirmLoading={confirmLoading}
+        okText={confirmAction?.okText || "OK"}
+        cancelText="Batal"
+        okButtonProps={{
+          danger: confirmAction?.okType === "danger",
+          loading: confirmLoading,
+        }}
+      >
+        <p>{confirmAction?.content}</p>
+      </Modal>
     </>
   );
 };

@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { Switch, Modal } from "antd";
 import UniversalTable, {
   createNumberColumn,
-  createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
-import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import {
   fetchUsersByRole,
   addUser,
@@ -23,7 +27,11 @@ const PimpinanDitmawa = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
-  const { alerts, success, error, warning, removeAlert } = useAlert();
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+
+  const { alerts, success, error, removeAlert } = useAlert();
 
   const fetchPimpinanDitmawa = async () => {
     setLoading(true);
@@ -34,7 +42,7 @@ const PimpinanDitmawa = () => {
       console.error("Error fetching Pimpinan Ditmawa:", err);
       error(
         "Gagal Memuat Data",
-        err.message || "Gagal mengambil data Pimpinan Ditmawa"
+        err.message || "Gagal mengambil data Pimpinan Ditmawa",
       );
     } finally {
       setLoading(false);
@@ -57,7 +65,7 @@ const PimpinanDitmawa = () => {
       console.error("Error adding Pimpinan Ditmawa:", err);
       error(
         "Gagal Menambahkan",
-        err.message || "Gagal menambahkan Pimpinan Ditmawa"
+        err.message || "Gagal menambahkan Pimpinan Ditmawa",
       );
     } finally {
       setModalLoading(false);
@@ -79,32 +87,62 @@ const PimpinanDitmawa = () => {
     }
   };
 
-  const handleDeactivateUser = async (id) => {
-    setLoading(true);
+  const handleToggleStatus = (record) => {
+    const actionText = record.is_active ? "nonaktifkan" : "aktifkan";
+    const actionTextCapital = record.is_active ? "Nonaktifkan" : "Aktifkan";
+
+    setConfirmAction({
+      type: record.is_active ? "deactivate" : "activate",
+      record: record,
+      title: `${actionTextCapital} User`,
+      content: `Apakah Anda yakin ingin ${actionText} user "${record.full_name}"?`,
+      okText: actionTextCapital,
+      okType: record.is_active ? "danger" : "primary",
+      icon: record.is_active ? (
+        <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+      ) : (
+        <CheckCircleOutlined style={{ color: "#52c41a" }} />
+      ),
+    });
+
+    setConfirmModalVisible(true);
+  };
+
+  const handleConfirmOk = async () => {
+    if (!confirmAction) return;
+
     try {
-      await deactivateUser(id);
-      success("Berhasil!", "User berhasil dinonaktifkan");
+      setConfirmLoading(true);
+
+      if (confirmAction.type === "deactivate") {
+        await deactivateUser(confirmAction.record.id);
+        success("Berhasil!", "User berhasil dinonaktifkan");
+      } else {
+        await activateUser(confirmAction.record.id);
+        success("Berhasil!", "User berhasil diaktifkan");
+      }
+
+      setConfirmModalVisible(false);
+      setConfirmAction(null);
       fetchPimpinanDitmawa();
     } catch (err) {
-      console.error("Error deactivating user:", err);
-      error("Gagal Menonaktifkan", err.message || "Gagal menonaktifkan user");
+      error(
+        "Gagal!",
+        err.message ||
+          `Gagal ${
+            confirmAction.type === "deactivate"
+              ? "menonaktifkan"
+              : "mengaktifkan"
+          } user`,
+      );
     } finally {
-      setLoading(false);
+      setConfirmLoading(false);
     }
   };
 
-  const handleActivateUser = async (id) => {
-    setLoading(true);
-    try {
-      await activateUser(id);
-      success("User Diaktifkan", "User berhasil diaktifkan");
-      fetchPimpinanDitmawa();
-    } catch (err) {
-      console.error("Error activating user:", err);
-      error("Gagal Mengaktifkan", err.message || "Gagal mengaktifkan user");
-    } finally {
-      setLoading(false);
-    }
+  const handleConfirmCancel = () => {
+    setConfirmModalVisible(false);
+    setConfirmAction(null);
   };
 
   const columns = [
@@ -128,11 +166,36 @@ const PimpinanDitmawa = () => {
       render: (date) =>
         date ? new Date(date).toLocaleString() : "Belum login",
     },
-    createStatusColumn({
-      Aktif: { color: "green" },
-      Nonaktif: { color: "red" },
-      mapValue: (record) => (record.is_active ? "Aktif" : "Nonaktif"),
-    }),
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      key: "is_active",
+      render: (is_active, record) => (
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              is_active
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {is_active ? "Aktif" : "Nonaktif"}
+          </span>
+          <Switch
+            checked={is_active}
+            onChange={() => handleToggleStatus(record)}
+            checkedChildren={<CheckCircleOutlined />}
+            unCheckedChildren={<CloseCircleOutlined />}
+            size="small"
+          />
+        </div>
+      ),
+      filters: [
+        { text: "Aktif", value: true },
+        { text: "Nonaktif", value: false },
+      ],
+      onFilter: (value, record) => record.is_active === value,
+    },
     createActionColumn([
       {
         key: "edit",
@@ -140,20 +203,6 @@ const PimpinanDitmawa = () => {
         onClick: (record) => {
           setEditingUser(record);
           setModalVisible(true);
-        },
-      },
-      {
-        key: "toggleActive",
-        label: (record) => (record.is_active ? "Nonaktifkan" : "Aktifkan"),
-        icon: (record) =>
-          record.is_active ? <DeleteOutlined /> : <CheckOutlined />,
-        danger: (record) => record.is_active,
-        onClick: (record) => {
-          if (record.is_active) {
-            handleDeactivateUser(record.id);
-          } else {
-            handleActivateUser(record.id);
-          }
         },
       },
     ]),
@@ -244,6 +293,26 @@ const PimpinanDitmawa = () => {
               ]
         }
       />
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            {confirmAction?.icon}
+            <span>{confirmAction?.title}</span>
+          </div>
+        }
+        open={confirmModalVisible}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        confirmLoading={confirmLoading}
+        okText={confirmAction?.okText || "OK"}
+        cancelText="Batal"
+        okButtonProps={{
+          danger: confirmAction?.okType === "danger",
+          loading: confirmLoading,
+        }}
+      >
+        <p>{confirmAction?.content}</p>
+      </Modal>
     </>
   );
 };

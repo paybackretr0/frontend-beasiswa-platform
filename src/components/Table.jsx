@@ -40,8 +40,8 @@ const UniversalTable = ({
 
     const filtered = data.filter((item) =>
       searchFields.some((field) =>
-        item[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      )
+        item[field]?.toString().toLowerCase().includes(value.toLowerCase()),
+      ),
     );
     setFilteredData(filtered);
   };
@@ -126,14 +126,11 @@ export const createActionColumn = (actions) => ({
   width: 80,
   render: (_, record) => {
     const visibleActions = actions.filter((action) => {
-      // jika hidden boolean true → sembunyikan
       if (typeof action.hidden === "boolean" && action.hidden) return false;
 
-      // jika hidden function → cek berdasarkan record
       if (typeof action.hidden === "function" && action.hidden(record))
         return false;
 
-      // dukung juga className dengan "hidden"
       if (typeof action.className === "function") {
         const className = action.className(record);
         if (className?.includes("hidden")) return false;

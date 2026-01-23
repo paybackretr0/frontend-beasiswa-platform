@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
+import { Switch, Modal } from "antd";
+import {
+  EditOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import UniversalTable, {
   createNumberColumn,
-  createStatusColumn,
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
@@ -27,6 +31,10 @@ const ProgramStudi = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingStudyProgram, setEditingStudyProgram] = useState(null);
 
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+
   const { alerts, success, error, removeAlert } = useAlert();
 
   useEffect(() => {
@@ -41,6 +49,7 @@ const ProgramStudi = () => {
       const data = await getStudyPrograms();
       const formattedData = data.map((studyProgram) => ({
         key: studyProgram.id,
+        id: studyProgram.id,
         kode: studyProgram.code,
         jenjang: studyProgram.degree,
         departemen: studyProgram.department
@@ -50,11 +59,11 @@ const ProgramStudi = () => {
           ? studyProgram.department.id
           : null,
         status: studyProgram.is_active ? "Aktif" : "Nonaktif",
+        is_active: studyProgram.is_active,
       }));
       setStudyPrograms(formattedData);
       setFilteredStudyPrograms(formattedData);
 
-      // Update department options untuk filter
       const uniqueDepartemen = [
         ...new Set(formattedData.map((item) => item.departemen)),
       ].filter((f) => f !== "-");
@@ -63,7 +72,7 @@ const ProgramStudi = () => {
       console.error("Error fetching study programs:", err);
       error(
         "Gagal memuat data",
-        err.message || "Gagal mengambil daftar program studi"
+        err.message || "Gagal mengambil daftar program studi",
       );
     } finally {
       setLoading(false);
@@ -78,7 +87,7 @@ const ProgramStudi = () => {
       console.error("Error fetching departments:", err);
       error(
         "Gagal memuat data",
-        err.message || "Gagal mengambil daftar departemen"
+        err.message || "Gagal mengambil daftar departemen",
       );
     }
   };
@@ -114,32 +123,62 @@ const ProgramStudi = () => {
     }
   };
 
-  const handleActivateStudyProgram = async (id) => {
-    setLoading(true);
+  const handleToggleStatus = (record) => {
+    const actionText = record.is_active ? "nonaktifkan" : "aktifkan";
+    const actionTextCapital = record.is_active ? "Nonaktifkan" : "Aktifkan";
+
+    setConfirmAction({
+      type: record.is_active ? "deactivate" : "activate",
+      record: record,
+      title: `${actionTextCapital} Program Studi`,
+      content: `Apakah Anda yakin ingin ${actionText} program studi "${record.jenjang} - ${record.kode}"?`,
+      okText: actionTextCapital,
+      okType: record.is_active ? "danger" : "primary",
+      icon: record.is_active ? (
+        <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+      ) : (
+        <CheckCircleOutlined style={{ color: "#52c41a" }} />
+      ),
+    });
+
+    setConfirmModalVisible(true);
+  };
+
+  const handleConfirmOk = async () => {
+    if (!confirmAction) return;
+
     try {
-      await activateStudyProgram(id);
-      success("Berhasil!", "Program Studi berhasil diaktifkan");
-      await fetchStudyPrograms();
+      setConfirmLoading(true);
+
+      if (confirmAction.type === "deactivate") {
+        await deactivateStudyProgram(confirmAction.record.id);
+        success("Berhasil!", "Program Studi berhasil dinonaktifkan");
+      } else {
+        await activateStudyProgram(confirmAction.record.id);
+        success("Berhasil!", "Program Studi berhasil diaktifkan");
+      }
+
+      setConfirmModalVisible(false);
+      setConfirmAction(null);
+      fetchStudyPrograms();
     } catch (err) {
-      console.error("Error activating study program:", err);
-      error("Gagal", err.message || "Gagal mengaktifkan program studi");
+      error(
+        "Gagal!",
+        err.message ||
+          `Gagal ${
+            confirmAction.type === "deactivate"
+              ? "menonaktifkan"
+              : "mengaktifkan"
+          } program studi`,
+      );
     } finally {
-      setLoading(false);
+      setConfirmLoading(false);
     }
   };
 
-  const handleDeactivateStudyProgram = async (id) => {
-    setLoading(true);
-    try {
-      await deactivateStudyProgram(id);
-      success("Berhasil!", "Program Studi berhasil dinonaktifkan");
-      await fetchStudyPrograms();
-    } catch (err) {
-      console.error("Error deactivating study program:", err);
-      error("Gagal", err.message || "Gagal menonaktifkan program studi");
-    } finally {
-      setLoading(false);
-    }
+  const handleConfirmCancel = () => {
+    setConfirmModalVisible(false);
+    setConfirmAction(null);
   };
 
   const handleAdd = () => {
@@ -160,7 +199,7 @@ const ProgramStudi = () => {
         (item) =>
           item.departemen?.toLowerCase().includes(searchValue.toLowerCase()) ||
           item.kode?.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.jenjang?.toLowerCase().includes(searchValue.toLowerCase())
+          item.jenjang?.toLowerCase().includes(searchValue.toLowerCase()),
       );
     }
 
@@ -204,35 +243,44 @@ const ProgramStudi = () => {
         })),
       onFilter: (value, record) => record.departemen === value,
     },
-    createStatusColumn(
-      {
-        Aktif: { color: "green" },
-        Nonaktif: { color: "red" },
-      },
-      "15%"
-    ),
-    createActionColumn(
-      [
-        {
-          key: "edit",
-          icon: <EditOutlined />,
-          onClick: handleEdit,
-        },
-        {
-          key: "toggleStatus",
-          label: (record) =>
-            record.status === "Aktif" ? "Nonaktifkan" : "Aktifkan",
-          icon: (record) =>
-            record.status === "Aktif" ? <DeleteOutlined /> : <CheckOutlined />,
-          danger: (record) => record.status === "Aktif",
-          onClick: (record) =>
-            record.status === "Aktif"
-              ? handleDeactivateStudyProgram(record.key)
-              : handleActivateStudyProgram(record.key),
-        },
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      key: "is_active",
+      render: (is_active, record) => (
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              is_active
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {is_active ? "Aktif" : "Nonaktif"}
+          </span>
+          <Switch
+            checked={is_active}
+            onChange={() => handleToggleStatus(record)}
+            checkedChildren={<CheckCircleOutlined />}
+            unCheckedChildren={<CloseCircleOutlined />}
+            size="small"
+          />
+        </div>
+      ),
+      filters: [
+        { text: "Aktif", value: true },
+        { text: "Nonaktif", value: false },
       ],
-      "15%"
-    ),
+      onFilter: (value, record) => record.is_active === value,
+      width: "20%",
+    },
+    createActionColumn([
+      {
+        key: "edit",
+        icon: <EditOutlined />,
+        onClick: handleEdit,
+      },
+    ]),
   ];
 
   return (
@@ -254,6 +302,7 @@ const ProgramStudi = () => {
         pageSize={10}
         onSearch={handleSearch}
       />
+
       <UniversalModal
         visible={modalVisible}
         onCancel={() => {
@@ -318,6 +367,27 @@ const ProgramStudi = () => {
           },
         ]}
       />
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            {confirmAction?.icon}
+            <span>{confirmAction?.title}</span>
+          </div>
+        }
+        open={confirmModalVisible}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        confirmLoading={confirmLoading}
+        okText={confirmAction?.okText || "OK"}
+        cancelText="Batal"
+        okButtonProps={{
+          danger: confirmAction?.okType === "danger",
+          loading: confirmLoading,
+        }}
+      >
+        <p>{confirmAction?.content}</p>
+      </Modal>
     </>
   );
 };
