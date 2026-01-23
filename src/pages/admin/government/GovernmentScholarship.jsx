@@ -38,8 +38,8 @@ const { Option } = Select;
 
 const currentYear = new Date().getFullYear();
 const years = Array.from(
-  { length: currentYear - 2020 + 1 },
-  (_, i) => 2020 + i,
+  { length: currentYear - 2024 + 1 },
+  (_, i) => 2024 + i,
 );
 
 const GovernmentScholarship = () => {
@@ -225,37 +225,37 @@ const GovernmentScholarship = () => {
   };
 
   const handleSyncIPK = async () => {
-    try {
-      setSyncingIPK(true);
-      info("Sinkronisasi IPK", "Memproses sinkronisasi data IPK mahasiswa...");
-
-      //   const result = await syncGovernmentScholarshipIPK(
-      //     selectedYear === "all" ? null : selectedYear,
-      //   );
-
-      clearAlerts();
-      success(
-        "Sinkronisasi Berhasil!",
-        `${result.updated} data IPK berhasil diperbarui. ` +
-          `${result.status_changed} status akademik berubah.`,
-      );
-
-      if (result.summary) {
-        setTimeout(() => {
-          info(
-            "Detail Perubahan",
-            `Normal: ${result.summary.normal} | Warning: ${result.summary.warning} | Revoked: ${result.summary.revoked}`,
-          );
-        }, 1000);
-      }
-
-      fetchAllData();
-    } catch (err) {
-      clearAlerts();
-      error("Gagal!", err.message || "Gagal melakukan sinkronisasi IPK");
-    } finally {
-      setSyncingIPK(false);
-    }
+    info(
+      "Fitur dalam pengembangan",
+      "Fitur sinkronisasi IPK sedang dalam pengembangan.",
+    );
+    // try {
+    //   setSyncingIPK(true);
+    //   info("Sinkronisasi IPK", "Memproses sinkronisasi data IPK mahasiswa...");
+    //   const result = await syncGovernmentScholarshipIPK(
+    //     selectedYear === "all" ? null : selectedYear,
+    //   );
+    //   clearAlerts();
+    //   success(
+    //     "Sinkronisasi Berhasil!",
+    //     `${result.updated} data IPK berhasil diperbarui. ` +
+    //       `${result.status_changed} status akademik berubah.`,
+    //   );
+    //   if (result.summary) {
+    //     setTimeout(() => {
+    //       info(
+    //         "Detail Perubahan",
+    //         `Normal: ${result.summary.normal} | Warning: ${result.summary.warning} | Revoked: ${result.summary.revoked}`,
+    //       );
+    //     }, 1000);
+    //   }
+    //   fetchAllData();
+    // } catch (err) {
+    //   clearAlerts();
+    //   error("Gagal!", err.message || "Gagal melakukan sinkronisasi IPK");
+    // } finally {
+    //   setSyncingIPK(false);
+    // }
   };
 
   const handleYearChange = (year) => {
