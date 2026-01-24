@@ -51,6 +51,7 @@ import {
   SkeletonChart,
   SkeletonTable,
 } from "../../../components/common/skeleton";
+import ExportLoadingModal from "../../../components/ExportLoadingModal";
 
 const { Option } = Select;
 
@@ -66,6 +67,8 @@ const GovernmentScholarship = () => {
   const [chartsLoading, setChartsLoading] = useState(true);
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  const [exportLoading, setExportLoading] = useState(false);
 
   const [importStep, setImportStep] = useState(1);
   const [validationResult, setValidationResult] = useState(null);
@@ -405,13 +408,17 @@ const GovernmentScholarship = () => {
 
   const handleExport = async () => {
     try {
-      info("Export Data", "Memproses export data...");
+      setExportLoading(true);
+
       await exportGovernmentScholarships(
         selectedYear === "all" ? null : selectedYear,
       );
-      clearAlerts();
-      success("Berhasil!", "Data berhasil diexport!");
+      setTimeout(() => {
+        setExportLoading(false);
+        success("Berhasil!", "Data berhasil diexport!");
+      }, 1200);
     } catch (err) {
+      setExportLoading(false);
       clearAlerts();
       error("Gagal!", err.message || "Gagal mengexport data");
     }
@@ -681,6 +688,8 @@ const GovernmentScholarship = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
+      <ExportLoadingModal visible={exportLoading} />
 
       <div className="flex justify-between items-center">
         <div>

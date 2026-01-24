@@ -36,6 +36,7 @@ import {
   SkeletonChart,
   SkeletonTable,
 } from "../../../components/common/skeleton";
+import ExportLoadingModal from "../../../components/ExportLoadingModal";
 
 const { Option } = Select;
 
@@ -49,6 +50,8 @@ const ReportsAdmin = () => {
   const [selectedYear, setSelectedYear] = useState("all");
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
+
+  const [exportLoading, setExportLoading] = useState(false);
 
   const [mainSummaryData, setMainSummaryData] = useState([]);
   const [selectionSummaryData, setSelectionSummaryData] = useState([]);
@@ -322,12 +325,16 @@ const ReportsAdmin = () => {
 
   const handleExportReport = async () => {
     try {
-      info("Ekspor Laporan", "Memproses ekspor laporan...");
+      setExportLoading(true);
+
       await exportLaporanBeasiswa(selectedYear);
-      clearAlerts();
-      success("Berhasil!", "Laporan berhasil diexport!");
+
+      setTimeout(() => {
+        setExportLoading(false);
+        success("Berhasil!", "Laporan berhasil diexport!");
+      }, 1200);
     } catch (err) {
-      clearAlerts();
+      setExportLoading(false);
       error("Gagal", err.message || "Gagal mengekspor laporan");
     }
   };
@@ -570,6 +577,8 @@ const ReportsAdmin = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
+      <ExportLoadingModal visible={exportLoading} />
 
       <div className="flex justify-between items-center">
         <div>

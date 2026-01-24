@@ -27,7 +27,7 @@ export const getMonthlyTrend = async (year) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil tren bulanan");
@@ -46,7 +46,7 @@ export const getSelectionSummary = async (year) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil ringkasan seleksi");
@@ -65,7 +65,7 @@ export const getStatusSummary = async (year = null) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil ringkasan status");
@@ -84,7 +84,7 @@ export const getFacultyDistribution = async (year = null) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil distribusi fakultas");
@@ -103,7 +103,7 @@ export const getDepartmentDistribution = async (year = null) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil distribusi departemen");
@@ -137,7 +137,7 @@ export const getGenderDistribution = async (year = null) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil distribusi gender");
@@ -178,7 +178,7 @@ export const getApplicationsList = async (filters = {}) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil daftar aplikasi");
@@ -223,7 +223,7 @@ export const getScholarshipPerformance = async (year = null) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengambil performa beasiswa");
@@ -242,11 +242,11 @@ export const getTopPerformingFaculties = async (year = null) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(
-      data.message || "Gagal mengambil fakultas berperforma terbaik"
+      data.message || "Gagal mengambil fakultas berperforma terbaik",
     );
   }
   return data.data;
@@ -254,7 +254,8 @@ export const getTopPerformingFaculties = async (year = null) => {
 
 export const exportLaporanBeasiswa = async (year = null) => {
   const token = localStorage.getItem("access_token");
-  const params = year ? `?year=${year}` : "";
+  const yearParam = year === "all" || !year ? "all" : year;
+  const params = `?year=${yearParam}`;
 
   try {
     const response = await fetch(
@@ -264,7 +265,7 @@ export const exportLaporanBeasiswa = async (year = null) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     if (!response.ok) {
@@ -272,7 +273,7 @@ export const exportLaporanBeasiswa = async (year = null) => {
     }
 
     const contentDisposition = response.headers.get("content-disposition");
-    let filename = `laporan_beasiswa_${year || new Date().getFullYear()}.xlsx`;
+    let filename = `laporan_beasiswa_${yearParam === "all" ? "Semua_Tahun" : yearParam}.xlsx`;
 
     if (contentDisposition) {
       const filenameMatch = contentDisposition.match(/filename="(.+)"/);
