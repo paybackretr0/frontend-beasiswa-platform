@@ -13,6 +13,7 @@ import {
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 import { SkeletonLog } from "../../../components/common/skeleton";
+import ExportLoadingModal from "../../../components/ExportLoadingModal";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -34,6 +35,7 @@ const LogAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [exportLoading, setExportLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState({
@@ -79,7 +81,7 @@ const LogAdmin = () => {
 
   const handleExportLog = async () => {
     setIsExporting(true);
-    info("Mengekspor Log Aktivitas", "Sedang mengekspor log aktivitas...");
+    setExportLoading(true);
 
     try {
       const exportFilters = {
@@ -91,22 +93,26 @@ const LogAdmin = () => {
 
       const result = await exportActivityLogs(exportFilters);
 
-      clearAlerts();
-      success(
-        "Berhasil Mengekspor Log Aktivitas",
-        "Log aktivitas berhasil diekspor",
-      );
+      setTimeout(() => {
+        setExportLoading(false);
+        success(
+          "Berhasil Mengekspor Log Aktivitas",
+          "Log aktivitas berhasil diekspor",
+        );
+      }, 1200);
 
       const downloadUrl = `${
         import.meta.env.VITE_IMAGE_URL || "http://localhost:5000"
       }/${result.filePath}`;
       window.open(downloadUrl, "_blank");
     } catch (err) {
-      clearAlerts();
+      setExportLoading(false);
       error("Gagal Mengekspor Log Aktivitas", "Gagal mengekspor log aktivitas");
       console.error("Error exporting logs:", err);
     } finally {
       setIsExporting(false);
+      setExportLoading(false);
+      clearAlerts();
     }
   };
 
@@ -161,6 +167,8 @@ const LogAdmin = () => {
         onRemove={removeAlert}
         position="top-right"
       />
+
+      <ExportLoadingModal visible={exportLoading} />
 
       <div className="flex justify-between items-center mb-6">
         <div>
