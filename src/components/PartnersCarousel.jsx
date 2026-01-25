@@ -12,26 +12,30 @@ const PartnersCarousel = () => {
           "../assets/partners/*.{png,jpg,jpeg,svg,webp,avif}",
         );
 
-        const logoPromises = Object.entries(logoModules).map(
-          async ([path, importFn]) => {
-            const module = await importFn();
-            return {
-              url: module.default,
-              order: parseInt(path.match(/logo(\d+)/)?.[1] || "999"),
-            };
-          },
+        const logoPaths = Object.entries(logoModules).map(
+          ([path, importFn]) => ({
+            path,
+            importFn,
+            order: parseInt(path.match(/logo(\d+)/)?.[1] || "999"),
+          }),
         );
 
-        const loadedLogos = await Promise.all(logoPromises);
-        const sortedLogos = loadedLogos
-          .sort((a, b) => a.order - b.order)
-          .map((item) => item.url);
+        const sortedPaths = logoPaths.sort((a, b) => a.order - b.order);
 
-        setLogos([...sortedLogos, ...sortedLogos]);
+        setLogos(sortedPaths.map(() => null));
+        setLoading(false);
+
+        sortedPaths.forEach(async (item, index) => {
+          const module = await item.importFn();
+          setLogos((prev) => {
+            const updated = [...prev];
+            updated[index] = module.default;
+            return updated;
+          });
+        });
       } catch (error) {
         console.error("Error loading partner logos:", error);
         setLogos([]);
-      } finally {
         setLoading(false);
       }
     };
@@ -50,6 +54,7 @@ const PartnersCarousel = () => {
     cssEase: "linear",
     arrows: false,
     pauseOnHover: false,
+    lazyLoad: "progressive",
     responsive: [
       {
         breakpoint: 1024,
@@ -121,17 +126,31 @@ const PartnersCarousel = () => {
             .partners-carousel .slick-slide > div {
               width: 100%;
             }
+            
+            .partner-logo {
+              opacity: 0;
+              transition: opacity 0.3s ease-in;
+            }
+            .partner-logo.loaded {
+              opacity: 1;
+            }
           `}
         </style>
         <Slider {...settings} className="partners-carousel">
           {logos.map((logo, idx) => (
             <div key={idx}>
               <div className="flex justify-center items-center h-20">
-                <img
-                  src={logo}
-                  alt={`Partner ${idx + 1}`}
-                  className="h-16 w-auto max-w-full object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                />
+                {logo ? (
+                  <img
+                    src={logo}
+                    alt={`Partner ${idx + 1}`}
+                    className="partner-logo loaded h-16 w-auto max-w-full object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    loading="lazy"
+                    onLoad={(e) => e.target.classList.add("loaded")}
+                  />
+                ) : (
+                  <div className="h-16 w-32 bg-gray-200 rounded animate-pulse"></div>
+                )}
               </div>
             </div>
           ))}
