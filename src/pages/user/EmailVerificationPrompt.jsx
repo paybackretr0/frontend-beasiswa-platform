@@ -56,7 +56,7 @@ const EmailVerificationPrompt = ({ userEmail, onVerificationSuccess }) => {
     } catch (err) {
       error(
         "Gagal!",
-        err.message || "Kode verifikasi salah atau sudah kadaluarsa"
+        err.message || "Kode verifikasi salah atau sudah kadaluarsa",
       );
     } finally {
       setIsVerifying(false);
@@ -107,7 +107,7 @@ const EmailVerificationPrompt = ({ userEmail, onVerificationSuccess }) => {
                 value={verificationCode}
                 onChange={(e) =>
                   setVerificationCode(
-                    e.target.value.replace(/\D/g, "").slice(0, 6)
+                    e.target.value.replace(/\D/g, "").slice(0, 6),
                   )
                 }
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-lg tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
