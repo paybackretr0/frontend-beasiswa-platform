@@ -20,6 +20,9 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
   const [formData, setFormData] = useState({
     email: "",
     code: "",
@@ -31,7 +34,15 @@ const ForgotPassword = () => {
 
   useEffect(() => {
     document.title = "Lupa Password - Beasiswa";
-  }, []);
+
+    if (cooldown === 0) return;
+
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,6 +50,22 @@ const ForgotPassword = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleResendCode = async () => {
+    if (cooldown > 0 || resendLoading) return;
+
+    setResendLoading(true);
+    try {
+      await forgotPassword({ email: formData.email });
+      success("Berhasil!", "Kode reset baru telah dikirim ke email Anda.");
+      setCooldown(60);
+    } catch (err) {
+      console.error("Error resending code:", err);
+      error("Gagal!", err.message || "Gagal mengirim ulang kode.");
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   const handleSubmitEmail = async (e) => {
@@ -121,10 +148,8 @@ const ForgotPassword = () => {
         onRemove={removeAlert}
         position="top-right"
       />
-      {/* Main Content */}
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex items-center justify-center space-x-2">
               {[1, 2, 3].map((stepNumber) => (
@@ -156,7 +181,6 @@ const ForgotPassword = () => {
           </div>
 
           <Card className="w-full">
-            {/* Step 1: Email */}
             {step === 1 && (
               <form onSubmit={handleSubmitEmail}>
                 <div className="text-center mb-6">
@@ -206,7 +230,6 @@ const ForgotPassword = () => {
               </form>
             )}
 
-            {/* Step 2: Verify Code */}
             {step === 2 && (
               <form onSubmit={handleSubmitCode}>
                 <div className="text-center mb-6">
@@ -242,7 +265,7 @@ const ForgotPassword = () => {
                   <button
                     type="button"
                     onClick={handleBackStep}
-                    className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                   >
                     <ArrowLeftOutlined />
                     Kembali
@@ -257,19 +280,21 @@ const ForgotPassword = () => {
                     Tidak menerima kode?{" "}
                     <button
                       type="button"
-                      onClick={() =>
-                        handleSubmitEmail({ preventDefault: () => {} })
-                      }
-                      className="text-blue-600 hover:text-blue-700 font-medium"
+                      onClick={handleResendCode}
+                      disabled={resendLoading || cooldown > 0}
+                      className="font-medium transition-colors text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
                     >
-                      Kirim ulang
+                      {resendLoading
+                        ? "Mengirim..."
+                        : cooldown > 0
+                          ? `Kirim ulang (${cooldown}s)`
+                          : "Kirim ulang"}
                     </button>
                   </p>
                 </div>
               </form>
             )}
 
-            {/* Step 3: Reset Password */}
             {step === 3 && (
               <form onSubmit={handleSubmitPassword}>
                 <div className="text-center mb-6">
