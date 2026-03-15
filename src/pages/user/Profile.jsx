@@ -84,7 +84,8 @@ const Profile = () => {
           faculty: user.faculty?.name || "N/A",
           department: user.department?.name || "N/A",
           study_program:
-            `${user.study_program?.degree} - ${user.department?.name}` || "N/A",
+            `${user.study_program?.degree} - ${user.study_program?.name}` ||
+            "N/A",
         };
 
         setFormData(userData);

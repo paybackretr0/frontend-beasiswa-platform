@@ -1042,7 +1042,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
                             isDisabled ? "cursor-not-allowed" : "cursor-pointer"
                           }`}
                         >
-                          {prog.degree} {prog.department.name}
+                          {prog.degree} {prog.name}
                           {isDisabledByFaculty && (
                             <span className="text-xs text-blue-600 ml-1">
                               (via fakultas)

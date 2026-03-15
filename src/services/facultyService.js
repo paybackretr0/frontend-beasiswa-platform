@@ -1,6 +1,23 @@
 import API_BASE_URL from "./apiConfig";
 import { authFetch } from "./tokenAuth";
 
+export const getPublicFaculties = async () => {
+  const res = await fetch(`${API_BASE_URL}/faculties/public`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil daftar fakultas");
+  }
+
+  return data.data;
+};
+
 export const getFaculties = async () => {
   const token = localStorage.getItem("access_token");
 
