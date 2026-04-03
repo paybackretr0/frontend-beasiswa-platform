@@ -31,7 +31,7 @@ export const createScholarship = async (formData) => {
   multipartFormData.append("is_external", formData.is_external);
   multipartFormData.append(
     "verification_level",
-    formData.verification_level || "DITMAWA"
+    formData.verification_level || "DITMAWA",
   );
 
   if (formData.start_date) {
@@ -44,11 +44,11 @@ export const createScholarship = async (formData) => {
   multipartFormData.append("contact_person_name", formData.contact_person_name);
   multipartFormData.append(
     "contact_person_email",
-    formData.contact_person_email
+    formData.contact_person_email,
   );
   multipartFormData.append(
     "contact_person_phone",
-    formData.contact_person_phone
+    formData.contact_person_phone,
   );
 
   multipartFormData.append("scholarship_value", formData.scholarship_value);
@@ -56,7 +56,7 @@ export const createScholarship = async (formData) => {
 
   multipartFormData.append(
     "is_active",
-    formData.is_active !== undefined ? formData.is_active : true
+    formData.is_active !== undefined ? formData.is_active : true,
   );
 
   if (formData.website_url) {
@@ -76,7 +76,7 @@ export const createScholarship = async (formData) => {
     for (const schema of formData.schemas) {
       if (schema.requirements && schema.requirements.length > 0) {
         const fileRequirement = schema.requirements.find(
-          (req) => req.type === "FILE" && req.file
+          (req) => req.type === "FILE" && req.file,
         );
         if (fileRequirement && !hasRequirementFile) {
           multipartFormData.append("requirement_file", fileRequirement.file);
@@ -160,7 +160,7 @@ export const updateScholarship = async (id, formData) => {
   multipartFormData.append("is_external", formData.is_external);
   multipartFormData.append(
     "verification_level",
-    formData.verification_level || "DITMAWA"
+    formData.verification_level || "DITMAWA",
   );
 
   if (formData.start_date) {
@@ -173,11 +173,11 @@ export const updateScholarship = async (id, formData) => {
   multipartFormData.append("contact_person_name", formData.contact_person_name);
   multipartFormData.append(
     "contact_person_email",
-    formData.contact_person_email
+    formData.contact_person_email,
   );
   multipartFormData.append(
     "contact_person_phone",
-    formData.contact_person_phone
+    formData.contact_person_phone,
   );
 
   multipartFormData.append("scholarship_value", formData.scholarship_value);
@@ -185,7 +185,7 @@ export const updateScholarship = async (id, formData) => {
 
   multipartFormData.append(
     "is_active",
-    formData.is_active !== undefined ? formData.is_active : true
+    formData.is_active !== undefined ? formData.is_active : true,
   );
 
   if (formData.website_url) {
@@ -205,7 +205,7 @@ export const updateScholarship = async (id, formData) => {
     for (const schema of formData.schemas) {
       if (schema.requirements && schema.requirements.length > 0) {
         const fileRequirement = schema.requirements.find(
-          (req) => req.type === "FILE" && req.file instanceof File
+          (req) => req.type === "FILE" && req.file instanceof File,
         );
         if (fileRequirement && !hasRequirementFile) {
           multipartFormData.append("requirement_file", fileRequirement.file);
@@ -318,7 +318,7 @@ export const getOtherScholarships = async (id, limit = 5) => {
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   const data = await response.json();
@@ -358,7 +358,7 @@ export const activateSchema = async (schemaId) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal mengaktifkan schema");
@@ -376,7 +376,7 @@ export const deactivateSchema = async (schemaId) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
   if (!data.success) {
     throw new Error(data.message || "Gagal menonaktifkan schema");

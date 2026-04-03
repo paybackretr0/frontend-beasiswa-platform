@@ -613,12 +613,12 @@ const ScholarshipDetail = () => {
                 {scholarship.studyPrograms?.length > 0 && (
                   <div>
                     <div className="text-sm text-gray-600 mb-2 font-medium">
-                      Departemen/Program Studi:
+                      Program Studi:
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {scholarship.studyPrograms.map((prodi) => (
                         <Tag key={prodi.id} color="purple">
-                          {prodi.degree} {prodi.department.name}
+                          {prodi.degree} {prodi.name}
                         </Tag>
                       ))}
                     </div>
