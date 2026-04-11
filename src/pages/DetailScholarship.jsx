@@ -44,7 +44,7 @@ const DetailScholarship = () => {
     studyPrograms: false,
   });
 
-  const { alert, setAlert, warning, error: alertError } = useAlert();
+  const { alerts, removeAlert, warning, error: alertError } = useAlert();
 
   useEffect(() => {
     loadScholarshipDetail();
@@ -118,6 +118,74 @@ const DetailScholarship = () => {
       console.error("Error opening external URL:", error);
       alertError("Gagal!", "Gagal membuka website penyedia");
     }
+  };
+
+  const getCurrentUser = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      return null;
+    }
+  };
+
+  const isStudentEligibleForScholarship = (user, scholarshipData) => {
+    if (!user || !scholarshipData) return false;
+
+    const studyProgramIds = new Set(
+      (scholarshipData.studyPrograms || []).map((sp) => sp.id),
+    );
+
+    const departmentIds = new Set(
+      (scholarshipData.departments || []).map((d) => d.id),
+    );
+
+    const facultyIds = new Set(
+      (scholarshipData.faculties || []).map((f) => f.id),
+    );
+
+    const hasRestriction =
+      studyProgramIds.size > 0 || departmentIds.size > 0 || facultyIds.size > 0;
+    if (!hasRestriction) return true;
+
+    const isStudyProgramEligible =
+      studyProgramIds.size > 0 && studyProgramIds.has(user.study_program_id);
+    const isDepartmentEligible =
+      departmentIds.size > 0 && departmentIds.has(user.department_id);
+    const isFacultyEligible =
+      facultyIds.size > 0 && facultyIds.has(user.faculty_id);
+
+    return isStudyProgramEligible || isDepartmentEligible || isFacultyEligible;
+  };
+
+  const handleApplyScholarship = (schemaId) => {
+    const accessToken = localStorage.getItem("access_token");
+    const user = getCurrentUser();
+
+    if (!accessToken || !user) {
+      warning("Perlu Login", "Silakan login terlebih dahulu sebagai mahasiswa");
+      navigate("/login");
+      return;
+    }
+
+    if (String(user.role || "").toUpperCase() !== "MAHASISWA") {
+      warning(
+        "Akses Ditolak",
+        "Hanya akun mahasiswa yang dapat mendaftar beasiswa",
+      );
+      return;
+    }
+
+    if (!isStudentEligibleForScholarship(user, scholarship)) {
+      warning(
+        "Tidak Memenuhi Cakupan",
+        "Program beasiswa ini tidak mencakup fakultas/departemen/program studi Anda",
+      );
+      return;
+    }
+
+    navigate(`/scholarship/${id}/apply?schema=${schemaId}`);
   };
 
   const getStatusTag = (isActive, endDate) => {
@@ -399,9 +467,7 @@ const DetailScholarship = () => {
                 ) : (
                   <Button
                     className="w-full"
-                    onClick={() =>
-                      navigate(`/scholarship/${id}/apply?schema=${schema.id}`)
-                    }
+                    onClick={() => handleApplyScholarship(schema.id)}
                   >
                     Daftar Skema Ini Sekarang
                   </Button>
@@ -427,8 +493,8 @@ const DetailScholarship = () => {
     return (
       <GuestLayout>
         <AlertContainer
-          alert={alert}
-          setAlert={setAlert}
+          alerts={alerts}
+          onRemove={removeAlert}
           position="top-right"
         />
         <SkeletonDetailScholarship />
@@ -440,8 +506,8 @@ const DetailScholarship = () => {
     return (
       <GuestLayout>
         <AlertContainer
-          alert={alert}
-          setAlert={setAlert}
+          alerts={alerts}
+          onRemove={removeAlert}
           position="top-right"
         />
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
@@ -486,7 +552,11 @@ const DetailScholarship = () => {
 
   return (
     <GuestLayout>
-      <AlertContainer alert={alert} setAlert={setAlert} position="top-right" />
+      <AlertContainer
+        alerts={alerts}
+        onRemove={removeAlert}
+        position="top-right"
+      />
 
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
