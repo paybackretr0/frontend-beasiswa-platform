@@ -20,30 +20,55 @@ const UniversalTable = ({
 }) => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState(data);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize,
+  });
 
   useEffect(() => {
     setFilteredData(data);
   }, [data]);
 
-  const handleSearch = (value) => {
-    setSearchText(value);
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      current: 1,
+      pageSize,
+    }));
+  }, [pageSize]);
 
-    if (onSearch) {
-      onSearch(value);
-      return;
-    }
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (onSearch) {
+        onSearch(searchText);
+        return;
+      }
 
-    if (!value || searchFields.length === 0) {
-      setFilteredData(data);
-      return;
-    }
+      if (!searchText || searchFields.length === 0) {
+        setFilteredData(data);
+        return;
+      }
 
-    const filtered = data.filter((item) =>
-      searchFields.some((field) =>
-        item[field]?.toString().toLowerCase().includes(value.toLowerCase()),
-      ),
-    );
-    setFilteredData(filtered);
+      const filtered = data.filter((item) =>
+        searchFields.some((field) =>
+          item[field]
+            ?.toString()
+            .toLowerCase()
+            .includes(searchText.toLowerCase()),
+        ),
+      );
+      setFilteredData(filtered);
+    }, 250);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchText, data, onSearch, searchFields]);
+
+  const handleTableChange = (nextPagination) => {
+    setPagination((prev) => ({
+      ...prev,
+      current: nextPagination.current,
+      pageSize: nextPagination.pageSize,
+    }));
   };
 
   return (
@@ -75,17 +100,9 @@ const UniversalTable = ({
                     allowClear
                     enterButton={<SearchOutlined />}
                     size="middle"
-                    onSearch={handleSearch}
-                    onChange={(e) => {
-                      if (!e.target.value) {
-                        if (onSearch) {
-                          onSearch("");
-                        } else {
-                          setFilteredData(data);
-                          setSearchText("");
-                        }
-                      }
-                    }}
+                    value={searchText}
+                    onSearch={(value) => setSearchText(value)}
+                    onChange={(e) => setSearchText(e.target.value)}
                     style={{ maxWidth: 350 }}
                   />
                 </div>
@@ -105,12 +122,15 @@ const UniversalTable = ({
           dataSource={onSearch ? data : filteredData}
           rowKey={rowKey}
           pagination={{
-            pageSize,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
             showSizeChanger: true,
             showQuickJumper: true,
+            pageSizeOptions: ["10", "20", "50", "100"],
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} dari ${total} data`,
           }}
+          onChange={handleTableChange}
           scroll={scroll}
         />
       </div>
