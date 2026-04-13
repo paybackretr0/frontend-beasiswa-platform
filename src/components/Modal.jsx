@@ -81,33 +81,37 @@ const UniversalModal = ({
       destroyOnHidden
       width={600}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        initialValues={initialValues}
-      >
-        {fields.map((field) => (
-          <Form.Item
-            key={field.name}
-            name={field.name}
-            label={field.label}
-            rules={field.rules}
-            extra={field.extra}
-          >
-            {renderField(field)}
-          </Form.Item>
-        ))}
+      <div className="max-h-[70vh] overflow-y-auto pr-1">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFinish}
+          initialValues={initialValues}
+        >
+          {fields.map((field) => (
+            <Form.Item
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              rules={field.rules}
+              extra={field.extra}
+            >
+              {renderField(field)}
+            </Form.Item>
+          ))}
 
-        <Form.Item style={{ marginTop: 24 }}>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <Button onClick={onCancel}>Batal</Button>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              Simpan
-            </Button>
-          </div>
-        </Form.Item>
-      </Form>
+          <Form.Item style={{ marginTop: 24 }}>
+            <div
+              style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
+            >
+              <Button onClick={onCancel}>Batal</Button>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Simpan
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </div>
     </Modal>
   );
 };
