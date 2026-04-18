@@ -140,6 +140,9 @@ const ReportsAdmin = () => {
     role,
   );
 
+  const selectedYearText =
+    selectedYear === "all" ? "semua tahun" : `tahun ${selectedYear}`;
+
   useEffect(() => {
     document.title = "Laporan - Admin";
     fetchAllData();
@@ -368,7 +371,11 @@ const ReportsAdmin = () => {
 
   const handleYearChange = (year) => {
     setSelectedYear(year);
-    info("Memuat data untuk tahun " + year);
+    info(
+      year === "all"
+        ? "Memuat data untuk semua tahun"
+        : `Memuat data untuk tahun ${year}`,
+    );
   };
 
   const handleExportReport = async () => {
@@ -1103,7 +1110,7 @@ const ReportsAdmin = () => {
             <LineChart
               data={monthlyData}
               title="Tren Pendaftaran Bulanan"
-              description={`Jumlah pendaftar per bulan tahun ${selectedYear}`}
+              description={`Jumlah pendaftar per bulan ${selectedYearText}`}
             />
             <LineChart
               data={tahunData}
@@ -1140,7 +1147,7 @@ const ReportsAdmin = () => {
               <PerformanceBarChart
                 data={scholarshipPerformance}
                 title="Performa Beasiswa"
-                description={`Top 5 beasiswa dengan peminat terbanyak tahun ${selectedYear}`}
+                description={`Top 5 beasiswa dengan peminat terbanyak ${selectedYearText}`}
               />
             </div>
             <div className="flex flex-col h-full">
@@ -1170,12 +1177,12 @@ const ReportsAdmin = () => {
                 <SkeletonChart
                   type="horizontal-bar"
                   title="Pendaftar Berdasarkan Fakultas"
-                  description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
+                  description={`Distribusi pendaftar beasiswa per fakultas ${selectedYearText}`}
                 />
                 <SkeletonChart
                   type="horizontal-bar"
                   title="Pendaftar Berdasarkan Departemen"
-                  description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
+                  description={`Distribusi pendaftar beasiswa per departemen ${selectedYearText}`}
                 />
               </>
             )}
@@ -1188,14 +1195,14 @@ const ReportsAdmin = () => {
                   <HorizontalBarChart
                     data={fakultasData}
                     title="Pendaftar Berdasarkan Fakultas"
-                    description={`Distribusi pendaftar beasiswa per fakultas tahun ${selectedYear}`}
+                    description={`Distribusi pendaftar beasiswa per fakultas ${selectedYearText}`}
                   />
                 </div>
                 <div className="flex flex-col h-full">
                   <HorizontalBarChart
                     data={departemenData}
                     title="Pendaftar Berdasarkan Departemen"
-                    description={`Distribusi pendaftar beasiswa per departemen tahun ${selectedYear}`}
+                    description={`Distribusi pendaftar beasiswa per departemen ${selectedYearText}`}
                   />
                 </div>
               </>
