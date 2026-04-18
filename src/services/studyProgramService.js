@@ -1,6 +1,26 @@
 import API_BASE_URL from "./apiConfig";
 import { authFetch } from "./tokenAuth";
 
+export const getStudyProgramsByDepartment = async (departmentId) => {
+  const res = await fetch(
+    `${API_BASE_URL}/departments/public/${departmentId}/study-programs`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  const data = await res.json();
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengambil daftar program studi");
+  }
+
+  return data.data;
+};
+
 export const getStudyPrograms = async () => {
   const token = localStorage.getItem("access_token");
 
@@ -68,7 +88,7 @@ export const activateStudyProgram = async (id) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 
   if (!data.success) {

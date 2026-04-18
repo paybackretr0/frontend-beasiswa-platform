@@ -19,6 +19,9 @@ import {
   deactivateUser,
   activateUser,
 } from "../../../services/userService";
+import { getPublicFaculties } from "../../../services/facultyService";
+import { getDepartmentsByFaculty } from "../../../services/departmentService";
+import { getStudyProgramsByDepartment } from "../../../services/studyProgramService";
 import { SkeletonAccount } from "../../../components/common/skeleton";
 
 const Mahasiswa = () => {
@@ -31,6 +34,9 @@ const Mahasiswa = () => {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [faculties, setFaculties] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [studyPrograms, setStudyPrograms] = useState([]);
 
   const { alerts, success, error, removeAlert } = useAlert();
 
@@ -54,6 +60,81 @@ const Mahasiswa = () => {
     document.title = "Kelola Mahasiswa";
     fetchMahasiswa();
   }, []);
+
+  const fetchFaculties = async () => {
+    try {
+      const data = await getPublicFaculties();
+      setFaculties(data);
+    } catch (err) {
+      console.error("Error fetching faculties:", err);
+      error("Gagal", err.message || "Gagal mengambil data fakultas");
+    }
+  };
+
+  const fetchDepartments = async (facultyId) => {
+    if (!facultyId) {
+      setDepartments([]);
+      return;
+    }
+
+    try {
+      const data = await getDepartmentsByFaculty(facultyId);
+      setDepartments(data);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      error("Gagal", err.message || "Gagal mengambil data departemen");
+      setDepartments([]);
+    }
+  };
+
+  const fetchStudyPrograms = async (departmentId) => {
+    if (!departmentId) {
+      setStudyPrograms([]);
+      return;
+    }
+
+    try {
+      const data = await getStudyProgramsByDepartment(departmentId);
+      setStudyPrograms(data);
+    } catch (err) {
+      console.error("Error fetching study programs:", err);
+      error("Gagal", err.message || "Gagal mengambil data program studi");
+      setStudyPrograms([]);
+    }
+  };
+
+  useEffect(() => {
+    if (!modalVisible) return;
+
+    const loadReferenceData = async () => {
+      await fetchFaculties();
+
+      if (editingUser?.faculty_id) {
+        await fetchDepartments(editingUser.faculty_id);
+      } else {
+        setDepartments([]);
+      }
+
+      if (editingUser?.department_id) {
+        await fetchStudyPrograms(editingUser.department_id);
+      } else {
+        setStudyPrograms([]);
+      }
+    };
+
+    loadReferenceData();
+  }, [modalVisible, editingUser]);
+
+  const handleFacultyChange = async (facultyId) => {
+    setDepartments([]);
+    setStudyPrograms([]);
+    await fetchDepartments(facultyId);
+  };
+
+  const handleDepartmentChange = async (departmentId) => {
+    setStudyPrograms([]);
+    await fetchStudyPrograms(departmentId);
+  };
 
   const handleAddMahasiswa = async (values) => {
     setModalLoading(true);
@@ -262,6 +343,8 @@ const Mahasiswa = () => {
         onCancel={() => {
           setModalVisible(false);
           setEditingUser(null);
+          setDepartments([]);
+          setStudyPrograms([]);
         }}
         onSubmit={(values) => {
           if (editingUser) {
@@ -278,6 +361,14 @@ const Mahasiswa = () => {
                 full_name: editingUser.full_name,
                 phone_number: editingUser.phone_number,
                 email: editingUser.email,
+                birth_place: editingUser.birth_place,
+                birth_date: editingUser.birth_date
+                  ? new Date(editingUser.birth_date).toISOString().split("T")[0]
+                  : undefined,
+                gender: editingUser.gender,
+                faculty_id: editingUser.faculty_id,
+                department_id: editingUser.department_id,
+                study_program_id: editingUser.study_program_id,
               }
             : {}
         }
@@ -292,17 +383,84 @@ const Mahasiswa = () => {
                   ],
                 },
                 {
-                  name: "phone_number",
-                  label: "Nomor Telepon",
-                  rules: [{ required: false }],
-                },
-                {
                   name: "email",
                   label: "Email",
                   type: "email",
                   rules: [
                     { required: true, message: "Email wajib diisi" },
                     { type: "email", message: "Format email tidak valid" },
+                  ],
+                },
+                {
+                  name: "phone_number",
+                  label: "Nomor Telepon",
+                  rules: [
+                    { required: true, message: "Nomor telepon wajib diisi" },
+                  ],
+                },
+                {
+                  name: "birth_place",
+                  label: "Tempat Lahir",
+                  rules: [
+                    { required: true, message: "Tempat lahir wajib diisi" },
+                  ],
+                },
+                {
+                  name: "birth_date",
+                  label: "Tanggal Lahir",
+                  type: "date",
+                  rules: [
+                    { required: true, message: "Tanggal lahir wajib diisi" },
+                  ],
+                },
+                {
+                  name: "gender",
+                  label: "Jenis Kelamin",
+                  type: "select",
+                  options: [
+                    { label: "Laki-laki", value: "L" },
+                    { label: "Perempuan", value: "P" },
+                  ],
+                  rules: [
+                    { required: true, message: "Jenis kelamin wajib dipilih" },
+                  ],
+                },
+                {
+                  name: "faculty_id",
+                  label: "Fakultas",
+                  type: "select",
+                  options: faculties.map((faculty) => ({
+                    label: faculty.name,
+                    value: faculty.id,
+                  })),
+                  onChange: handleFacultyChange,
+                  rules: [
+                    { required: true, message: "Fakultas wajib dipilih" },
+                  ],
+                },
+                {
+                  name: "department_id",
+                  label: "Departemen",
+                  type: "select",
+                  options: departments.map((department) => ({
+                    label: department.name,
+                    value: department.id,
+                  })),
+                  onChange: handleDepartmentChange,
+                  rules: [
+                    { required: true, message: "Departemen wajib dipilih" },
+                  ],
+                },
+                {
+                  name: "study_program_id",
+                  label: "Program Studi",
+                  type: "select",
+                  options: studyPrograms.map((studyProgram) => ({
+                    label: `${studyProgram.degree || ""}${studyProgram.degree ? " - " : ""}${studyProgram.name}`,
+                    value: studyProgram.id,
+                  })),
+                  rules: [
+                    { required: true, message: "Program studi wajib dipilih" },
                   ],
                 },
               ]
@@ -328,6 +486,78 @@ const Mahasiswa = () => {
                   label: "Password",
                   type: "password",
                   rules: [{ required: true, message: "Password wajib diisi" }],
+                },
+                {
+                  name: "phone_number",
+                  label: "Nomor Telepon",
+                  rules: [
+                    { required: true, message: "Nomor telepon wajib diisi" },
+                  ],
+                },
+                {
+                  name: "birth_place",
+                  label: "Tempat Lahir",
+                  rules: [
+                    { required: true, message: "Tempat lahir wajib diisi" },
+                  ],
+                },
+                {
+                  name: "birth_date",
+                  label: "Tanggal Lahir",
+                  type: "date",
+                  rules: [
+                    { required: true, message: "Tanggal lahir wajib diisi" },
+                  ],
+                },
+                {
+                  name: "gender",
+                  label: "Jenis Kelamin",
+                  type: "select",
+                  options: [
+                    { label: "Laki-laki", value: "L" },
+                    { label: "Perempuan", value: "P" },
+                  ],
+                  rules: [
+                    { required: true, message: "Jenis kelamin wajib dipilih" },
+                  ],
+                },
+                {
+                  name: "faculty_id",
+                  label: "Fakultas",
+                  type: "select",
+                  options: faculties.map((faculty) => ({
+                    label: faculty.name,
+                    value: faculty.id,
+                  })),
+                  onChange: handleFacultyChange,
+                  rules: [
+                    { required: true, message: "Fakultas wajib dipilih" },
+                  ],
+                },
+                {
+                  name: "department_id",
+                  label: "Departemen",
+                  type: "select",
+                  options: departments.map((department) => ({
+                    label: department.name,
+                    value: department.id,
+                  })),
+                  onChange: handleDepartmentChange,
+                  rules: [
+                    { required: true, message: "Departemen wajib dipilih" },
+                  ],
+                },
+                {
+                  name: "study_program_id",
+                  label: "Program Studi",
+                  type: "select",
+                  options: studyPrograms.map((studyProgram) => ({
+                    label: `${studyProgram.degree || ""}${studyProgram.degree ? " - " : ""}${studyProgram.name}`,
+                    value: studyProgram.id,
+                  })),
+                  rules: [
+                    { required: true, message: "Program studi wajib dipilih" },
+                  ],
                 },
               ]
         }

@@ -27,12 +27,10 @@ const Login = () => {
       const res = await login(form);
 
       if (res?.data?.access_token && res?.data?.user) {
-        // simpan token dan user
         localStorage.setItem("access_token", res.data.access_token);
         localStorage.setItem("refresh_token", res.data.refresh_token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
 
-        // redirect berdasarkan role
         const role = res.data.user.role?.toUpperCase();
         if (role === "MAHASISWA") {
           navigate("/", { replace: true });
@@ -52,7 +50,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left: Background Image */}
       <div className="hidden md:block w-0 md:w-[70%] relative">
         <img
           src={AuthImg}
@@ -62,7 +59,6 @@ const Login = () => {
         <div className="absolute inset-0 bg-gradient-to-tr from-[#2D60FF]/70 via-[#eaf0ff]/60 to-transparent" />
       </div>
 
-      {/* Right: Login Form */}
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-md bg-white rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-600 mb-6 text-center">

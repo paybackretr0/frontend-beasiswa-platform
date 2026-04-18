@@ -37,7 +37,7 @@ const Validator = () => {
   const fetchValidator = async () => {
     setLoading(true);
     try {
-      const data = await fetchUsersByRole("Validator");
+      const data = await fetchUsersByRole("validator");
       setValidatorData(data);
     } catch (err) {
       console.error("Error fetching Validator:", err);

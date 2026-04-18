@@ -89,6 +89,14 @@ const StepFinalize = ({
       return;
     }
 
+    if (new Date(formData.end_date) < new Date(formData.start_date)) {
+      warning(
+        "Tanggal Tidak Valid",
+        "Tanggal selesai pendaftaran tidak boleh kurang dari tanggal mulai",
+      );
+      return;
+    }
+
     if (
       !formData.contact_person_name ||
       !formData.contact_person_email ||

@@ -11,6 +11,20 @@ import AlertContainer from "../../../../components/AlertContainer";
 const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   const { warning, alerts, removeAlert } = useAlert();
 
+  const sortByName = (items = []) => {
+    return [...items].sort((a, b) =>
+      (a?.name || "").localeCompare(b?.name || "", "id-ID"),
+    );
+  };
+
+  const sortStudyPrograms = (items = []) => {
+    return [...items].sort((a, b) => {
+      const nameCompare = (a?.name || "").localeCompare(b?.name || "", "id-ID");
+      if (nameCompare !== 0) return nameCompare;
+      return (a?.degree || "").localeCompare(b?.degree || "", "id-ID");
+    });
+  };
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -72,9 +86,9 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
           getDepartments(),
           getStudyPrograms(),
         ]);
-      setFaculties(facultiesData);
-      setDepartments(departmentsData);
-      setStudyPrograms(studyProgramsData);
+      setFaculties(sortByName(facultiesData));
+      setDepartments(sortByName(departmentsData));
+      setStudyPrograms(sortStudyPrograms(studyProgramsData));
     } catch (err) {
       console.error("Error fetching data:", err);
     }
@@ -1042,7 +1056,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
                             isDisabled ? "cursor-not-allowed" : "cursor-pointer"
                           }`}
                         >
-                          {prog.degree} {prog.department.name}
+                          {prog.degree} {prog.name}
                           {isDisabledByFaculty && (
                             <span className="text-xs text-blue-600 ml-1">
                               (via fakultas)

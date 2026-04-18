@@ -25,7 +25,14 @@ const AdminRoutes = () => (
       </AuthRoute>
     }
   >
-    <Route path="dashboard" element={<AdminDashboard />} />
+    <Route
+      path="dashboard"
+      element={
+        <RoleRoute access="dashboard">
+          <AdminDashboard />
+        </RoleRoute>
+      }
+    />
     <Route
       path="registration"
       element={

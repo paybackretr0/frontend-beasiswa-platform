@@ -51,6 +51,7 @@ const ProgramStudi = () => {
       const formattedData = data.map((studyProgram) => ({
         key: studyProgram.id,
         id: studyProgram.id,
+        nama: studyProgram.name,
         kode: studyProgram.code,
         jenjang: studyProgram.degree,
         departemen: studyProgram.department
@@ -132,7 +133,7 @@ const ProgramStudi = () => {
       type: record.is_active ? "deactivate" : "activate",
       record: record,
       title: `${actionTextCapital} Program Studi`,
-      content: `Apakah Anda yakin ingin ${actionText} program studi "${record.jenjang} - ${record.kode}"?`,
+      content: `Apakah Anda yakin ingin ${actionText} program studi "${record.jenjang} - ${record.nama}"?`,
       okText: actionTextCapital,
       okType: record.is_active ? "danger" : "primary",
       icon: record.is_active ? (
@@ -199,6 +200,7 @@ const ProgramStudi = () => {
       filtered = filtered.filter(
         (item) =>
           item.departemen?.toLowerCase().includes(searchValue.toLowerCase()) ||
+          item.nama?.toLowerCase().includes(searchValue.toLowerCase()) ||
           item.kode?.toLowerCase().includes(searchValue.toLowerCase()) ||
           item.jenjang?.toLowerCase().includes(searchValue.toLowerCase()),
       );
@@ -235,11 +237,13 @@ const ProgramStudi = () => {
 
   const studyProgramColumns = [
     createNumberColumn(),
+
     {
       title: "Jenjang",
       dataIndex: "jenjang",
       key: "jenjang",
-      width: "15%",
+      width: 120,
+      align: "center",
       filters: [
         { text: "D3", value: "D3" },
         { text: "D4", value: "D4" },
@@ -250,32 +254,27 @@ const ProgramStudi = () => {
       ],
       onFilter: (value, record) => record.jenjang === value,
     },
+
     {
-      title: "Kode",
-      dataIndex: "kode",
-      key: "kode",
-      sorter: (a, b) => a.kode.localeCompare(b.kode),
-      width: "20%",
+      title: "Program Studi",
+      key: "nama",
+      sorter: (a, b) => a.nama.localeCompare(b.nama),
+      render: (_, record) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-800">{record.nama}</span>
+          <span className="text-xs text-gray-500">{record.departemen}</span>
+        </div>
+      ),
     },
-    {
-      title: "Departemen",
-      dataIndex: "departemen",
-      key: "departemen",
-      width: "30%",
-      filters: departmentOptions
-        .filter((option) => option !== "Semua")
-        .map((dept) => ({
-          text: dept,
-          value: dept,
-        })),
-      onFilter: (value, record) => record.departemen === value,
-    },
+
     {
       title: "Status",
       dataIndex: "is_active",
       key: "is_active",
+      width: 160,
+      align: "center",
       render: (is_active, record) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <span
             className={`px-2 py-1 rounded text-xs font-medium ${
               is_active
@@ -285,11 +284,10 @@ const ProgramStudi = () => {
           >
             {is_active ? "Aktif" : "Nonaktif"}
           </span>
+
           <Switch
             checked={is_active}
             onChange={() => handleToggleStatus(record)}
-            checkedChildren={<CheckCircleOutlined />}
-            unCheckedChildren={<CloseCircleOutlined />}
             size="small"
           />
         </div>
@@ -299,15 +297,18 @@ const ProgramStudi = () => {
         { text: "Nonaktif", value: false },
       ],
       onFilter: (value, record) => record.is_active === value,
-      width: "20%",
     },
-    createActionColumn([
-      {
-        key: "edit",
-        icon: <EditOutlined />,
-        onClick: handleEdit,
-      },
-    ]),
+
+    createActionColumn(
+      [
+        {
+          key: "edit",
+          icon: <EditOutlined />,
+          onClick: handleEdit,
+        },
+      ],
+      80,
+    ),
   ];
 
   return (
@@ -321,8 +322,8 @@ const ProgramStudi = () => {
         title="Kelola Program Studi"
         data={filteredStudyPrograms}
         columns={studyProgramColumns}
-        searchFields={["departemen", "kode", "jenjang"]}
-        searchPlaceholder="Cari program studi, departemen, kode, atau jenjang..."
+        searchFields={["nama", "jenjang", "departemen"]}
+        searchPlaceholder="Cari program studi, departemen, jenjang..."
         addButtonText="Tambah Program Studi"
         onAdd={handleAdd}
         loading={loading}
@@ -350,6 +351,7 @@ const ProgramStudi = () => {
         initialValues={
           editingStudyProgram
             ? {
+                name: editingStudyProgram.nama,
                 degree: editingStudyProgram.jenjang,
                 code: editingStudyProgram.kode,
                 department_id: editingStudyProgram.departemenId,
@@ -370,6 +372,17 @@ const ProgramStudi = () => {
               { label: "Profesi", value: "Profesi" },
             ],
             rules: [{ required: true, message: "Jenjang wajib dipilih" }],
+          },
+          {
+            name: "name",
+            label: "Nama Program Studi",
+            rules: [
+              { required: true, message: "Nama program studi wajib diisi" },
+              {
+                max: 255,
+                message: "Nama program studi maksimal 255 karakter",
+              },
+            ],
           },
           {
             name: "code",
