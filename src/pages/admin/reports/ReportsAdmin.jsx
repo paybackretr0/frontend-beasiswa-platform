@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import { Modal, Radio, Select, Spin, Tag } from "antd";
-import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
+import { Modal, Radio, Select, Spin, Tag, Upload } from "antd";
+import {
+  DownloadOutlined,
+  EyeOutlined,
+  UploadOutlined,
+  FileExcelOutlined,
+} from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import UniversalTable, {
@@ -27,6 +32,9 @@ import {
   getTopPerformingFaculties,
   exportLaporanBeasiswa,
   exportLaporanPendaftar,
+  downloadRecipientImportTemplate,
+  validateRecipientImportFile,
+  importScholarshipRecipients,
 } from "../../../services/analyticsService";
 import { getApplicationDetail } from "../../../services/applicationService";
 import { fetchActiveScholarships } from "../../../services/scholarshipService";
@@ -70,6 +78,12 @@ const ReportsAdmin = () => {
   const [selectedExportScholarship, setSelectedExportScholarship] =
     useState(null);
   const [selectedExportSchema, setSelectedExportSchema] = useState(null);
+  const [importModalVisible, setImportModalVisible] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [selectedImportFile, setSelectedImportFile] = useState(null);
+  const [importValidationResult, setImportValidationResult] = useState(null);
+  const [selectedImportScholarship, setSelectedImportScholarship] =
+    useState(null);
 
   const [mainSummaryData, setMainSummaryData] = useState([]);
   const [selectionSummaryData, setSelectionSummaryData] = useState([]);
@@ -116,6 +130,11 @@ const ReportsAdmin = () => {
   }
 
   const role = user?.role?.toUpperCase() || null;
+  const canImportRecipients = [
+    "SUPERADMIN",
+    "PIMPINAN_DITMAWA",
+    "VALIDATOR_DITMAWA",
+  ].includes(role);
 
   const isFacultyRole = ["VERIFIKATOR_FAKULTAS", "PIMPINAN_FAKULTAS"].includes(
     role,
@@ -438,6 +457,109 @@ const ReportsAdmin = () => {
     setExportModalVisible(false);
   };
 
+  const handleDownloadImportTemplate = async () => {
+    try {
+      setExportLoading(true);
+      await downloadRecipientImportTemplate();
+      success("Berhasil!", "Template import penerima berhasil diunduh");
+    } catch (err) {
+      error("Gagal", err.message || "Gagal mengunduh template import");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleOpenImportModal = () => {
+    setImportValidationResult(null);
+    setSelectedImportFile(null);
+    setSelectedImportScholarship(null);
+    setImportModalVisible(true);
+  };
+
+  const handleCloseImportModal = () => {
+    setImportModalVisible(false);
+    setImportValidationResult(null);
+    setSelectedImportFile(null);
+    setSelectedImportScholarship(null);
+  };
+
+  const handleValidateImport = async () => {
+    if (!selectedImportScholarship) {
+      error("Gagal", "Pilih beasiswa terlebih dahulu");
+      return;
+    }
+
+    if (!selectedImportFile) {
+      error("Gagal", "Pilih file import terlebih dahulu");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedImportFile);
+      formData.append("scholarshipId", selectedImportScholarship);
+
+      setImportLoading(true);
+      const result = await validateRecipientImportFile(formData);
+      setImportValidationResult(result);
+
+      if (result.error_count > 0) {
+        error(
+          "Validasi Gagal",
+          `Ditemukan ${result.error_count} error pada file import`,
+        );
+      } else {
+        success(
+          "Validasi Berhasil",
+          `${result.valid_count} data siap diimport`,
+        );
+      }
+    } catch (err) {
+      setImportValidationResult(null);
+      error("Gagal", err.message || "Gagal memvalidasi file import");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleImportRecipients = async () => {
+    if (!selectedImportScholarship) {
+      error("Gagal", "Pilih beasiswa terlebih dahulu");
+      return;
+    }
+
+    if (!selectedImportFile) {
+      error("Gagal", "Pilih file import terlebih dahulu");
+      return;
+    }
+
+    if (!importValidationResult || importValidationResult.error_count > 0) {
+      error("Gagal", "Lakukan validasi dan pastikan file bebas error");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedImportFile);
+      formData.append("scholarshipId", selectedImportScholarship);
+
+      setImportLoading(true);
+      const result = await importScholarshipRecipients(formData);
+
+      success(
+        "Import Berhasil",
+        `${result.created_applications} data baru, ${result.updated_applications} data diperbarui, ${result.created_dummy_users} akun dummy dibuat`,
+      );
+
+      handleCloseImportModal();
+      fetchAllData();
+    } catch (err) {
+      error("Gagal", err.message || "Gagal mengimpor data penerima");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const handleFilterChange = (filterType, value) => {
     const newFilters = { ...filters, [filterType]: value };
     setFilters(newFilters);
@@ -703,6 +825,17 @@ const ReportsAdmin = () => {
             ))}
           </Select>
 
+          {canImportRecipients && (
+            <>
+              <Button
+                onClick={handleOpenImportModal}
+                className="flex items-center gap-2"
+              >
+                <UploadOutlined /> Import Penerima
+              </Button>
+            </>
+          )}
+
           <Button
             onClick={handleOpenExportModal}
             className="flex items-center gap-2"
@@ -711,6 +844,134 @@ const ReportsAdmin = () => {
           </Button>
         </div>
       </div>
+
+      <Modal
+        title="Import Data Penerima Beasiswa"
+        open={importModalVisible}
+        onCancel={handleCloseImportModal}
+        footer={[
+          <div className="flex justify-between gap-2">
+            <Button
+              key="validate"
+              onClick={handleValidateImport}
+              className="gap-2 !bg-amber-500 hover:!bg-amber-600 disabled:!bg-gray-300 disabled:!text-gray-500 disabled:hover:!bg-gray-300"
+              disabled={
+                !selectedImportScholarship ||
+                !selectedImportFile ||
+                importLoading
+              }
+            >
+              Validasi
+            </Button>
+            ,
+            <Button
+              key="import"
+              onClick={handleImportRecipients}
+              className="gap-2 !bg-emerald-600 hover:!bg-emerald-700 disabled:!bg-gray-300 disabled:!text-gray-500 disabled:hover:!bg-gray-300"
+              disabled={
+                importLoading ||
+                !selectedImportScholarship ||
+                !importValidationResult ||
+                importValidationResult.error_count > 0
+              }
+            >
+              Import
+            </Button>
+          </div>,
+        ]}
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Pilih Beasiswa
+            </p>
+            <Select
+              value={selectedImportScholarship}
+              onChange={(value) => {
+                setSelectedImportScholarship(value || null);
+                setSelectedImportFile(null);
+                setImportValidationResult(null);
+              }}
+              allowClear
+              placeholder="Pilih beasiswa tujuan import"
+              style={{ width: "100%" }}
+            >
+              {exportScholarships.map((scholarship) => (
+                <Option key={scholarship.id} value={scholarship.id}>
+                  {scholarship.name} ({scholarship.year})
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          <Button
+            onClick={handleDownloadImportTemplate}
+            className="w-full gap-2 !bg-sky-600 hover:!bg-sky-700"
+          >
+            <FileExcelOutlined /> Download Template Import
+          </Button>
+
+          <Upload
+            beforeUpload={(file) => {
+              if (!selectedImportScholarship) {
+                error("Gagal", "Pilih beasiswa terlebih dahulu");
+                return Upload.LIST_IGNORE;
+              }
+              setSelectedImportFile(file);
+              setImportValidationResult(null);
+              return false;
+            }}
+            maxCount={1}
+            accept=".xlsx,.xls,.csv"
+            onRemove={() => {
+              setSelectedImportFile(null);
+              setImportValidationResult(null);
+            }}
+          >
+            <Button className="w-full gap-2 !bg-violet-600 hover:!bg-violet-700">
+              <UploadOutlined /> Pilih File Import
+            </Button>
+          </Upload>
+
+          {selectedImportFile && (
+            <div className="text-sm text-gray-600">
+              File terpilih: {selectedImportFile.name}
+            </div>
+          )}
+
+          {importLoading && (
+            <div className="flex items-center gap-2 text-sm text-blue-600">
+              <Spin size="small" /> Memproses file import...
+            </div>
+          )}
+
+          {importValidationResult && (
+            <div className="rounded-md border border-gray-200 p-3 bg-gray-50 text-sm space-y-2">
+              <div>Total baris: {importValidationResult.total_rows}</div>
+              <div>Data valid: {importValidationResult.valid_count}</div>
+              <div>Error: {importValidationResult.error_count}</div>
+
+              {importValidationResult.error_count > 0 &&
+                importValidationResult.errors?.length > 0 && (
+                  <div>
+                    <p className="font-medium text-red-600 mb-1">
+                      Contoh error:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-red-600">
+                      {importValidationResult.errors
+                        .slice(0, 5)
+                        .map((item, idx) => (
+                          <li key={idx}>
+                            Baris {item.row} - {item.field}: {item.message}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+            </div>
+          )}
+        </div>
+      </Modal>
 
       <Modal
         title="Export Laporan Beasiswa"
@@ -879,7 +1140,7 @@ const ReportsAdmin = () => {
               <PerformanceBarChart
                 data={scholarshipPerformance}
                 title="Performa Beasiswa"
-                description={`Top 10 beasiswa dengan peminat terbanyak tahun ${selectedYear}`}
+                description={`Top 5 beasiswa dengan peminat terbanyak tahun ${selectedYear}`}
               />
             </div>
             <div className="flex flex-col h-full">

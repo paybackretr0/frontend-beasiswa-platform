@@ -363,3 +363,78 @@ export const exportLaporanPendaftar = async ({
     throw new Error("Gagal mengekspor data pendaftar");
   }
 };
+
+export const downloadRecipientImportTemplate = async () => {
+  const token = localStorage.getItem("access_token");
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/analytics/import-penerima/template`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Gagal mengunduh template import");
+    }
+
+    const contentDisposition = response.headers.get("content-disposition");
+    let filename = "template_import_penerima_beasiswa.xlsx";
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Download template import error:", error);
+    throw new Error("Gagal mengunduh template import penerima");
+  }
+};
+
+export const validateRecipientImportFile = async (formData) => {
+  const data = await authFetch(
+    `${API_BASE_URL}/analytics/import-penerima/validate`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal memvalidasi file import");
+  }
+
+  return data.data;
+};
+
+export const importScholarshipRecipients = async (formData) => {
+  const data = await authFetch(`${API_BASE_URL}/analytics/import-penerima`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal mengimpor data penerima");
+  }
+
+  return data.data;
+};
