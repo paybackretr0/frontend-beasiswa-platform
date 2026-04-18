@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Select, Spin, Tag } from "antd";
+import { Modal, Radio, Select, Spin, Tag } from "antd";
 import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
@@ -26,8 +26,10 @@ import {
   getScholarshipPerformance,
   getTopPerformingFaculties,
   exportLaporanBeasiswa,
+  exportLaporanPendaftar,
 } from "../../../services/analyticsService";
 import { getApplicationDetail } from "../../../services/applicationService";
+import { fetchActiveScholarships } from "../../../services/scholarshipService";
 import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
@@ -46,12 +48,28 @@ const years = Array.from(
   (_, i) => 2025 + i,
 );
 
+const sanitizeFilenamePart = (value) => {
+  if (!value) return "";
+
+  return String(value)
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, "_");
+};
+
 const ReportsAdmin = () => {
   const [selectedYear, setSelectedYear] = useState("all");
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
 
   const [exportLoading, setExportLoading] = useState(false);
+  const [exportModalVisible, setExportModalVisible] = useState(false);
+  const [exportMode, setExportMode] = useState("ALL");
+  const [exportScholarships, setExportScholarships] = useState([]);
+  const [exportSchemas, setExportSchemas] = useState([]);
+  const [selectedExportScholarship, setSelectedExportScholarship] =
+    useState(null);
+  const [selectedExportSchema, setSelectedExportSchema] = useState(null);
 
   const [mainSummaryData, setMainSummaryData] = useState([]);
   const [selectionSummaryData, setSelectionSummaryData] = useState([]);
@@ -107,7 +125,18 @@ const ReportsAdmin = () => {
     document.title = "Laporan - Admin";
     fetchAllData();
     fetchFilterOptions();
+    fetchExportScholarshipOptions();
   }, []);
+  const fetchExportScholarshipOptions = async () => {
+    try {
+      const scholarshipData = await fetchActiveScholarships();
+      setExportScholarships(
+        Array.isArray(scholarshipData) ? scholarshipData : [],
+      );
+    } catch (err) {
+      console.error("Error fetching export scholarship options:", err);
+    }
+  };
 
   useEffect(() => {
     fetchAllData();
@@ -324,10 +353,59 @@ const ReportsAdmin = () => {
   };
 
   const handleExportReport = async () => {
+    if (exportMode === "SCHOLARSHIP" && !selectedExportScholarship) {
+      error("Gagal", "Pilih beasiswa terlebih dahulu");
+      return;
+    }
+
+    if (exportMode === "SCHEMA") {
+      if (!selectedExportScholarship) {
+        error("Gagal", "Pilih beasiswa terlebih dahulu");
+        return;
+      }
+      if (!selectedExportSchema) {
+        error("Gagal", "Pilih skema terlebih dahulu");
+        return;
+      }
+    }
+
     try {
+      setExportModalVisible(false);
       setExportLoading(true);
 
-      await exportLaporanBeasiswa(selectedYear);
+      if (exportMode === "ALL") {
+        await exportLaporanBeasiswa(selectedYear);
+      } else {
+        const selectedScholarshipObj = exportScholarships.find(
+          (scholarship) => scholarship.id === selectedExportScholarship,
+        );
+        const selectedSchemaObj = exportSchemas.find(
+          (schema) => schema.id === selectedExportSchema,
+        );
+
+        const fileNameParts = ["laporan_pendaftar"];
+
+        const scholarshipName = sanitizeFilenamePart(
+          selectedScholarshipObj?.name,
+        );
+        const schemaName = sanitizeFilenamePart(selectedSchemaObj?.name);
+        const yearPart =
+          selectedYear && selectedYear !== "all"
+            ? sanitizeFilenamePart(selectedYear)
+            : "";
+
+        if (scholarshipName) fileNameParts.push(scholarshipName);
+        if (schemaName) fileNameParts.push(schemaName);
+        if (yearPart) fileNameParts.push(yearPart);
+
+        await exportLaporanPendaftar({
+          year: selectedYear,
+          scholarshipId: selectedExportScholarship || null,
+          schemaId:
+            exportMode === "SCHEMA" ? selectedExportSchema || null : null,
+          filename: `${fileNameParts.join("_")}.xlsx`,
+        });
+      }
 
       setTimeout(() => {
         setExportLoading(false);
@@ -335,8 +413,29 @@ const ReportsAdmin = () => {
       }, 1200);
     } catch (err) {
       setExportLoading(false);
-      error("Gagal", err.message || "Gagal mengekspor laporan");
+      error("Gagal", err.message || "Gagal mengekspor data pendaftar");
     }
+  };
+
+  const handleExportScholarshipChange = (value) => {
+    setSelectedExportScholarship(value || null);
+    setSelectedExportSchema(null);
+
+    if (!value) {
+      setExportSchemas([]);
+      return;
+    }
+
+    const selectedScholarship = exportScholarships.find((s) => s.id === value);
+    setExportSchemas(selectedScholarship?.schemas || []);
+  };
+
+  const handleOpenExportModal = () => {
+    setExportModalVisible(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setExportModalVisible(false);
   };
 
   const handleFilterChange = (filterType, value) => {
@@ -603,15 +702,97 @@ const ReportsAdmin = () => {
               </Option>
             ))}
           </Select>
+
           <Button
-            onClick={handleExportReport}
+            onClick={handleOpenExportModal}
             className="flex items-center gap-2"
           >
-            <DownloadOutlined />
-            Export Laporan
+            <DownloadOutlined /> Export Laporan
           </Button>
         </div>
       </div>
+
+      <Modal
+        title="Export Laporan Beasiswa"
+        open={exportModalVisible}
+        onCancel={handleCloseExportModal}
+        footer={[
+          <Button
+            key="submit"
+            onClick={handleExportReport}
+            className="w-full gap-2"
+          >
+            <DownloadOutlined /> Export
+          </Button>,
+        ]}
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Mode Export
+            </p>
+            <Radio.Group
+              value={exportMode}
+              onChange={(e) => {
+                const mode = e.target.value;
+                setExportMode(mode);
+                if (mode === "ALL") {
+                  setSelectedExportScholarship(null);
+                  setSelectedExportSchema(null);
+                  setExportSchemas([]);
+                }
+              }}
+            >
+              <Radio value="ALL">Seluruh Data (Laporan Beasiswa)</Radio>
+              <Radio value="SCHOLARSHIP">Per Beasiswa</Radio>
+              <Radio value="SCHEMA">Per Skema</Radio>
+            </Radio.Group>
+          </div>
+
+          {(exportMode === "SCHOLARSHIP" || exportMode === "SCHEMA") && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Pilih Beasiswa
+              </p>
+              <Select
+                value={selectedExportScholarship}
+                onChange={handleExportScholarshipChange}
+                allowClear
+                placeholder="Pilih beasiswa"
+                style={{ width: "100%" }}
+              >
+                {exportScholarships.map((scholarship) => (
+                  <Option key={scholarship.id} value={scholarship.id}>
+                    {scholarship.name}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
+
+          {exportMode === "SCHEMA" && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Pilih Skema
+              </p>
+              <Select
+                value={selectedExportSchema}
+                onChange={(value) => setSelectedExportSchema(value || null)}
+                allowClear
+                disabled={!selectedExportScholarship}
+                placeholder="Pilih skema"
+                style={{ width: "100%" }}
+              >
+                {exportSchemas.map((schema) => (
+                  <Option key={schema.id} value={schema.id}>
+                    {schema.name}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </div>
+      </Modal>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {mainSummaryData.map((item, idx) => (
