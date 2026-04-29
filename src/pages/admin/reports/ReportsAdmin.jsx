@@ -627,6 +627,7 @@ const ReportsAdmin = () => {
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
       VERIFIED: "Terverifikasi",
       VALIDATED: "Divalidasi",
+      AWARDEE: "Penerima Beasiswa",
       REJECTED: "Ditolak",
       REVISION_NEEDED: "Perlu Revisi",
     };
