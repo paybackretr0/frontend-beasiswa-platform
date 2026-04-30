@@ -237,7 +237,12 @@ const ReportsAdmin = () => {
 
       const summary = [
         {
-          title: "Divalidasi (Lolos)",
+          title: "Penerima",
+          value: data.awardee || 0,
+          color: "text-green-600",
+        },
+        {
+          title: "Divalidasi",
           value: data.validated || 0,
           color: "text-green-600",
         },
@@ -686,6 +691,7 @@ const ReportsAdmin = () => {
           text: "Menunggu Validasi",
           value: "Menunggu Validasi",
         },
+        { text: "Penerima Beasiswa", value: "Penerima Beasiswa" },
         { text: "Divalidasi", value: "Divalidasi" },
         { text: "Ditolak", value: "Ditolak" },
         { text: "Perlu Revisi", value: "Perlu Revisi" },
@@ -1076,7 +1082,7 @@ const ReportsAdmin = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         {selectionSummaryData.map((item, idx) => (
           <Card key={idx}>
             <div className="flex flex-col items-center py-4">
