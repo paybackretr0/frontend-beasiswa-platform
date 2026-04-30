@@ -8,9 +8,14 @@ const UniversalModal = ({
   onCancel,
   onSubmit,
   title,
-  fields,
+  fields = [],
   loading,
   initialValues = {},
+  description,
+  submitText = "Simpan",
+  cancelText = "Batal",
+  zIndex,
+  width = 600,
 }) => {
   const [form] = Form.useForm();
 
@@ -78,10 +83,14 @@ const UniversalModal = ({
       open={visible}
       onCancel={onCancel}
       footer={null}
-      destroyOnHidden
-      width={600}
+      destroyOnClose
+      width={width}
+      zIndex={zIndex}
     >
       <div className="max-h-[70vh] overflow-y-auto pr-1">
+        {description ? (
+          <div className="mb-4 text-sm text-gray-700">{description}</div>
+        ) : null}
         <Form
           form={form}
           layout="vertical"
@@ -104,9 +113,11 @@ const UniversalModal = ({
             <div
               style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
             >
-              <Button onClick={onCancel}>Batal</Button>
+              <Button onClick={onCancel} disabled={loading}>
+                {cancelText}
+              </Button>
               <Button type="primary" htmlType="submit" loading={loading}>
-                Simpan
+                {submitText}
               </Button>
             </div>
           </Form.Item>

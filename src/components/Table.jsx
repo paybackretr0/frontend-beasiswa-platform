@@ -17,6 +17,8 @@ const UniversalTable = ({
   scroll = { x: 800 },
   customFilters = null,
   onSearch = null,
+  rowSelection = null,
+  loading = false,
 }) => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -121,6 +123,8 @@ const UniversalTable = ({
           columns={columns}
           dataSource={onSearch ? data : filteredData}
           rowKey={rowKey}
+          rowSelection={rowSelection || undefined}
+          loading={loading}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

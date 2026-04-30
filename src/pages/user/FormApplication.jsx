@@ -50,6 +50,19 @@ const getCleanFileName = (filePath) => {
   return match ? match[1] : fullFileName;
 };
 
+const normalizeLabel = (label) =>
+  String(label || "")
+    .trim()
+    .toLowerCase();
+
+const parseNumberAnswer = (value) => {
+  if (value === undefined || value === null) return null;
+  const normalized = String(value).trim().replace(",", ".");
+  if (normalized === "") return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 const FormApplication = () => {
   const { id: scholarshipId } = useParams();
   const navigate = useNavigate();
@@ -218,10 +231,71 @@ const FormApplication = () => {
       }
     }
 
+    const gpaMinimum =
+      selectedSchema?.gpa_minimum !== undefined &&
+      selectedSchema?.gpa_minimum !== null
+        ? Number(selectedSchema.gpa_minimum)
+        : null;
+    if (Number.isFinite(gpaMinimum)) {
+      const gpaField = formFields.find(
+        (field) =>
+          field.type === "NUMBER" &&
+          normalizeLabel(field.label).includes("ipk"),
+      );
+
+      if (gpaField) {
+        const gpaValue = parseNumberAnswer(answers[gpaField.id]);
+        if (gpaValue === null) {
+          newErrors[gpaField.id] = "IPK harus berupa angka";
+        } else if (gpaValue < gpaMinimum) {
+          newErrors[gpaField.id] =
+            `IPK tidak memenuhi syarat minimum (min: ${gpaMinimum})`;
+        }
+      }
+    }
+
+    const semesterMinimum =
+      selectedSchema?.semester_minimum !== undefined &&
+      selectedSchema?.semester_minimum !== null
+        ? Number(selectedSchema.semester_minimum)
+        : null;
+    if (Number.isFinite(semesterMinimum)) {
+      const semesterField = formFields.find(
+        (field) =>
+          field.type === "NUMBER" &&
+          normalizeLabel(field.label).includes("semester"),
+      );
+
+      if (semesterField) {
+        const semesterValue = parseNumberAnswer(answers[semesterField.id]);
+        if (semesterValue === null) {
+          newErrors[semesterField.id] = "Semester harus berupa angka";
+        } else if (!Number.isInteger(semesterValue)) {
+          newErrors[semesterField.id] = "Semester harus berupa bilangan bulat";
+        } else if (semesterValue < semesterMinimum) {
+          newErrors[semesterField.id] =
+            `Semester tidak memenuhi syarat minimum (min: ${semesterMinimum})`;
+        }
+      }
+    }
+
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
-      warning("Peringatan!", "Mohon lengkapi semua field yang wajib diisi");
+      const hasEligibilityError = formFields.some((field) => {
+        const label = normalizeLabel(field.label);
+        return (
+          newErrors[field.id] &&
+          (label.includes("ipk") || label.includes("semester"))
+        );
+      });
+
+      warning(
+        "Peringatan!",
+        hasEligibilityError
+          ? "IPK/Semester tidak memenuhi syarat minimum"
+          : "Mohon lengkapi semua field yang wajib diisi",
+      );
       return false;
     }
 

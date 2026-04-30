@@ -84,6 +84,8 @@ const ReportsAdmin = () => {
   const [importValidationResult, setImportValidationResult] = useState(null);
   const [selectedImportScholarship, setSelectedImportScholarship] =
     useState(null);
+  const [importSchemas, setImportSchemas] = useState([]);
+  const [selectedImportSchema, setSelectedImportSchema] = useState(null);
 
   const [mainSummaryData, setMainSummaryData] = useState([]);
   const [selectionSummaryData, setSelectionSummaryData] = useState([]);
@@ -237,7 +239,12 @@ const ReportsAdmin = () => {
 
       const summary = [
         {
-          title: "Divalidasi (Lolos)",
+          title: "Penerima",
+          value: data.awardee || 0,
+          color: "text-green-600",
+        },
+        {
+          title: "Divalidasi",
           value: data.validated || 0,
           color: "text-green-600",
         },
@@ -480,6 +487,8 @@ const ReportsAdmin = () => {
     setImportValidationResult(null);
     setSelectedImportFile(null);
     setSelectedImportScholarship(null);
+    setImportSchemas([]);
+    setSelectedImportSchema(null);
     setImportModalVisible(true);
   };
 
@@ -488,11 +497,18 @@ const ReportsAdmin = () => {
     setImportValidationResult(null);
     setSelectedImportFile(null);
     setSelectedImportScholarship(null);
+    setImportSchemas([]);
+    setSelectedImportSchema(null);
   };
 
   const handleValidateImport = async () => {
     if (!selectedImportScholarship) {
       error("Gagal", "Pilih beasiswa terlebih dahulu");
+      return;
+    }
+
+    if (!selectedImportSchema) {
+      error("Gagal", "Pilih skema terlebih dahulu");
       return;
     }
 
@@ -505,6 +521,7 @@ const ReportsAdmin = () => {
       const formData = new FormData();
       formData.append("file", selectedImportFile);
       formData.append("scholarshipId", selectedImportScholarship);
+      formData.append("schemaId", selectedImportSchema);
 
       setImportLoading(true);
       const result = await validateRecipientImportFile(formData);
@@ -535,6 +552,11 @@ const ReportsAdmin = () => {
       return;
     }
 
+    if (!selectedImportSchema) {
+      error("Gagal", "Pilih skema terlebih dahulu");
+      return;
+    }
+
     if (!selectedImportFile) {
       error("Gagal", "Pilih file import terlebih dahulu");
       return;
@@ -549,6 +571,7 @@ const ReportsAdmin = () => {
       const formData = new FormData();
       formData.append("file", selectedImportFile);
       formData.append("scholarshipId", selectedImportScholarship);
+      formData.append("schemaId", selectedImportSchema);
 
       setImportLoading(true);
       const result = await importScholarshipRecipients(formData);
@@ -627,6 +650,7 @@ const ReportsAdmin = () => {
       MENUNGGU_VERIFIKASI: "Menunggu Verifikasi",
       VERIFIED: "Terverifikasi",
       VALIDATED: "Divalidasi",
+      AWARDEE: "Penerima Beasiswa",
       REJECTED: "Ditolak",
       REVISION_NEEDED: "Perlu Revisi",
     };
@@ -685,6 +709,7 @@ const ReportsAdmin = () => {
           text: "Menunggu Validasi",
           value: "Menunggu Validasi",
         },
+        { text: "Penerima Beasiswa", value: "Penerima Beasiswa" },
         { text: "Divalidasi", value: "Divalidasi" },
         { text: "Ditolak", value: "Ditolak" },
         { text: "Perlu Revisi", value: "Perlu Revisi" },
@@ -864,6 +889,7 @@ const ReportsAdmin = () => {
               className="gap-2 !bg-amber-500 hover:!bg-amber-600 disabled:!bg-gray-300 disabled:!text-gray-500 disabled:hover:!bg-gray-300"
               disabled={
                 !selectedImportScholarship ||
+                !selectedImportSchema ||
                 !selectedImportFile ||
                 importLoading
               }
@@ -878,6 +904,7 @@ const ReportsAdmin = () => {
               disabled={
                 importLoading ||
                 !selectedImportScholarship ||
+                !selectedImportSchema ||
                 !importValidationResult ||
                 importValidationResult.error_count > 0
               }
@@ -898,6 +925,23 @@ const ReportsAdmin = () => {
                 setSelectedImportScholarship(value || null);
                 setSelectedImportFile(null);
                 setImportValidationResult(null);
+                setSelectedImportSchema(null);
+
+                if (!value) {
+                  setImportSchemas([]);
+                  return;
+                }
+
+                const selectedScholarship = exportScholarships.find(
+                  (s) => s.id === value,
+                );
+                const schemas = Array.isArray(selectedScholarship?.schemas)
+                  ? selectedScholarship.schemas
+                  : [];
+                const activeSchemas = schemas.filter((s) => s.is_active);
+                setImportSchemas(
+                  activeSchemas.length ? activeSchemas : schemas,
+                );
               }}
               allowClear
               placeholder="Pilih beasiswa tujuan import"
@@ -906,6 +950,30 @@ const ReportsAdmin = () => {
               {exportScholarships.map((scholarship) => (
                 <Option key={scholarship.id} value={scholarship.id}>
                   {scholarship.name} ({scholarship.year})
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Pilih Skema
+            </p>
+            <Select
+              value={selectedImportSchema}
+              onChange={(value) => {
+                setSelectedImportSchema(value || null);
+                setSelectedImportFile(null);
+                setImportValidationResult(null);
+              }}
+              allowClear
+              disabled={!selectedImportScholarship}
+              placeholder="Pilih skema tujuan import"
+              style={{ width: "100%" }}
+            >
+              {importSchemas.map((schema) => (
+                <Option key={schema.id} value={schema.id}>
+                  {schema.name}
                 </Option>
               ))}
             </Select>
@@ -922,6 +990,10 @@ const ReportsAdmin = () => {
             beforeUpload={(file) => {
               if (!selectedImportScholarship) {
                 error("Gagal", "Pilih beasiswa terlebih dahulu");
+                return Upload.LIST_IGNORE;
+              }
+              if (!selectedImportSchema) {
+                error("Gagal", "Pilih skema terlebih dahulu");
                 return Upload.LIST_IGNORE;
               }
               setSelectedImportFile(file);
@@ -1075,7 +1147,7 @@ const ReportsAdmin = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         {selectionSummaryData.map((item, idx) => (
           <Card key={idx}>
             <div className="flex flex-col items-center py-4">
