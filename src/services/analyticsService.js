@@ -39,7 +39,7 @@ export const getSelectionSummary = async (year) => {
   const token = localStorage.getItem("access_token");
   const params = year ? `?year=${year}` : "";
   const data = await authFetch(
-    `${API_BASE_URL}/analytics/selection-summary?year=${params}`,
+    `${API_BASE_URL}/analytics/selection-summary${params}`,
     {
       method: "GET",
       headers: {
