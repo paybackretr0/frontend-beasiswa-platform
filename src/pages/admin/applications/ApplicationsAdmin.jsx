@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Tag } from "antd";
+import { Tag, Button } from "antd";
 import UniversalTable, {
   createNumberColumn,
   createActionColumn,
@@ -15,6 +15,7 @@ import {
   getAllApplications,
   getApplicationsSummary,
   getApplicationDetail,
+  assignApplicationsAsAwardeeBulk,
 } from "../../../services/applicationService";
 import {
   verifyApplication,
@@ -30,6 +31,7 @@ import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
 import AlertContainer from "../../../components/AlertContainer";
 import useAlert from "../../../hooks/useAlert";
 import RevisionRejectModal from "../../../components/RevisionRejectModal";
+import UniversalModal from "../../../components/Modal";
 import {
   SkeletonCard,
   SkeletonTable,
@@ -64,6 +66,11 @@ const ApplicationsAdmin = () => {
   const [selectedApplicationForValidate, setSelectedApplicationForValidate] =
     useState(null);
   const [validateLoading, setValidateLoading] = useState(false);
+
+  const [awardeeMode, setAwardeeMode] = useState(false);
+  const [selectedAwardeeIds, setSelectedAwardeeIds] = useState([]);
+  const [awardeeLoading, setAwardeeLoading] = useState(false);
+  const [awardeeConfirmVisible, setAwardeeConfirmVisible] = useState(false);
 
   const { alerts, success, error, removeAlert, clearAlerts, warning } =
     useAlert();
@@ -169,6 +176,7 @@ const ApplicationsAdmin = () => {
       VERIFIED: "Menunggu Validasi",
       REJECTED: "Ditolak",
       VALIDATED: "Lolos Validasi",
+      AWARDEE: "Penerima Beasiswa",
       REVISION_NEEDED: "Revisi",
     };
     return statusMap[status] || status;
@@ -179,6 +187,7 @@ const ApplicationsAdmin = () => {
       MENUNGGU_VERIFIKASI: "orange",
       VERIFIED: "blue",
       VALIDATED: "green",
+      AWARDEE: "gold",
       REJECTED: "red",
       REVISION_NEEDED: "purple",
     };
@@ -188,6 +197,63 @@ const ApplicationsAdmin = () => {
   const refreshData = async () => {
     await fetchApplications();
     await fetchSummary();
+  };
+
+  const startAwardeeMode = () => {
+    setAwardeeMode(true);
+    setSelectedAwardeeIds([]);
+  };
+
+  const cancelAwardeeMode = () => {
+    setAwardeeMode(false);
+    setSelectedAwardeeIds([]);
+  };
+
+  const handleAssignAwardeeBulk = async () => {
+    if (!selectedAwardeeIds || selectedAwardeeIds.length === 0) {
+      warning("Perhatian!", "Pilih minimal 1 pendaftaran berstatus VALIDATED");
+      return;
+    }
+
+    setAwardeeConfirmVisible(true);
+  };
+
+  const handleSubmitAssignAwardeeBulk = async () => {
+    try {
+      setAwardeeLoading(true);
+
+      const result = await assignApplicationsAsAwardeeBulk(selectedAwardeeIds);
+
+      console.log("[assign-awardee] api result", result);
+
+      success(
+        "Berhasil!",
+        `${result.updated_count || 0} pendaftaran berhasil jadi awardee`,
+      );
+
+      const skippedCount = Array.isArray(result.skipped)
+        ? result.skipped.length
+        : 0;
+      const notFoundCount = Array.isArray(result.not_found_ids)
+        ? result.not_found_ids.length
+        : 0;
+
+      if (skippedCount > 0 || notFoundCount > 0) {
+        warning(
+          "Sebagian dilewati",
+          `${skippedCount} tidak VALIDATED, ${notFoundCount} tidak ditemukan`,
+        );
+      }
+
+      setAwardeeConfirmVisible(false);
+      cancelAwardeeMode();
+      setTimeout(refreshData, 800);
+    } catch (err) {
+      console.error("Error assign awardee bulk:", err);
+      error("Gagal!", err.message || "Gagal assign awardee");
+    } finally {
+      setAwardeeLoading(false);
+    }
   };
 
   const handleDetail = async (record) => {
@@ -457,6 +523,7 @@ const ApplicationsAdmin = () => {
         { text: "Menunggu Verifikasi", value: "MENUNGGU_VERIFIKASI" },
         { text: "Menunggu Validasi", value: "VERIFIED" },
         { text: "Lolos Validasi", value: "VALIDATED" },
+        { text: "Awardee", value: "AWARDEE" },
         { text: "Ditolak", value: "REJECTED" },
         { text: "Revisi", value: "REVISION_NEEDED" },
       ],
@@ -540,6 +607,42 @@ const ApplicationsAdmin = () => {
       },
     ]),
   ];
+
+  const rowSelection =
+    role === "SUPERADMIN" && awardeeMode
+      ? {
+          selectedRowKeys: selectedAwardeeIds,
+          onChange: (keys) => setSelectedAwardeeIds(keys),
+          getCheckboxProps: (record) => ({
+            disabled: record.status !== "VALIDATED" || awardeeLoading,
+          }),
+        }
+      : null;
+
+  const awardeeBulkControls =
+    role === "SUPERADMIN" ? (
+      <div className="flex gap-2">
+        {!awardeeMode ? (
+          <Button type="primary" onClick={startAwardeeMode}>
+            Assign jadi Awardee
+          </Button>
+        ) : (
+          <>
+            <Button onClick={cancelAwardeeMode} disabled={awardeeLoading}>
+              Batal
+            </Button>
+            <Button
+              type="primary"
+              onClick={handleAssignAwardeeBulk}
+              loading={awardeeLoading}
+              disabled={selectedAwardeeIds.length === 0}
+            >
+              Assign ({selectedAwardeeIds.length})
+            </Button>
+          </>
+        )}
+      </div>
+    ) : null;
 
   if (loading && summaryLoading) {
     return (
@@ -635,6 +738,21 @@ const ApplicationsAdmin = () => {
         searchPlaceholder="Cari nama pendaftar, email, beasiswa, atau skema..."
         onAdd={null}
         loading={loading}
+        rowSelection={rowSelection}
+        customFilters={awardeeBulkControls}
+      />
+
+      <UniversalModal
+        visible={awardeeConfirmVisible}
+        onCancel={() => setAwardeeConfirmVisible(false)}
+        onSubmit={handleSubmitAssignAwardeeBulk}
+        title="Assign jadi Awardee"
+        description={`Yakin ubah ${selectedAwardeeIds.length} pendaftaran menjadi AWARDEE?`}
+        fields={[]}
+        loading={awardeeLoading}
+        submitText="Ya, Assign"
+        cancelText="Batal"
+        zIndex={2000}
       />
 
       <ApplicationDetailModal

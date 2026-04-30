@@ -172,6 +172,7 @@ const History = () => {
             text: "Terverifikasi - Menunggu Validasi",
           },
           DRAFT: { color: "orange", text: "Draft" },
+          AWARDEE: { color: "purple", text: "Penerima Beasiswa" },
           REVISION_NEEDED: { color: "purple", text: "Perlu Revisi" },
         };
 
@@ -213,6 +214,7 @@ const History = () => {
         { text: "Terverifikasi - Menunggu Validasi", value: "VERIFIED" },
         { text: "Draft", value: "DRAFT" },
         { text: "Perlu Revisi", value: "REVISION_NEEDED" },
+        { text: "Penerima Beasiswa", value: "AWARDEE" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -273,6 +275,7 @@ const History = () => {
         <Option value="VERIFIED">Terverifikasi</Option>
         <Option value="DRAFT">Draft</Option>
         <Option value="REVISION_NEEDED">Perlu Revisi</Option>
+        <Option value="AWARDEE">Penerima Beasiswa</Option>
       </Select>
 
       <RangePicker

@@ -60,3 +60,26 @@ export const getApplicationDetailUser = async (id) => {
   }
   return data.data;
 };
+
+export const assignApplicationsAsAwardeeBulk = async (applicationIds = []) => {
+  const token = localStorage.getItem("access_token");
+
+  const payload = {
+    application_ids: Array.isArray(applicationIds) ? applicationIds : [],
+  };
+
+  const data = await authFetch(`${API_BASE_URL}/applications/awardees/assign`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!data.success) {
+    throw new Error(data.message || "Gagal assign awardee");
+  }
+
+  return data.data;
+};
