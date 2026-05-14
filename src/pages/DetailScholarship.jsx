@@ -37,7 +37,7 @@ const DetailScholarship = () => {
   const [otherScholarships, setOtherScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeSchemaTab, setActiveSchemaTab] = useState("0");
+  const [activeSchemaTab, setActiveSchemaTab] = useState(null);
   const [expandedEligible, setExpandedEligible] = useState({
     faculties: false,
     departments: false,
@@ -47,9 +47,20 @@ const DetailScholarship = () => {
   const { alerts, removeAlert, warning, error: alertError } = useAlert();
 
   useEffect(() => {
+    setActiveSchemaTab(null);
     loadScholarshipDetail();
     loadOtherScholarships();
   }, [id]);
+
+  useEffect(() => {
+    const activeSchemas = (scholarship?.schemas || []).filter(
+      (schema) => schema.is_active,
+    );
+
+    if (activeSchemas.length > 0 && !activeSchemaTab) {
+      setActiveSchemaTab(activeSchemas[0].id);
+    }
+  }, [scholarship, activeSchemaTab]);
 
   const loadScholarshipDetail = async () => {
     try {
@@ -130,20 +141,16 @@ const DetailScholarship = () => {
     }
   };
 
-  const isStudentEligibleForScholarship = (user, scholarshipData) => {
-    if (!user || !scholarshipData) return false;
+  const isStudentEligibleForSchema = (user, schema) => {
+    if (!user || !schema) return false;
 
     const studyProgramIds = new Set(
-      (scholarshipData.studyPrograms || []).map((sp) => sp.id),
+      (schema.studyPrograms || []).map((sp) => sp.id),
     );
 
-    const departmentIds = new Set(
-      (scholarshipData.departments || []).map((d) => d.id),
-    );
+    const departmentIds = new Set((schema.departments || []).map((d) => d.id));
 
-    const facultyIds = new Set(
-      (scholarshipData.faculties || []).map((f) => f.id),
-    );
+    const facultyIds = new Set((schema.faculties || []).map((f) => f.id));
 
     const hasRestriction =
       studyProgramIds.size > 0 || departmentIds.size > 0 || facultyIds.size > 0;
@@ -159,7 +166,7 @@ const DetailScholarship = () => {
     return isStudyProgramEligible || isDepartmentEligible || isFacultyEligible;
   };
 
-  const handleApplyScholarship = (schemaId) => {
+  const handleApplyScholarship = (schema) => {
     const accessToken = localStorage.getItem("access_token");
     const user = getCurrentUser();
 
@@ -177,15 +184,33 @@ const DetailScholarship = () => {
       return;
     }
 
-    if (!isStudentEligibleForScholarship(user, scholarship)) {
+    if (!schema) {
+      warning("Skema Tidak Ditemukan", "Silakan pilih skema yang tersedia");
+      return;
+    }
+
+    if (!isStudentEligibleForSchema(user, schema)) {
       warning(
         "Tidak Memenuhi Cakupan",
-        "Program beasiswa ini tidak mencakup fakultas/departemen/program studi Anda",
+        "Skema ini tidak mencakup fakultas/departemen/program studi Anda",
       );
       return;
     }
 
-    navigate(`/scholarship/${id}/apply?schema=${schemaId}`);
+    navigate(`/scholarship/${id}/apply?schema=${schema.id}`);
+  };
+
+  const getActiveSchemas = () =>
+    (scholarship?.schemas || []).filter((schema) => schema.is_active);
+
+  const getSelectedSchema = () => {
+    const activeSchemas = getActiveSchemas();
+    if (activeSchemas.length === 0) return null;
+
+    return (
+      activeSchemas.find((schema) => schema.id === activeSchemaTab) ||
+      activeSchemas[0]
+    );
   };
 
   const getStatusTag = (isActive, endDate) => {
@@ -257,7 +282,7 @@ const DetailScholarship = () => {
       );
     }
 
-    const activeSchemas = scholarship.schemas.filter((s) => s.is_active);
+    const activeSchemas = getActiveSchemas();
 
     if (activeSchemas.length === 0) {
       return (
@@ -269,17 +294,12 @@ const DetailScholarship = () => {
       );
     }
 
-    const tabItems = activeSchemas.map((schema, index) => ({
-      key: index.toString(),
+    const tabItems = activeSchemas.map((schema) => ({
+      key: schema.id,
       label: (
         <span className="flex items-center gap-2">
           <FormOutlined />
           {schema.name}
-          {schema.quota && (
-            <Tag color="blue" className="ml-1">
-              {schema.quota} kuota
-            </Tag>
-          )}
         </span>
       ),
       children: (
@@ -437,6 +457,161 @@ const DetailScholarship = () => {
             )}
           </AntCard>
 
+          <AntCard>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Cakupan Eligible
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-2">Fakultas Eligible</h4>
+
+                {schema.faculties?.length > 0 ? (
+                  <div className="space-y-2">
+                    {[...schema.faculties]
+                      .sort((a, b) =>
+                        (a.name || "").localeCompare(b.name || "", "id-ID"),
+                      )
+                      .slice(
+                        0,
+                        expandedEligible.faculties
+                          ? schema.faculties.length
+                          : 6,
+                      )
+                      .map((faculty) => (
+                        <div
+                          key={faculty.id}
+                          className="flex items-center space-x-2 p-2 bg-indigo-50 rounded-lg"
+                        >
+                          <RightOutlined className="text-indigo-500 text-xs" />
+                          <span className="text-gray-700">{faculty.name}</span>
+                        </div>
+                      ))}
+
+                    {schema.faculties.length > 6 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleEligible("faculties")}
+                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                      >
+                        {expandedEligible.faculties
+                          ? "Sembunyikan"
+                          : `Lihat semua (${schema.faculties.length})`}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">Semua fakultas</p>
+                )}
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Departemen Eligible</h4>
+
+                {schema.departments?.length > 0 ? (
+                  <div className="space-y-2">
+                    {[...schema.departments]
+                      .sort((a, b) =>
+                        (a.name || "").localeCompare(b.name || "", "id-ID"),
+                      )
+                      .slice(
+                        0,
+                        expandedEligible.departments
+                          ? schema.departments.length
+                          : 6,
+                      )
+                      .map((department) => (
+                        <div
+                          key={department.id}
+                          className="flex items-center space-x-2 p-2 bg-orange-50 rounded-lg"
+                        >
+                          <RightOutlined className="text-orange-500 text-xs" />
+                          <span className="text-gray-700">
+                            {department.name}
+                          </span>
+                        </div>
+                      ))}
+
+                    {schema.departments.length > 6 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleEligible("departments")}
+                        className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                      >
+                        {expandedEligible.departments
+                          ? "Sembunyikan"
+                          : `Lihat semua (${schema.departments.length})`}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">Semua departemen</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <h4 className="font-semibold mb-2">Program Studi Eligible</h4>
+
+              {schema.studyPrograms?.length > 0 ? (
+                <div className="space-y-2">
+                  {[...schema.studyPrograms]
+                    .sort((a, b) => {
+                      const nameCompare = (a.name || "").localeCompare(
+                        b.name || "",
+                        "id-ID",
+                      );
+                      if (nameCompare !== 0) return nameCompare;
+
+                      return (a.degree || "").localeCompare(
+                        b.degree || "",
+                        "id-ID",
+                      );
+                    })
+                    .slice(
+                      0,
+                      expandedEligible.studyPrograms
+                        ? schema.studyPrograms.length
+                        : 6,
+                    )
+                    .map((studyProgram) => (
+                      <div
+                        key={studyProgram.id}
+                        className="flex items-center justify-between space-x-2 p-2 bg-emerald-50 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RightOutlined className="text-emerald-500 text-xs" />
+                          <span className="text-gray-700">
+                            {studyProgram.name}
+                          </span>
+                        </div>
+
+                        {studyProgram.degree && (
+                          <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                            {studyProgram.degree}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+
+                  {schema.studyPrograms.length > 6 && (
+                    <button
+                      type="button"
+                      onClick={() => toggleEligible("studyPrograms")}
+                      className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                    >
+                      {expandedEligible.studyPrograms
+                        ? "Sembunyikan"
+                        : `Lihat semua (${schema.studyPrograms.length})`}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">Semua program studi</p>
+              )}
+            </div>
+          </AntCard>
+
           {scholarship.is_active &&
             (!scholarship.end_date ||
               new Date() <= new Date(scholarship.end_date)) && (
@@ -467,7 +642,7 @@ const DetailScholarship = () => {
                 ) : (
                   <Button
                     className="w-full"
-                    onClick={() => handleApplyScholarship(schema.id)}
+                    onClick={() => handleApplyScholarship(schema)}
                   >
                     Daftar Skema Ini Sekarang
                   </Button>
@@ -480,8 +655,15 @@ const DetailScholarship = () => {
 
     return (
       <Tabs
-        activeKey={activeSchemaTab}
-        onChange={setActiveSchemaTab}
+        activeKey={activeSchemaTab || activeSchemas[0]?.id}
+        onChange={(key) => {
+          setActiveSchemaTab(key);
+          setExpandedEligible({
+            faculties: false,
+            departments: false,
+            studyPrograms: false,
+          });
+        }}
         items={tabItems}
         type="card"
         className="schema-tabs"
@@ -700,160 +882,6 @@ const DetailScholarship = () => {
               </h2>
               {renderSchemaTabs()}
             </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                  <ApartmentOutlined className="mr-2 text-indigo-500" />
-                  Fakultas Eligible
-                </h2>
-                {scholarship.faculties && scholarship.faculties.length > 0 ? (
-                  <div className="space-y-2">
-                    {[...scholarship.faculties]
-                      .sort((a, b) =>
-                        (a.name || "").localeCompare(b.name || "", "id-ID"),
-                      )
-                      .slice(
-                        0,
-                        expandedEligible.faculties
-                          ? scholarship.faculties.length
-                          : 6,
-                      )
-                      .map((faculty, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 bg-indigo-50 rounded-lg"
-                        >
-                          <RightOutlined className="text-indigo-500 text-xs" />
-                          <span className="text-gray-700">{faculty.name}</span>
-                        </div>
-                      ))}
-                    {scholarship.faculties.length > 6 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleEligible("faculties")}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
-                      >
-                        {expandedEligible.faculties
-                          ? "Sembunyikan"
-                          : `Lihat semua (${scholarship.faculties.length})`}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Semua fakultas</p>
-                )}
-              </Card>
-
-              <Card>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                  <BookOutlined className="mr-2 text-orange-500" />
-                  Departemen Eligible
-                </h2>
-                {scholarship.departments &&
-                scholarship.departments.length > 0 ? (
-                  <div className="space-y-2">
-                    {[...scholarship.departments]
-                      .sort((a, b) =>
-                        (a.name || "").localeCompare(b.name || "", "id-ID"),
-                      )
-                      .slice(
-                        0,
-                        expandedEligible.departments
-                          ? scholarship.departments.length
-                          : 6,
-                      )
-                      .map((department, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 bg-orange-50 rounded-lg"
-                        >
-                          <RightOutlined className="text-orange-500 text-xs" />
-                          <span className="text-gray-700">
-                            {department.name}
-                          </span>
-                        </div>
-                      ))}
-                    {scholarship.departments.length > 6 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleEligible("departments")}
-                        className="text-sm font-medium text-orange-600 hover:text-orange-700"
-                      >
-                        {expandedEligible.departments
-                          ? "Sembunyikan"
-                          : `Lihat semua (${scholarship.departments.length})`}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Semua departemen</p>
-                )}
-              </Card>
-            </div>
-
-            <div className="mt-6">
-              <Card>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                  <FormOutlined className="mr-2 text-emerald-500" />
-                  Program Studi Eligible
-                </h2>
-                {scholarship.studyPrograms &&
-                scholarship.studyPrograms.length > 0 ? (
-                  <div className="space-y-2">
-                    {[...scholarship.studyPrograms]
-                      .sort((a, b) => {
-                        const nameCompare = (a.name || "").localeCompare(
-                          b.name || "",
-                          "id-ID",
-                        );
-                        if (nameCompare !== 0) return nameCompare;
-                        return (a.degree || "").localeCompare(
-                          b.degree || "",
-                          "id-ID",
-                        );
-                      })
-                      .slice(
-                        0,
-                        expandedEligible.studyPrograms
-                          ? scholarship.studyPrograms.length
-                          : 6,
-                      )
-                      .map((studyProgram, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between space-x-2 p-2 bg-emerald-50 rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RightOutlined className="text-emerald-500 text-xs" />
-                            <span className="text-gray-700">
-                              {studyProgram.name}
-                            </span>
-                          </div>
-                          {studyProgram.degree && (
-                            <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                              {studyProgram.degree}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    {scholarship.studyPrograms.length > 6 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleEligible("studyPrograms")}
-                        className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
-                      >
-                        {expandedEligible.studyPrograms
-                          ? "Sembunyikan"
-                          : `Lihat semua (${scholarship.studyPrograms.length})`}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Semua program studi</p>
-                )}
-              </Card>
-            </div>
           </div>
 
           <div className="lg:col-span-1">
