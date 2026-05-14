@@ -231,28 +231,6 @@ const DetailInformation = () => {
                   />
                 )}
               </Card>
-
-              {information.meta && Object.keys(information.meta).length > 0 && (
-                <Card>
-                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <StarOutlined className="mr-2 text-purple-500" />
-                    Informasi Tambahan
-                  </h2>
-                  <div className="space-y-3">
-                    {Object.entries(information.meta).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex justify-between items-center p-3 bg-blue-50 rounded-lg"
-                      >
-                        <span className="text-gray-600 capitalize">
-                          {key.replace(/_/g, " ")}:
-                        </span>
-                        <span className="font-semibold">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
             </div>
 
             <div className="lg:col-span-1">

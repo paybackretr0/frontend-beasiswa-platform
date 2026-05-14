@@ -108,6 +108,48 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
     onNext({ schemas });
   };
 
+  const getTargetSummary = (schema) => {
+    const facultyCount = schema.faculties?.length || 0;
+    const departmentCount = schema.departments?.length || 0;
+    const studyProgramCount =
+      schema.study_programs?.length || schema.studyPrograms?.length || 0;
+
+    const parts = [];
+
+    if (facultyCount > 0) {
+      parts.push(`${facultyCount} Fakultas`);
+    }
+
+    if (departmentCount > 0) {
+      parts.push(`${departmentCount} Departemen`);
+    }
+
+    if (studyProgramCount > 0) {
+      parts.push(`${studyProgramCount} Program Studi`);
+    }
+
+    if (parts.length === 0) {
+      return "Semua Mahasiswa";
+    }
+
+    return parts.join(", ");
+  };
+
+  const getTargetNote = (schema) => {
+    const facultyCount = schema.faculties?.length || 0;
+    const departmentCount = schema.departments?.length || 0;
+
+    if (facultyCount > 0) {
+      return "Departemen dan program studi di dalam fakultas tersebut otomatis tercakup.";
+    }
+
+    if (departmentCount > 0) {
+      return "Program studi di dalam departemen tersebut otomatis tercakup.";
+    }
+
+    return null;
+  };
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <AlertContainer
@@ -200,15 +242,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
                       </span>
                       <span className="flex items-center gap-1">
                         <AimOutlined className="text-orange-500" />
-                        {schema.faculties?.length || 0} Fakultas
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <AimOutlined className="text-orange-500" />
-                        {schema.departments?.length || 0} Departemen
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <AimOutlined className="text-orange-500" />
-                        {schema.study_programs?.length || 0} Program Studi
+                        Target langsung: {getTargetSummary(schema)}
                       </span>
                     </div>
                   </div>

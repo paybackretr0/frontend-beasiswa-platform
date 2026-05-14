@@ -483,6 +483,40 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     return allAvailableSelected;
   };
 
+  const getCleanEligibilityPayload = () => {
+    const facultiesToSubmit = selectedFaculties;
+
+    const departmentsToSubmit = selectedDepartments.filter((departmentId) => {
+      const department = departments.find((dept) => dept.id === departmentId);
+
+      return !selectedFaculties.includes(department?.faculty_id);
+    });
+
+    const studyProgramsToSubmit = selectedStudyPrograms.filter((programId) => {
+      const program = studyPrograms.find((prog) => prog.id === programId);
+
+      const programDepartment = departments.find(
+        (dept) => dept.id === program?.department_id,
+      );
+
+      const isCoveredByFaculty = selectedFaculties.includes(
+        programDepartment?.faculty_id,
+      );
+
+      const isCoveredByDepartment = departmentsToSubmit.includes(
+        program?.department_id,
+      );
+
+      return !isCoveredByFaculty && !isCoveredByDepartment;
+    });
+
+    return {
+      faculties: facultiesToSubmit,
+      departments: departmentsToSubmit,
+      study_programs: studyProgramsToSubmit,
+    };
+  };
+
   const handleSave = () => {
     if (!formData.name || !formData.semester_minimum) {
       warning(
@@ -520,6 +554,8 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       return;
     }
 
+    const eligibilityPayload = getCleanEligibilityPayload();
+
     const schemaData = {
       ...formData,
       requirements: validRequirements.map((r) => ({
@@ -535,9 +571,9 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
         stage_name: s.name,
         order_no: index + 1,
       })),
-      faculties: selectedFaculties,
-      departments: selectedDepartments,
-      study_programs: selectedStudyPrograms,
+      faculties: eligibilityPayload.faculties,
+      departments: eligibilityPayload.departments,
+      study_programs: eligibilityPayload.study_programs,
     };
 
     onSave(schemaData);

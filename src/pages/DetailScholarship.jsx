@@ -37,7 +37,7 @@ const DetailScholarship = () => {
   const [otherScholarships, setOtherScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeSchemaTab, setActiveSchemaTab] = useState("0");
+  const [activeSchemaTab, setActiveSchemaTab] = useState(null);
   const [expandedEligible, setExpandedEligible] = useState({
     faculties: false,
     departments: false,
@@ -47,9 +47,20 @@ const DetailScholarship = () => {
   const { alerts, removeAlert, warning, error: alertError } = useAlert();
 
   useEffect(() => {
+    setActiveSchemaTab(null);
     loadScholarshipDetail();
     loadOtherScholarships();
   }, [id]);
+
+  useEffect(() => {
+    const activeSchemas = (scholarship?.schemas || []).filter(
+      (schema) => schema.is_active,
+    );
+
+    if (activeSchemas.length > 0 && !activeSchemaTab) {
+      setActiveSchemaTab(activeSchemas[0].id);
+    }
+  }, [scholarship, activeSchemaTab]);
 
   const loadScholarshipDetail = async () => {
     try {
@@ -130,36 +141,44 @@ const DetailScholarship = () => {
     }
   };
 
-  const isStudentEligibleForScholarship = (user, scholarshipData) => {
-    if (!user || !scholarshipData) return false;
+  const getSchemaFaculties = (schema) =>
+    schema?.effectiveFaculties || schema?.faculties || [];
+
+  const getSchemaDepartments = (schema) =>
+    schema?.effectiveDepartments || schema?.departments || [];
+
+  const getSchemaStudyPrograms = (schema) =>
+    schema?.effectiveStudyPrograms ||
+    schema?.studyPrograms ||
+    schema?.study_programs ||
+    [];
+
+  const isStudentEligibleForSchema = (user, schema) => {
+    if (!user || !schema) return false;
 
     const studyProgramIds = new Set(
-      (scholarshipData.studyPrograms || []).map((sp) => sp.id),
+      getSchemaStudyPrograms(schema).map((sp) => sp.id),
     );
 
     const departmentIds = new Set(
-      (scholarshipData.departments || []).map((d) => d.id),
+      getSchemaDepartments(schema).map((d) => d.id),
     );
 
-    const facultyIds = new Set(
-      (scholarshipData.faculties || []).map((f) => f.id),
-    );
+    const facultyIds = new Set(getSchemaFaculties(schema).map((f) => f.id));
 
     const hasRestriction =
       studyProgramIds.size > 0 || departmentIds.size > 0 || facultyIds.size > 0;
+
     if (!hasRestriction) return true;
 
-    const isStudyProgramEligible =
-      studyProgramIds.size > 0 && studyProgramIds.has(user.study_program_id);
-    const isDepartmentEligible =
-      departmentIds.size > 0 && departmentIds.has(user.department_id);
-    const isFacultyEligible =
-      facultyIds.size > 0 && facultyIds.has(user.faculty_id);
-
-    return isStudyProgramEligible || isDepartmentEligible || isFacultyEligible;
+    return (
+      studyProgramIds.has(user.study_program_id) ||
+      departmentIds.has(user.department_id) ||
+      facultyIds.has(user.faculty_id)
+    );
   };
 
-  const handleApplyScholarship = (schemaId) => {
+  const handleApplyScholarship = (schema) => {
     const accessToken = localStorage.getItem("access_token");
     const user = getCurrentUser();
 
@@ -177,15 +196,33 @@ const DetailScholarship = () => {
       return;
     }
 
-    if (!isStudentEligibleForScholarship(user, scholarship)) {
+    if (!schema) {
+      warning("Skema Tidak Ditemukan", "Silakan pilih skema yang tersedia");
+      return;
+    }
+
+    if (!isStudentEligibleForSchema(user, schema)) {
       warning(
         "Tidak Memenuhi Cakupan",
-        "Program beasiswa ini tidak mencakup fakultas/departemen/program studi Anda",
+        "Skema ini tidak mencakup fakultas/departemen/program studi Anda",
       );
       return;
     }
 
-    navigate(`/scholarship/${id}/apply?schema=${schemaId}`);
+    navigate(`/scholarship/${id}/apply?schema=${schema.id}`);
+  };
+
+  const getActiveSchemas = () =>
+    (scholarship?.schemas || []).filter((schema) => schema.is_active);
+
+  const getSelectedSchema = () => {
+    const activeSchemas = getActiveSchemas();
+    if (activeSchemas.length === 0) return null;
+
+    return (
+      activeSchemas.find((schema) => schema.id === activeSchemaTab) ||
+      activeSchemas[0]
+    );
   };
 
   const getStatusTag = (isActive, endDate) => {
@@ -257,7 +294,7 @@ const DetailScholarship = () => {
       );
     }
 
-    const activeSchemas = scholarship.schemas.filter((s) => s.is_active);
+    const activeSchemas = getActiveSchemas();
 
     if (activeSchemas.length === 0) {
       return (
@@ -269,219 +306,386 @@ const DetailScholarship = () => {
       );
     }
 
-    const tabItems = activeSchemas.map((schema, index) => ({
-      key: index.toString(),
-      label: (
-        <span className="flex items-center gap-2">
-          <FormOutlined />
-          {schema.name}
-          {schema.quota && (
-            <Tag color="blue" className="ml-1">
-              {schema.quota} kuota
-            </Tag>
-          )}
-        </span>
-      ),
-      children: (
-        <div className="space-y-6">
-          <AntCard className="border-l-4 border-l-blue-500">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <InfoCircleOutlined className="mr-2 text-blue-500" />
-              Informasi Skema
-            </h3>
-            {schema.description && (
-              <p className="text-gray-700 mb-4">{schema.description}</p>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {schema.quota && (
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                  <span className="text-gray-600">Kuota:</span>
-                  <span className="font-semibold text-lg">
-                    {schema.quota} orang
-                  </span>
-                </div>
-              )}
-              {schema.gpa_minimum && (
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span className="text-gray-600">Minimum IPK:</span>
-                  <span className="font-semibold text-lg">
-                    {schema.gpa_minimum}
-                  </span>
-                </div>
-              )}
-              {schema.semester_minimum && (
-                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                  <span className="text-gray-600">Minimum Semester:</span>
-                  <span className="font-semibold text-lg">
-                    {schema.semester_minimum}
-                  </span>
-                </div>
-              )}
-            </div>
-          </AntCard>
+    const tabItems = activeSchemas.map((schema) => {
+      const schemaFaculties = getSchemaFaculties(schema);
+      const schemaDepartments = getSchemaDepartments(schema);
+      const schemaStudyPrograms = getSchemaStudyPrograms(schema);
 
-          <AntCard>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <CheckCircleOutlined className="mr-2 text-green-500" />
-              Persyaratan Skema
-            </h3>
-            {schema.requirements && schema.requirements.length > 0 ? (
-              <div className="space-y-3">
-                {schema.requirements.map((req, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400"
-                  >
-                    <div className="flex-1">
-                      {req.requirement_type === "TEXT" && (
+      return {
+        key: schema.id,
+        label: (
+          <span className="flex items-center gap-2">
+            <FormOutlined />
+            {schema.name}
+          </span>
+        ),
+        children: (
+          <div className="space-y-6">
+            <AntCard className="border-l-4 border-l-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <InfoCircleOutlined className="mr-2 text-blue-500" />
+                Informasi Skema
+              </h3>
+              {schema.description && (
+                <p className="text-gray-700 mb-4">{schema.description}</p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {schema.quota && (
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <span className="text-gray-600">Kuota:</span>
+                    <span className="font-semibold text-lg">
+                      {schema.quota} orang
+                    </span>
+                  </div>
+                )}
+                {schema.gpa_minimum && (
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <span className="text-gray-600">Minimum IPK:</span>
+                    <span className="font-semibold text-lg">
+                      {schema.gpa_minimum}
+                    </span>
+                  </div>
+                )}
+                {schema.semester_minimum && (
+                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                    <span className="text-gray-600">Minimum Semester:</span>
+                    <span className="font-semibold text-lg">
+                      {schema.semester_minimum}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </AntCard>
+
+            <AntCard>
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <CheckCircleOutlined className="mr-2 text-green-500" />
+                Persyaratan Skema
+              </h3>
+              {schema.requirements && schema.requirements.length > 0 ? (
+                <div className="space-y-3">
+                  {schema.requirements.map((req, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400"
+                    >
+                      <div className="flex-1">
+                        {req.requirement_type === "TEXT" && (
+                          <span className="text-gray-700">
+                            {req.requirement_text}
+                          </span>
+                        )}
+                        {req.requirement_type === "FILE" &&
+                          req.requirement_file && (
+                            <a
+                              href={`${import.meta.env.VITE_IMAGE_URL}/${
+                                req.requirement_file
+                              }`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline flex items-center gap-2"
+                            >
+                              <FileTextOutlined />
+                              Lihat syarat & ketentuan (PDF)
+                            </a>
+                          )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Belum ada persyaratan khusus"
+                  className="my-4"
+                />
+              )}
+            </AntCard>
+
+            <AntCard>
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <FileTextOutlined className="mr-2 text-red-500" />
+                Dokumen yang Diperlukan
+              </h3>
+              {schema.documents && schema.documents.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {schema.documents.map((doc, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-400"
+                    >
+                      <div className="flex-1">
                         <span className="text-gray-700">
-                          {req.requirement_text}
+                          {doc.document_name}
                         </span>
-                      )}
-                      {req.requirement_type === "FILE" &&
-                        req.requirement_file && (
+                        {doc.template_file && (
                           <a
                             href={`${import.meta.env.VITE_IMAGE_URL}/${
-                              req.requirement_file
+                              doc.template_file
                             }`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline flex items-center gap-2"
+                            className="block text-xs text-blue-600 hover:text-blue-800 mt-1"
                           >
-                            <FileTextOutlined />
-                            Lihat syarat & ketentuan (PDF)
+                            Download template
                           </a>
                         )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Belum ada persyaratan khusus"
-                className="my-4"
-              />
-            )}
-          </AntCard>
+                  ))}
+                </div>
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Tidak ada dokumen yang diperlukan"
+                  className="my-4"
+                />
+              )}
+            </AntCard>
 
-          <AntCard>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <FileTextOutlined className="mr-2 text-red-500" />
-              Dokumen yang Diperlukan
-            </h3>
-            {schema.documents && schema.documents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {schema.documents.map((doc, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-400"
-                  >
-                    <div className="flex-1">
-                      <span className="text-gray-700">{doc.document_name}</span>
-                      {doc.template_file && (
-                        <a
-                          href={`${import.meta.env.VITE_IMAGE_URL}/${
-                            doc.template_file
-                          }`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block text-xs text-blue-600 hover:text-blue-800 mt-1"
+            <AntCard>
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <TrophyOutlined className="mr-2 text-purple-500" />
+                Tahapan Seleksi
+              </h3>
+              {schema.stages && schema.stages.length > 0 ? (
+                <Timeline
+                  items={schema.stages
+                    .sort((a, b) => a.order_no - b.order_no)
+                    .map((stage, stageIdx) => ({
+                      dot: (
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {stageIdx + 1}
+                        </div>
+                      ),
+                      children: (
+                        <div className="ml-4">
+                          <h4 className="font-semibold text-gray-900">
+                            {stage.stage_name}
+                          </h4>
+                        </div>
+                      ),
+                    }))}
+                />
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Belum ada tahapan seleksi"
+                  className="my-4"
+                />
+              )}
+            </AntCard>
+
+            <AntCard>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Cakupan Eligible
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2">Fakultas Eligible</h4>
+
+                  {schemaFaculties.length > 0 ? (
+                    <div className="space-y-2">
+                      {[...schemaFaculties]
+                        .sort((a, b) =>
+                          (a.name || "").localeCompare(b.name || "", "id-ID"),
+                        )
+                        .slice(
+                          0,
+                          expandedEligible.faculties
+                            ? schemaFaculties.length
+                            : 6,
+                        )
+                        .map((faculty) => (
+                          <div
+                            key={faculty.id}
+                            className="flex items-center space-x-2 p-2 bg-indigo-50 rounded-lg"
+                          >
+                            <RightOutlined className="text-indigo-500 text-xs" />
+                            <span className="text-gray-700">
+                              {faculty.name}
+                            </span>
+                          </div>
+                        ))}
+
+                      {schemaFaculties.length > 6 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEligible("faculties")}
+                          className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
                         >
-                          Download template
-                        </a>
+                          {expandedEligible.faculties
+                            ? "Sembunyikan"
+                            : `Lihat semua (${schemaFaculties.length})`}
+                        </button>
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Tidak ada dokumen yang diperlukan"
-                className="my-4"
-              />
-            )}
-          </AntCard>
+                  ) : (
+                    <p className="text-gray-500 text-sm">Tidak Ada</p>
+                  )}
+                </div>
 
-          <AntCard>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <TrophyOutlined className="mr-2 text-purple-500" />
-              Tahapan Seleksi
-            </h3>
-            {schema.stages && schema.stages.length > 0 ? (
-              <Timeline
-                items={schema.stages
-                  .sort((a, b) => a.order_no - b.order_no)
-                  .map((stage, stageIdx) => ({
-                    dot: (
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {stageIdx + 1}
-                      </div>
-                    ),
-                    children: (
-                      <div className="ml-4">
-                        <h4 className="font-semibold text-gray-900">
-                          {stage.stage_name}
-                        </h4>
-                      </div>
-                    ),
-                  }))}
-              />
-            ) : (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Belum ada tahapan seleksi"
-                className="my-4"
-              />
-            )}
-          </AntCard>
+                <div>
+                  <h4 className="font-semibold mb-2">Departemen Eligible</h4>
 
-          {scholarship.is_active &&
-            (!scholarship.end_date ||
-              new Date() <= new Date(scholarship.end_date)) && (
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-3">
-                  Tertarik dengan skema ini?
-                </h4>
-                {scholarship.is_external ? (
-                  <>
-                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-start space-x-2">
-                        <ExclamationCircleOutlined className="text-blue-500 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm text-blue-800">
-                          Pendaftaran dilakukan melalui website penyedia
-                          beasiswa.
-                        </div>
-                      </div>
+                  {schemaDepartments?.length > 0 ? (
+                    <div className="space-y-2">
+                      {[...schemaDepartments]
+                        .sort((a, b) =>
+                          (a.name || "").localeCompare(b.name || "", "id-ID"),
+                        )
+                        .slice(
+                          0,
+                          expandedEligible.departments
+                            ? schemaDepartments.length
+                            : 6,
+                        )
+                        .map((department) => (
+                          <div
+                            key={department.id}
+                            className="flex items-center space-x-2 p-2 bg-orange-50 rounded-lg"
+                          >
+                            <RightOutlined className="text-orange-500 text-xs" />
+                            <span className="text-gray-700">
+                              {department.name}
+                            </span>
+                          </div>
+                        ))}
+
+                      {schemaDepartments.length > 6 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEligible("departments")}
+                          className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                        >
+                          {expandedEligible.departments
+                            ? "Sembunyikan"
+                            : `Lihat semua (${schemaDepartments.length})`}
+                        </button>
+                      )}
                     </div>
-                    <Button
-                      className="w-full bg-green-600 hover:bg-green-700"
-                      onClick={() =>
-                        handleExternalApplication(scholarship.website_url)
-                      }
-                    >
-                      Daftar di Website Penyedia
-                    </Button>
-                  </>
+                  ) : (
+                    <p className="text-gray-500 text-sm">Tidak Ada</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h4 className="font-semibold mb-2">Program Studi Eligible</h4>
+
+                {schemaStudyPrograms?.length > 0 ? (
+                  <div className="space-y-2">
+                    {[...schemaStudyPrograms]
+                      .sort((a, b) => {
+                        const nameCompare = (a.name || "").localeCompare(
+                          b.name || "",
+                          "id-ID",
+                        );
+                        if (nameCompare !== 0) return nameCompare;
+
+                        return (a.degree || "").localeCompare(
+                          b.degree || "",
+                          "id-ID",
+                        );
+                      })
+                      .slice(
+                        0,
+                        expandedEligible.studyPrograms
+                          ? schemaStudyPrograms.length
+                          : 6,
+                      )
+                      .map((studyProgram) => (
+                        <div
+                          key={studyProgram.id}
+                          className="flex items-center justify-between space-x-2 p-2 bg-emerald-50 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RightOutlined className="text-emerald-500 text-xs" />
+                            <span className="text-gray-700">
+                              {studyProgram.name}
+                            </span>
+                          </div>
+
+                          {studyProgram.degree && (
+                            <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                              {studyProgram.degree}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+
+                    {schemaStudyPrograms.length > 6 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleEligible("studyPrograms")}
+                        className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                      >
+                        {expandedEligible.studyPrograms
+                          ? "Sembunyikan"
+                          : `Lihat semua (${schemaStudyPrograms.length})`}
+                      </button>
+                    )}
+                  </div>
                 ) : (
-                  <Button
-                    className="w-full"
-                    onClick={() => handleApplyScholarship(schema.id)}
-                  >
-                    Daftar Skema Ini Sekarang
-                  </Button>
+                  <p className="text-gray-500 text-sm">Tidak Ada</p>
                 )}
               </div>
-            )}
-        </div>
-      ),
-    }));
+            </AntCard>
+
+            {scholarship.is_active &&
+              (!scholarship.end_date ||
+                new Date() <= new Date(scholarship.end_date)) && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl p-6">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3">
+                    Tertarik dengan skema ini?
+                  </h4>
+                  {scholarship.is_external ? (
+                    <>
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start space-x-2">
+                          <ExclamationCircleOutlined className="text-blue-500 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm text-blue-800">
+                            Pendaftaran dilakukan melalui website penyedia
+                            beasiswa.
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        className="w-full bg-green-600 hover:bg-green-700"
+                        onClick={() =>
+                          handleExternalApplication(scholarship.website_url)
+                        }
+                      >
+                        Daftar di Website Penyedia
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={() => handleApplyScholarship(schema)}
+                    >
+                      Daftar Skema Ini Sekarang
+                    </Button>
+                  )}
+                </div>
+              )}
+          </div>
+        ),
+      };
+    });
 
     return (
       <Tabs
-        activeKey={activeSchemaTab}
-        onChange={setActiveSchemaTab}
+        activeKey={activeSchemaTab || activeSchemas[0]?.id}
+        onChange={(key) => {
+          setActiveSchemaTab(key);
+          setExpandedEligible({
+            faculties: false,
+            departments: false,
+            studyPrograms: false,
+          });
+        }}
         items={tabItems}
         type="card"
         className="schema-tabs"
@@ -700,160 +904,6 @@ const DetailScholarship = () => {
               </h2>
               {renderSchemaTabs()}
             </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                  <ApartmentOutlined className="mr-2 text-indigo-500" />
-                  Fakultas Eligible
-                </h2>
-                {scholarship.faculties && scholarship.faculties.length > 0 ? (
-                  <div className="space-y-2">
-                    {[...scholarship.faculties]
-                      .sort((a, b) =>
-                        (a.name || "").localeCompare(b.name || "", "id-ID"),
-                      )
-                      .slice(
-                        0,
-                        expandedEligible.faculties
-                          ? scholarship.faculties.length
-                          : 6,
-                      )
-                      .map((faculty, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 bg-indigo-50 rounded-lg"
-                        >
-                          <RightOutlined className="text-indigo-500 text-xs" />
-                          <span className="text-gray-700">{faculty.name}</span>
-                        </div>
-                      ))}
-                    {scholarship.faculties.length > 6 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleEligible("faculties")}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
-                      >
-                        {expandedEligible.faculties
-                          ? "Sembunyikan"
-                          : `Lihat semua (${scholarship.faculties.length})`}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Semua fakultas</p>
-                )}
-              </Card>
-
-              <Card>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                  <BookOutlined className="mr-2 text-orange-500" />
-                  Departemen Eligible
-                </h2>
-                {scholarship.departments &&
-                scholarship.departments.length > 0 ? (
-                  <div className="space-y-2">
-                    {[...scholarship.departments]
-                      .sort((a, b) =>
-                        (a.name || "").localeCompare(b.name || "", "id-ID"),
-                      )
-                      .slice(
-                        0,
-                        expandedEligible.departments
-                          ? scholarship.departments.length
-                          : 6,
-                      )
-                      .map((department, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 bg-orange-50 rounded-lg"
-                        >
-                          <RightOutlined className="text-orange-500 text-xs" />
-                          <span className="text-gray-700">
-                            {department.name}
-                          </span>
-                        </div>
-                      ))}
-                    {scholarship.departments.length > 6 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleEligible("departments")}
-                        className="text-sm font-medium text-orange-600 hover:text-orange-700"
-                      >
-                        {expandedEligible.departments
-                          ? "Sembunyikan"
-                          : `Lihat semua (${scholarship.departments.length})`}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Semua departemen</p>
-                )}
-              </Card>
-            </div>
-
-            <div className="mt-6">
-              <Card>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                  <FormOutlined className="mr-2 text-emerald-500" />
-                  Program Studi Eligible
-                </h2>
-                {scholarship.studyPrograms &&
-                scholarship.studyPrograms.length > 0 ? (
-                  <div className="space-y-2">
-                    {[...scholarship.studyPrograms]
-                      .sort((a, b) => {
-                        const nameCompare = (a.name || "").localeCompare(
-                          b.name || "",
-                          "id-ID",
-                        );
-                        if (nameCompare !== 0) return nameCompare;
-                        return (a.degree || "").localeCompare(
-                          b.degree || "",
-                          "id-ID",
-                        );
-                      })
-                      .slice(
-                        0,
-                        expandedEligible.studyPrograms
-                          ? scholarship.studyPrograms.length
-                          : 6,
-                      )
-                      .map((studyProgram, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between space-x-2 p-2 bg-emerald-50 rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RightOutlined className="text-emerald-500 text-xs" />
-                            <span className="text-gray-700">
-                              {studyProgram.name}
-                            </span>
-                          </div>
-                          {studyProgram.degree && (
-                            <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                              {studyProgram.degree}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    {scholarship.studyPrograms.length > 6 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleEligible("studyPrograms")}
-                        className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
-                      >
-                        {expandedEligible.studyPrograms
-                          ? "Sembunyikan"
-                          : `Lihat semua (${scholarship.studyPrograms.length})`}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Semua program studi</p>
-                )}
-              </Card>
-            </div>
           </div>
 
           <div className="lg:col-span-1">

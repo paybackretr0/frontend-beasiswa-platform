@@ -17,6 +17,9 @@ const UniversalTable = ({
   scroll = { x: 800 },
   customFilters = null,
   onSearch = null,
+  onPageChange = null,
+  paginationConfig = null,
+  serverSide = false,
   rowSelection = null,
   loading = false,
 }) => {
@@ -66,6 +69,11 @@ const UniversalTable = ({
   }, [searchText, data, onSearch, searchFields]);
 
   const handleTableChange = (nextPagination) => {
+    if (serverSide && onPageChange) {
+      onPageChange(nextPagination.current, nextPagination.pageSize);
+      return;
+    }
+
     setPagination((prev) => ({
       ...prev,
       current: nextPagination.current,
@@ -121,19 +129,33 @@ const UniversalTable = ({
       <div className="p-6 pt-0">
         <Table
           columns={columns}
-          dataSource={onSearch ? data : filteredData}
+          dataSource={serverSide || onSearch ? data : filteredData}
           rowKey={rowKey}
           rowSelection={rowSelection || undefined}
           loading={loading}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            pageSizeOptions: ["10", "20", "50", "100"],
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} dari ${total} data`,
-          }}
+          pagination={
+            serverSide
+              ? {
+                  current: paginationConfig?.current || 1,
+                  pageSize: paginationConfig?.pageSize || pageSize,
+                  total: paginationConfig?.total || 0,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                  pageSizeOptions: ["10", "20", "50", "100"],
+                  showTotal:
+                    paginationConfig?.showTotal ||
+                    ((total, range) => `${range[0]}-${range[1]} dari ${total} data`),
+                }
+              : {
+                  current: pagination.current,
+                  pageSize: pagination.pageSize,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                  pageSizeOptions: ["10", "20", "50", "100"],
+                  showTotal: (total, range) =>
+                    `${range[0]}-${range[1]} dari ${total} data`,
+                }
+          }
           onChange={handleTableChange}
           scroll={scroll}
         />
@@ -221,11 +243,11 @@ export const createActionColumn = (actions) => ({
   },
 });
 
-export const createNumberColumn = () => ({
+export const createNumberColumn = (currentPage = 1, pageSize = 10) => ({
   title: "No",
   key: "number",
   width: 60,
-  render: (_, __, index) => index + 1,
+  render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
 });
 
 export const createStatusColumn = ({ Aktif, Nonaktif, mapValue }) => ({

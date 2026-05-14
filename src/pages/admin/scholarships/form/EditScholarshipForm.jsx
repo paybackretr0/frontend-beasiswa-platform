@@ -267,7 +267,7 @@ const EditScholarshipForm = () => {
         label: field.label,
         type: field.type,
         is_required: field.is_required,
-        options: field.options_json || [],
+        options: field.options || [],
         order_no: field.order_no,
         originalId: field.id,
       }));

@@ -80,6 +80,48 @@ const StepSchemas = ({ onNext, onBack, initialData = {} }) => {
     onNext({ schemas });
   };
 
+  const getTargetSummary = (schema) => {
+    const facultyCount = schema.faculties?.length || 0;
+    const departmentCount = schema.departments?.length || 0;
+    const studyProgramCount =
+      schema.study_programs?.length || schema.studyPrograms?.length || 0;
+
+    const parts = [];
+
+    if (facultyCount > 0) {
+      parts.push(`${facultyCount} fakultas`);
+    }
+
+    if (departmentCount > 0) {
+      parts.push(`${departmentCount} departemen`);
+    }
+
+    if (studyProgramCount > 0) {
+      parts.push(`${studyProgramCount} program studi`);
+    }
+
+    if (parts.length === 0) {
+      return "Semua mahasiswa";
+    }
+
+    return parts.join(", ");
+  };
+
+  const getTargetNote = (schema) => {
+    const facultyCount = schema.faculties?.length || 0;
+    const departmentCount = schema.departments?.length || 0;
+
+    if (facultyCount > 0) {
+      return "Departemen dan program studi di dalam fakultas tersebut otomatis tercakup.";
+    }
+
+    if (departmentCount > 0) {
+      return "Program studi di dalam departemen tersebut otomatis tercakup.";
+    }
+
+    return null;
+  };
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <AlertContainer
@@ -210,13 +252,21 @@ const StepSchemas = ({ onNext, onBack, initialData = {} }) => {
                     ))}
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-xs text-gray-500">Target:</span>
-                    <span className="text-xs text-gray-700">
-                      {schema.faculties?.length || 0} Fakultas,{" "}
-                      {schema.departments?.length || 0} Departemen,{" "}
-                      {schema.study_programs?.length || 0} Prodi
-                    </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs text-gray-500">
+                        Target langsung:
+                      </span>
+                      <span className="text-xs font-medium text-gray-700">
+                        {getTargetSummary(schema)}
+                      </span>
+                    </div>
+
+                    {getTargetNote(schema) && (
+                      <p className="text-xs text-blue-600">
+                        {getTargetNote(schema)}
+                      </p>
+                    )}
                   </div>
                 </div>
 

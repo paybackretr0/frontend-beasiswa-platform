@@ -34,6 +34,7 @@ const ScholarshipDetail = () => {
   const navigate = useNavigate();
   const [scholarship, setScholarship] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expandedEligible, setExpandedEligible] = useState({});
 
   const { alerts, error, success, removeAlert } = useAlert();
 
@@ -70,6 +71,33 @@ const ScholarshipDetail = () => {
       month: "long",
       year: "numeric",
     });
+  };
+
+  const isExpanded = (schemaId, key) => {
+    return expandedEligible?.[schemaId]?.[key] || false;
+  };
+
+  const toggleEligible = (schemaId, key) => {
+    setExpandedEligible((prev) => ({
+      ...prev,
+      [schemaId]: {
+        ...prev[schemaId],
+        [key]: !prev?.[schemaId]?.[key],
+      },
+    }));
+  };
+
+  const getVisibleItems = (items = [], schemaId, key, limit = 6) => {
+    const sortedItems = [...items].sort((a, b) => {
+      const nameCompare = (a.name || "").localeCompare(b.name || "", "id-ID");
+      if (nameCompare !== 0) return nameCompare;
+
+      return (a.degree || "").localeCompare(b.degree || "", "id-ID");
+    });
+
+    return isExpanded(schemaId, key)
+      ? sortedItems
+      : sortedItems.slice(0, limit);
   };
 
   const handleFormNavigation = async (schemaId) => {
@@ -286,39 +314,57 @@ const ScholarshipDetail = () => {
                   {scholarship.schemas.map((schema, index) => (
                     <Panel
                       header={
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <span className="font-semibold text-base">
-                              {index + 1}. {schema.name}
-                            </span>
-                            <Tag color={schema.is_active ? "green" : "red"}>
-                              {schema.is_active ? "Aktif" : "Nonaktif"}
-                            </Tag>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
+                            {index + 1}
                           </div>
+
+                          <div className="min-w-0">
+                            <div className="font-semibold text-gray-800 truncate">
+                              {schema.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Skema beasiswa
+                            </div>
+                          </div>
+
+                          <Tag
+                            color={schema.is_active ? "green" : "red"}
+                            className="ml-1 rounded-full"
+                          >
+                            {schema.is_active ? "Aktif" : "Nonaktif"}
+                          </Tag>
                         </div>
                       }
                       key={schema.id}
                       className="mb-3"
                       extra={
                         <div
-                          className="flex gap-2"
+                          className="flex flex-wrap items-center gap-2"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {!scholarship.is_external && (
-                            <Button
-                              size="small"
+                            <button
+                              type="button"
                               onClick={() => handleFormNavigation(schema.id)}
-                              className="!bg-green-500 hover:!bg-green-600 !text-white"
+                              className="
+                                inline-flex items-center gap-1.5
+                                rounded-full border border-emerald-200 bg-emerald-50
+                                px-3 py-1.5 text-xs font-semibold text-emerald-700
+                                shadow-sm transition-all duration-200
+                                hover:bg-emerald-100 hover:border-emerald-300 hover:text-emerald-800
+                                hover:shadow-md active:scale-95 cursor-pointer
+                              "
                             >
-                              <FileTextOutlined className="mr-1" />
+                              <FileTextOutlined className="text-sm" />
                               Kelola Form
-                            </Button>
+                            </button>
                           )}
 
                           {!scholarship.is_external &&
                             scholarship.is_active && (
-                              <Button
-                                size="small"
+                              <button
+                                type="button"
                                 onClick={() =>
                                   handleSchemaToggle(
                                     schema.id,
@@ -326,24 +372,30 @@ const ScholarshipDetail = () => {
                                     schema.name,
                                   )
                                 }
-                                className={
-                                  schema.is_active
-                                    ? "!bg-red-500 hover:!bg-red-600 !text-white"
-                                    : "!bg-blue-500 hover:!bg-blue-600 !text-white"
-                                }
+                                className={`
+                                  inline-flex items-center gap-1.5
+                                  rounded-full border px-3 py-1.5 text-xs font-semibold
+                                  shadow-sm transition-all duration-200
+                                  hover:shadow-md active:scale-95 cursor-pointer
+                                  ${
+                                    schema.is_active
+                                      ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-800"
+                                      : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-800"
+                                  }
+                                `}
                               >
                                 {schema.is_active ? (
                                   <>
-                                    <CloseCircleOutlined className="mr-1" />
+                                    <CloseCircleOutlined className="text-sm" />
                                     Nonaktifkan
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircleOutlined className="mr-1" />
+                                    <CheckCircleOutlined className="text-sm" />
                                     Aktifkan
                                   </>
                                 )}
-                              </Button>
+                              </button>
                             )}
                         </div>
                       }
@@ -472,6 +524,137 @@ const ScholarshipDetail = () => {
                             />
                           )}
                         </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <UserOutlined className="text-indigo-500" />
+                            <span className="font-semibold text-gray-800">
+                              Target Mahasiswa
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-indigo-50 rounded-lg p-3">
+                              <div className="text-sm font-medium text-gray-700 mb-2">
+                                Fakultas Eligible
+                              </div>
+
+                              {schema.effectiveFaculties?.length > 0 ? (
+                                <>
+                                  <div className="flex flex-wrap gap-2">
+                                    {getVisibleItems(
+                                      schema.effectiveFaculties,
+                                      schema.id,
+                                      "faculties",
+                                    ).map((faculty) => (
+                                      <Tag key={faculty.id} color="blue">
+                                        {faculty.name}
+                                      </Tag>
+                                    ))}
+                                  </div>
+
+                                  {schema.effectiveFaculties.length > 6 && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        toggleEligible(schema.id, "faculties")
+                                      }
+                                      className="text-xs font-medium text-blue-600 hover:text-blue-800 mt-2"
+                                    >
+                                      {isExpanded(schema.id, "faculties")
+                                        ? "Sembunyikan"
+                                        : `Lihat semua (${schema.effectiveFaculties.length})`}
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  Tidak ada
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="bg-orange-50 rounded-lg p-3">
+                              <div className="text-sm font-medium text-gray-700 mb-2">
+                                Departemen Eligible
+                              </div>
+
+                              {schema.effectiveDepartments?.length > 0 ? (
+                                <>
+                                  <div className="flex flex-wrap gap-2">
+                                    {getVisibleItems(
+                                      schema.effectiveDepartments,
+                                      schema.id,
+                                      "departments",
+                                    ).map((department) => (
+                                      <Tag key={department.id} color="orange">
+                                        {department.name}
+                                      </Tag>
+                                    ))}
+                                  </div>
+
+                                  {schema.effectiveDepartments.length > 6 && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        toggleEligible(schema.id, "departments")
+                                      }
+                                      className="text-xs font-medium text-orange-600 hover:text-orange-800 mt-2"
+                                    >
+                                      {isExpanded(schema.id, "departments")
+                                        ? "Sembunyikan"
+                                        : `Lihat semua (${schema.effectiveDepartments.length})`}
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  Tidak ada
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="bg-emerald-50 rounded-lg p-3 mt-4">
+                            <div className="text-sm font-medium text-gray-700 mb-2">
+                              Program Studi Eligible
+                            </div>
+
+                            {schema.effectiveStudyPrograms?.length > 0 ? (
+                              <>
+                                <div className="flex flex-wrap gap-2">
+                                  {getVisibleItems(
+                                    schema.effectiveStudyPrograms,
+                                    schema.id,
+                                    "studyPrograms",
+                                  ).map((studyProgram) => (
+                                    <Tag key={studyProgram.id} color="green">
+                                      {studyProgram.degree
+                                        ? `${studyProgram.degree} `
+                                        : ""}
+                                      {studyProgram.name}
+                                    </Tag>
+                                  ))}
+                                </div>
+
+                                {schema.effectiveStudyPrograms.length > 6 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      toggleEligible(schema.id, "studyPrograms")
+                                    }
+                                    className="text-xs font-medium text-emerald-600 hover:text-emerald-800 mt-2"
+                                  >
+                                    {isExpanded(schema.id, "studyPrograms")
+                                      ? "Sembunyikan"
+                                      : `Lihat semua (${schema.effectiveStudyPrograms.length})`}
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-sm text-gray-500">Tidak ada</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </Panel>
                   ))}
@@ -584,48 +767,6 @@ const ScholarshipDetail = () => {
                 )}
               </div>
             </Card>
-
-            {(scholarship.faculties?.length ||
-              scholarship.departments?.length ||
-              scholarship.studyPrograms?.length) && (
-              <Card
-                title={
-                  <div className="flex items-center">
-                    <span>Target Mahasiswa</span>
-                  </div>
-                }
-              >
-                {scholarship.faculties?.length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-sm text-gray-600 mb-2 font-medium">
-                      Fakultas:
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {scholarship.faculties.map((faculty) => (
-                        <Tag key={faculty.id} color="blue">
-                          {faculty.name}
-                        </Tag>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {scholarship.studyPrograms?.length > 0 && (
-                  <div>
-                    <div className="text-sm text-gray-600 mb-2 font-medium">
-                      Program Studi:
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {scholarship.studyPrograms.map((prodi) => (
-                        <Tag key={prodi.id} color="purple">
-                          {prodi.degree} {prodi.name}
-                        </Tag>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Card>
-            )}
           </div>
         </div>
       </div>

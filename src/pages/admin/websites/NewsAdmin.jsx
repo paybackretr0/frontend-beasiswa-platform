@@ -77,17 +77,6 @@ const NewsAdmin = () => {
       formData.append("content", values.content || "");
       formData.append("status", values.status || "DRAFT");
 
-      const meta = {
-        category: values.category || "",
-        tags: values.tags
-          ? values.tags
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter((tag) => tag)
-          : [],
-      };
-      formData.append("meta", JSON.stringify(meta));
-
       if (uploadedFile) {
         formData.append("file", uploadedFile);
       }
@@ -408,8 +397,6 @@ const NewsAdmin = () => {
                 title: editingNews.title,
                 content: editingNews.content,
                 status: editingNews.status,
-                category: editingNews.meta?.category,
-                tags: editingNews.meta?.tags?.join(", "),
               }
             : {}
         }
@@ -479,18 +466,6 @@ const NewsAdmin = () => {
               { label: "Archived", value: "ARCHIVED" },
             ],
             rules: [{ required: true, message: "Status wajib dipilih" }],
-          },
-          {
-            name: "category",
-            label: "Kategori",
-            rules: [{ required: true, message: "Kategori wajib diisi" }],
-            placeholder: "Contoh: Beasiswa, Akademik, Kemahasiswaan",
-          },
-          {
-            name: "tags",
-            label: "Tags",
-            placeholder: "beasiswa, pendidikan, mahasiswa",
-            extra: "Pisahkan dengan koma untuk multiple tags",
           },
         ]}
       />
