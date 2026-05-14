@@ -102,7 +102,7 @@ const PreviewScholarshipForm = () => {
       case "SELECT":
         return (
           <Select {...commonProps} className="w-full">
-            {field.options_json?.map((option, index) => (
+            {(field.options || []).map((option, index) => (
               <Option key={index} value={option}>
                 {option}
               </Option>
