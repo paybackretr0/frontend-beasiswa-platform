@@ -84,9 +84,21 @@ const ScholarshipEdit = () => {
             order_no: stage.order_no,
           })),
 
-        faculties: schema.faculties?.map((f) => f.id) || [],
-        departments: schema.departments?.map((d) => d.id) || [],
-        study_programs: schema.studyPrograms?.map((p) => p.id) || [],
+        faculties:
+          schema.directFaculties?.map((f) => f.id) ||
+          schema.faculties?.map((f) => f.id) ||
+          [],
+
+        departments:
+          schema.directDepartments?.map((d) => d.id) ||
+          schema.departments?.map((d) => d.id) ||
+          [],
+
+        study_programs:
+          schema.directStudyPrograms?.map((p) => p.id) ||
+          schema.studyPrograms?.map((p) => p.id) ||
+          schema.study_programs?.map((p) => p.id) ||
+          [],
       }));
 
       const transformedData = {

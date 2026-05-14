@@ -53,7 +53,7 @@ const ScholarshipAdd = () => {
       await createScholarship(finalData);
       success(
         "Berhasil!",
-        `Beasiswa "${finalData.name}" dengan ${finalData.schemas.length} schema telah berhasil ditambahkan.`,
+        `Beasiswa "${finalData.name}" dengan ${finalData.schemas.length} skema telah berhasil ditambahkan.`,
       );
 
       setTimeout(() => {
@@ -145,7 +145,7 @@ const ScholarshipAdd = () => {
             >
               2
             </div>
-            <span className="text-sm font-medium hidden sm:inline">Schema</span>
+            <span className="text-sm font-medium hidden sm:inline">Skema</span>
           </div>
 
           <div

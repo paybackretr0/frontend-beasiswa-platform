@@ -314,39 +314,57 @@ const ScholarshipDetail = () => {
                   {scholarship.schemas.map((schema, index) => (
                     <Panel
                       header={
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <span className="font-semibold text-base">
-                              {index + 1}. {schema.name}
-                            </span>
-                            <Tag color={schema.is_active ? "green" : "red"}>
-                              {schema.is_active ? "Aktif" : "Nonaktif"}
-                            </Tag>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
+                            {index + 1}
                           </div>
+
+                          <div className="min-w-0">
+                            <div className="font-semibold text-gray-800 truncate">
+                              {schema.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Skema beasiswa
+                            </div>
+                          </div>
+
+                          <Tag
+                            color={schema.is_active ? "green" : "red"}
+                            className="ml-1 rounded-full"
+                          >
+                            {schema.is_active ? "Aktif" : "Nonaktif"}
+                          </Tag>
                         </div>
                       }
                       key={schema.id}
                       className="mb-3"
                       extra={
                         <div
-                          className="flex gap-2"
+                          className="flex flex-wrap items-center gap-2"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {!scholarship.is_external && (
-                            <Button
-                              size="small"
+                            <button
+                              type="button"
                               onClick={() => handleFormNavigation(schema.id)}
-                              className="!bg-green-500 hover:!bg-green-600 !text-white"
+                              className="
+                                inline-flex items-center gap-1.5
+                                rounded-full border border-emerald-200 bg-emerald-50
+                                px-3 py-1.5 text-xs font-semibold text-emerald-700
+                                shadow-sm transition-all duration-200
+                                hover:bg-emerald-100 hover:border-emerald-300 hover:text-emerald-800
+                                hover:shadow-md active:scale-95 cursor-pointer
+                              "
                             >
-                              <FileTextOutlined className="mr-1" />
+                              <FileTextOutlined className="text-sm" />
                               Kelola Form
-                            </Button>
+                            </button>
                           )}
 
                           {!scholarship.is_external &&
                             scholarship.is_active && (
-                              <Button
-                                size="small"
+                              <button
+                                type="button"
                                 onClick={() =>
                                   handleSchemaToggle(
                                     schema.id,
@@ -354,24 +372,30 @@ const ScholarshipDetail = () => {
                                     schema.name,
                                   )
                                 }
-                                className={
-                                  schema.is_active
-                                    ? "!bg-red-500 hover:!bg-red-600 !text-white"
-                                    : "!bg-blue-500 hover:!bg-blue-600 !text-white"
-                                }
+                                className={`
+                                  inline-flex items-center gap-1.5
+                                  rounded-full border px-3 py-1.5 text-xs font-semibold
+                                  shadow-sm transition-all duration-200
+                                  hover:shadow-md active:scale-95 cursor-pointer
+                                  ${
+                                    schema.is_active
+                                      ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-800"
+                                      : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-800"
+                                  }
+                                `}
                               >
                                 {schema.is_active ? (
                                   <>
-                                    <CloseCircleOutlined className="mr-1" />
+                                    <CloseCircleOutlined className="text-sm" />
                                     Nonaktifkan
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircleOutlined className="mr-1" />
+                                    <CheckCircleOutlined className="text-sm" />
                                     Aktifkan
                                   </>
                                 )}
-                              </Button>
+                              </button>
                             )}
                         </div>
                       }
@@ -514,11 +538,11 @@ const ScholarshipDetail = () => {
                                 Fakultas Eligible
                               </div>
 
-                              {schema.faculties?.length > 0 ? (
+                              {schema.effectiveFaculties?.length > 0 ? (
                                 <>
                                   <div className="flex flex-wrap gap-2">
                                     {getVisibleItems(
-                                      schema.faculties,
+                                      schema.effectiveFaculties,
                                       schema.id,
                                       "faculties",
                                     ).map((faculty) => (
@@ -528,7 +552,7 @@ const ScholarshipDetail = () => {
                                     ))}
                                   </div>
 
-                                  {schema.faculties.length > 6 && (
+                                  {schema.effectiveFaculties.length > 6 && (
                                     <button
                                       type="button"
                                       onClick={() =>
@@ -538,13 +562,13 @@ const ScholarshipDetail = () => {
                                     >
                                       {isExpanded(schema.id, "faculties")
                                         ? "Sembunyikan"
-                                        : `Lihat semua (${schema.faculties.length})`}
+                                        : `Lihat semua (${schema.effectiveFaculties.length})`}
                                     </button>
                                   )}
                                 </>
                               ) : (
                                 <p className="text-sm text-gray-500">
-                                  Semua fakultas
+                                  Tidak ada
                                 </p>
                               )}
                             </div>
@@ -554,11 +578,11 @@ const ScholarshipDetail = () => {
                                 Departemen Eligible
                               </div>
 
-                              {schema.departments?.length > 0 ? (
+                              {schema.effectiveDepartments?.length > 0 ? (
                                 <>
                                   <div className="flex flex-wrap gap-2">
                                     {getVisibleItems(
-                                      schema.departments,
+                                      schema.effectiveDepartments,
                                       schema.id,
                                       "departments",
                                     ).map((department) => (
@@ -568,7 +592,7 @@ const ScholarshipDetail = () => {
                                     ))}
                                   </div>
 
-                                  {schema.departments.length > 6 && (
+                                  {schema.effectiveDepartments.length > 6 && (
                                     <button
                                       type="button"
                                       onClick={() =>
@@ -578,13 +602,13 @@ const ScholarshipDetail = () => {
                                     >
                                       {isExpanded(schema.id, "departments")
                                         ? "Sembunyikan"
-                                        : `Lihat semua (${schema.departments.length})`}
+                                        : `Lihat semua (${schema.effectiveDepartments.length})`}
                                     </button>
                                   )}
                                 </>
                               ) : (
                                 <p className="text-sm text-gray-500">
-                                  Semua departemen
+                                  Tidak ada
                                 </p>
                               )}
                             </div>
@@ -595,11 +619,11 @@ const ScholarshipDetail = () => {
                               Program Studi Eligible
                             </div>
 
-                            {schema.studyPrograms?.length > 0 ? (
+                            {schema.effectiveStudyPrograms?.length > 0 ? (
                               <>
                                 <div className="flex flex-wrap gap-2">
                                   {getVisibleItems(
-                                    schema.studyPrograms,
+                                    schema.effectiveStudyPrograms,
                                     schema.id,
                                     "studyPrograms",
                                   ).map((studyProgram) => (
@@ -612,7 +636,7 @@ const ScholarshipDetail = () => {
                                   ))}
                                 </div>
 
-                                {schema.studyPrograms.length > 6 && (
+                                {schema.effectiveStudyPrograms.length > 6 && (
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -622,14 +646,12 @@ const ScholarshipDetail = () => {
                                   >
                                     {isExpanded(schema.id, "studyPrograms")
                                       ? "Sembunyikan"
-                                      : `Lihat semua (${schema.studyPrograms.length})`}
+                                      : `Lihat semua (${schema.effectiveStudyPrograms.length})`}
                                   </button>
                                 )}
                               </>
                             ) : (
-                              <p className="text-sm text-gray-500">
-                                Semua program studi
-                              </p>
+                              <p className="text-sm text-gray-500">Tidak ada</p>
                             )}
                           </div>
                         </div>
