@@ -87,12 +87,12 @@ const ApplicationCommentsTab = ({ applicationId }) => {
             comment.comment_type === "REJECTION"
               ? "bg-red-50 border-red-200"
               : comment.comment_type === "REVISION"
-              ? "bg-purple-50 border-purple-200"
-              : comment.comment_type === "VERIFICATION"
-              ? "bg-green-50 border-green-200"
-              : comment.comment_type === "VALIDATION"
-              ? "bg-blue-50 border-blue-200"
-              : "bg-gray-50 border-gray-200"
+                ? "bg-purple-50 border-purple-200"
+                : comment.comment_type === "VERIFICATION"
+                  ? "bg-green-50 border-green-200"
+                  : comment.comment_type === "VALIDATION"
+                    ? "bg-blue-50 border-blue-200"
+                    : "bg-gray-50 border-gray-200"
           }`}
         >
           <div className="text-sm whitespace-pre-wrap">

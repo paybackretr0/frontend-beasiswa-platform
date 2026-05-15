@@ -508,7 +508,7 @@ const Profile = () => {
                                 ? "border-red-300 focus:ring-red-500"
                                 : "border-gray-300 hover:border-gray-400"
                           }`}
-                          placeholder="Contoh: +62 812 3456 7890"
+                          placeholder="Contoh: 081234567890"
                         />
                         {errors.phone_number && (
                           <p className="text-red-500 text-xs mt-1">
