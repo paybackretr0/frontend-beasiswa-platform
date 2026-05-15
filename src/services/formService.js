@@ -1,7 +1,6 @@
 import API_BASE_URL from "./apiConfig";
 import { authFetch } from "./tokenAuth";
 
-// ✅ Changed to use schemaId
 export const checkScholarshipForm = async (schemaId) => {
   const token = localStorage.getItem("access_token");
   const data = await authFetch(`${API_BASE_URL}/forms/check/${schemaId}`, {
@@ -27,7 +26,7 @@ export const createFormField = async (schemaId, fields) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ fields }), // ✅ No need to send schemaId in body
+    body: JSON.stringify({ fields }),
   });
 
   if (!response.success) {
@@ -62,7 +61,7 @@ export const updateFormField = async (schemaId, fields) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ fields }), // ✅ No need to send schemaId in body
+    body: JSON.stringify({ fields }),
   });
 
   if (!response.success) {

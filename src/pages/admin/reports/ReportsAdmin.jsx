@@ -147,7 +147,6 @@ const ReportsAdmin = () => {
 
   useEffect(() => {
     document.title = "Laporan - Admin";
-    fetchAllData();
     fetchFilterOptions();
     fetchExportScholarshipOptions();
   }, []);

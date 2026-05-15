@@ -45,7 +45,9 @@ const UniversalTable = ({
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       if (onSearch) {
-        onSearch(searchText);
+        if (searchText.trim() !== "") {
+          onSearch(searchText);
+        }
         return;
       }
 
@@ -62,11 +64,12 @@ const UniversalTable = ({
             .includes(searchText.toLowerCase()),
         ),
       );
+
       setFilteredData(filtered);
     }, 250);
 
     return () => clearTimeout(debounceTimer);
-  }, [searchText, data, onSearch, searchFields]);
+  }, [searchText]);
 
   const handleTableChange = (nextPagination) => {
     if (serverSide && onPageChange) {
@@ -144,7 +147,8 @@ const UniversalTable = ({
                   pageSizeOptions: ["10", "20", "50", "100"],
                   showTotal:
                     paginationConfig?.showTotal ||
-                    ((total, range) => `${range[0]}-${range[1]} dari ${total} data`),
+                    ((total, range) =>
+                      `${range[0]}-${range[1]} dari ${total} data`),
                 }
               : {
                   current: pagination.current,
