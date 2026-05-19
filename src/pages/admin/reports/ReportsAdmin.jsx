@@ -881,11 +881,12 @@ const ReportsAdmin = () => {
         open={importModalVisible}
         onCancel={handleCloseImportModal}
         footer={[
-          <div className="flex justify-between gap-2">
+          <div key="footer" className="flex justify-end gap-2">
             <Button
               key="validate"
+              size="sm"
+              variant="warning"
               onClick={handleValidateImport}
-              className="gap-2 !bg-amber-500 hover:!bg-amber-600 disabled:!bg-gray-300 disabled:!text-gray-500 disabled:hover:!bg-gray-300"
               disabled={
                 !selectedImportScholarship ||
                 !selectedImportSchema ||
@@ -895,11 +896,12 @@ const ReportsAdmin = () => {
             >
               Validasi
             </Button>
-            ,
+
             <Button
               key="import"
+              size="sm"
+              variant="success"
               onClick={handleImportRecipients}
-              className="gap-2 !bg-emerald-600 hover:!bg-emerald-700 disabled:!bg-gray-300 disabled:!text-gray-500 disabled:hover:!bg-gray-300"
               disabled={
                 importLoading ||
                 !selectedImportScholarship ||
@@ -978,38 +980,41 @@ const ReportsAdmin = () => {
             </Select>
           </div>
 
-          <Button
-            onClick={handleDownloadImportTemplate}
-            className="w-full gap-2 !bg-sky-600 hover:!bg-sky-700"
-          >
-            <FileExcelOutlined /> Download Template Import
-          </Button>
-
-          <Upload
-            beforeUpload={(file) => {
-              if (!selectedImportScholarship) {
-                error("Gagal", "Pilih beasiswa terlebih dahulu");
-                return Upload.LIST_IGNORE;
-              }
-              if (!selectedImportSchema) {
-                error("Gagal", "Pilih skema terlebih dahulu");
-                return Upload.LIST_IGNORE;
-              }
-              setSelectedImportFile(file);
-              setImportValidationResult(null);
-              return false;
-            }}
-            maxCount={1}
-            accept=".xlsx,.xls,.csv"
-            onRemove={() => {
-              setSelectedImportFile(null);
-              setImportValidationResult(null);
-            }}
-          >
-            <Button className="w-full gap-2 !bg-violet-600 hover:!bg-violet-700">
-              <UploadOutlined /> Pilih File Import
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="sky"
+              onClick={handleDownloadImportTemplate}
+            >
+              <FileExcelOutlined /> Download Template
             </Button>
-          </Upload>
+
+            <Upload
+              beforeUpload={(file) => {
+                if (!selectedImportScholarship) {
+                  error("Gagal", "Pilih beasiswa terlebih dahulu");
+                  return Upload.LIST_IGNORE;
+                }
+                if (!selectedImportSchema) {
+                  error("Gagal", "Pilih skema terlebih dahulu");
+                  return Upload.LIST_IGNORE;
+                }
+                setSelectedImportFile(file);
+                setImportValidationResult(null);
+                return false;
+              }}
+              maxCount={1}
+              accept=".xlsx,.xls,.csv"
+              onRemove={() => {
+                setSelectedImportFile(null);
+                setImportValidationResult(null);
+              }}
+            >
+              <Button size="sm" variant="violet">
+                <UploadOutlined /> Pilih File
+              </Button>
+            </Upload>
+          </div>
 
           {selectedImportFile && (
             <div className="text-sm text-gray-600">

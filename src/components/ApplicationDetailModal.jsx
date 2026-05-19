@@ -213,7 +213,7 @@ const ApplicationDetailModal = ({
     }
 
     return history.length > 0 ? (
-      <Timeline mode="left" items={history} className="mt-4" />
+      <Timeline mode="left" items={history} className="mt-4 pl-6" />
     ) : (
       <div className="text-center py-8 text-gray-500">
         Belum ada riwayat proses
@@ -681,7 +681,11 @@ const ApplicationDetailModal = ({
     {
       key: "6",
       label: <span>Komentar</span>,
-      children: <ApplicationCommentsTab applicationId={applicationDetail.id} />,
+      children: (
+        <div className="pl-4 pr-1">
+          <ApplicationCommentsTab applicationId={applicationDetail.id} />
+        </div>
+      ),
     },
   ];
 
@@ -692,6 +696,15 @@ const ApplicationDetailModal = ({
       onCancel={onClose}
       width={900}
       loading={loading}
+      style={{ top: 24 }}
+      styles={{
+        body: {
+          maxHeight: "72vh",
+          overflowY: "auto",
+          paddingLeft: 8,
+          paddingRight: 8,
+        },
+      }}
       footer={[
         <Button key="close" onClick={onClose}>
           Tutup
