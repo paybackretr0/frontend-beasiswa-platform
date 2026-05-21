@@ -340,12 +340,14 @@ const AdminDashboard = () => {
           <span className="text-sm text-blue-700 font-medium">
             {!canSeeAPBN
               ? `Beasiswa Non-APBN ${
-                  isFacultyRole ? `(Fakultas ${user?.faculty?.name || ""})` : ""
+                  isFacultyRole
+                    ? `(Fakultas ${user?.staff?.faculty?.name || ""})`
+                    : ""
                 }`
               : scholarshipType === "NON-APBN"
                 ? `Beasiswa Non-APBN ${
                     isFacultyRole
-                      ? `(Fakultas ${user?.faculty?.name || ""})`
+                      ? `(Fakultas ${user?.staff?.faculty?.name || ""})`
                       : ""
                   }`
                 : "Beasiswa Pemerintah (APBN)"}
