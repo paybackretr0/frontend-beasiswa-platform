@@ -61,6 +61,7 @@ const PimpinanDitmawa = () => {
       await addUser({ ...values, role: "PIMPINAN_DITMAWA" });
       success("Berhasil!", "Pimpinan Ditmawa berhasil ditambahkan");
       setModalVisible(false);
+      setEditingUser(null);
       await fetchPimpinanDitmawa();
     } catch (err) {
       console.error("Error adding Pimpinan Ditmawa:", err);
@@ -79,6 +80,7 @@ const PimpinanDitmawa = () => {
       await updateUser(id, values);
       success("Berhasil!", "Data user berhasil diperbarui");
       setModalVisible(false);
+      setEditingUser(null);
       fetchPimpinanDitmawa();
     } catch (err) {
       console.error("Error updating user:", err);
@@ -238,7 +240,10 @@ const PimpinanDitmawa = () => {
         searchFields={["full_name", "email"]}
         searchPlaceholder="Cari nama atau email..."
         addButtonText="Tambah Pimpinan Ditmawa"
-        onAdd={() => setModalVisible(true)}
+        onAdd={() => {
+          setEditingUser(null);
+          setModalVisible(true);
+        }}
       />
       <UniversalModal
         visible={modalVisible}

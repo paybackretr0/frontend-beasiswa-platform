@@ -74,6 +74,7 @@ const Verifikator = () => {
       await addVerifikator(values);
       success("Sukses", "Verifikator berhasil ditambahkan");
       setModalVisible(false);
+      setEditingUser(null);
       setSelectedRole(null);
       await fetchVerifikator();
     } catch (err) {
@@ -344,7 +345,11 @@ const Verifikator = () => {
         searchFields={["full_name", "email"]}
         searchPlaceholder="Cari nama atau email..."
         addButtonText="Tambah Verifikator"
-        onAdd={() => setModalVisible(true)}
+        onAdd={() => {
+          setEditingUser(null);
+          setSelectedRole(null);
+          setModalVisible(true);
+        }}
       />
       <Modal
         title={
