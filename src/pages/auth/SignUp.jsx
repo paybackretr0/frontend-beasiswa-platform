@@ -175,16 +175,6 @@ const SignUp = () => {
       return false;
     }
 
-    if (!form.faculty_id) {
-      error("Data Tidak Lengkap", "Fakultas harus dipilih");
-      return false;
-    }
-
-    if (!form.department_id) {
-      error("Data Tidak Lengkap", "Departemen harus dipilih");
-      return false;
-    }
-
     if (!form.study_program_id) {
       error("Data Tidak Lengkap", "Program Studi harus dipilih");
       return false;
@@ -202,7 +192,19 @@ const SignUp = () => {
 
     setLoading(true);
     try {
-      const res = await register(form);
+      const payload = {
+        full_name: form.full_name,
+        email: form.email,
+        password: form.password,
+        password_confirmation: form.password_confirmation,
+        birth_date: form.birth_date,
+        birth_place: form.birth_place,
+        gender: form.gender,
+        phone_number: form.phone_number,
+        study_program_id: form.study_program_id,
+      };
+
+      const res = await register(payload);
 
       if (res.success) {
         success(
