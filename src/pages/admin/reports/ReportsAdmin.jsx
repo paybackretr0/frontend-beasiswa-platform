@@ -336,6 +336,7 @@ const ReportsAdmin = () => {
         nim: item.nim,
         fakultas: item.fakultas,
         departemen: item.departemen,
+        prodi: item.prodi,
         gender: item.gender,
         status: getStatusLabel(item.status),
         rawStatus: item.status,
@@ -695,6 +696,12 @@ const ReportsAdmin = () => {
       sorter: (a, b) => a.departemen.localeCompare(b.departemen),
     },
     {
+      title: "Program Studi",
+      dataIndex: "prodi",
+      key: "prodi",
+      sorter: (a, b) => a.prodi.localeCompare(b.prodi),
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -1038,7 +1045,7 @@ const ReportsAdmin = () => {
                 importValidationResult.errors?.length > 0 && (
                   <div>
                     <p className="font-medium text-red-600 mb-1">
-                      Contoh error:
+                      Detail error:
                     </p>
                     <ul className="list-disc pl-5 space-y-1 text-red-600">
                       {importValidationResult.errors
@@ -1379,6 +1386,7 @@ const ReportsAdmin = () => {
                   nim: item.nim,
                   fakultas: item.fakultas,
                   departemen: item.departemen,
+                  prodi: item.prodi,
                   gender: item.gender,
                   status: item.status,
                   beasiswa: item.beasiswa,
