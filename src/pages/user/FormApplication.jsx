@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Input, Select, DatePicker, Upload, Alert, Button, Modal } from "antd";
+import {
+  Input,
+  Select,
+  DatePicker,
+  Upload,
+  Alert,
+  Button,
+  Modal,
+  Checkbox,
+} from "antd";
 import {
   UploadOutlined,
   SaveOutlined,
@@ -63,6 +72,12 @@ const parseNumberAnswer = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const getOptionValue = (option) =>
+  typeof option === "object" && option !== null ? option.id : option;
+
+const getOptionLabel = (option) =>
+  typeof option === "object" && option !== null ? option.value : option;
+
 const FormApplication = () => {
   const { id: scholarshipId } = useParams();
   const navigate = useNavigate();
@@ -116,39 +131,38 @@ const FormApplication = () => {
         setFormFields(formData.form_fields);
 
         const existingAnswers = {};
+        formData.form_fields.forEach((field) => {
+          const existingAnswer = formData.existing_answers?.[field.id];
 
-        if (
-          revisionData.formAnswers &&
-          Array.isArray(revisionData.formAnswers)
-        ) {
-          revisionData.formAnswers.forEach((ans) => {
-            if (ans.field_id) {
-              if (ans.answer_text) {
-                existingAnswers[ans.field_id] = ans.answer_text;
-              } else if (ans.file_path) {
-                existingAnswers[ans.field_id] = {
-                  path: ans.file_path,
-                  name: getCleanFileName(ans.file_path),
-                  mime_type: ans.mime_type,
-                };
-              }
+          if (existingAnswer) {
+            if (field.type === "FILE") {
+              existingAnswers[field.id] = existingAnswer.file_path
+                ? {
+                    name: getCleanFileName(existingAnswer.file_path),
+                    path: existingAnswer.file_path,
+                    mime_type: existingAnswer.mime_type,
+                  }
+                : null;
+            } else if (field.type === "MULTI_SELECT") {
+              existingAnswers[field.id] =
+                existingAnswer.selected_option_ids || [];
+            } else if (field.type === "SELECT") {
+              existingAnswers[field.id] =
+                existingAnswer.selected_option_ids?.[0] ||
+                existingAnswer.answer_text ||
+                "";
+            } else {
+              existingAnswers[field.id] = existingAnswer.answer_text || "";
             }
-          });
-        }
-
-        if (revisionData.documents && Array.isArray(revisionData.documents)) {
-          revisionData.documents.forEach((doc) => {
-            if (doc.field_id && !existingAnswers[doc.field_id]) {
-              existingAnswers[doc.field_id] = {
-                path: doc.filePath || doc.file_path,
-                name:
-                  doc.fileName ||
-                  getCleanFileName(doc.filePath || doc.file_path),
-                mime_type: doc.mimeType || doc.mime_type,
-              };
-            }
-          });
-        }
+          } else {
+            existingAnswers[field.id] =
+              field.type === "FILE"
+                ? null
+                : field.type === "MULTI_SELECT"
+                  ? []
+                  : "";
+          }
+        });
 
         setAnswers(existingAnswers);
 
@@ -175,11 +189,24 @@ const FormApplication = () => {
                     path: existingAnswer.file_path,
                   }
                 : null;
+            } else if (field.type === "MULTI_SELECT") {
+              initialAnswers[field.id] =
+                existingAnswer.selected_option_ids || [];
+            } else if (field.type === "SELECT") {
+              initialAnswers[field.id] =
+                existingAnswer.selected_option_ids?.[0] ||
+                existingAnswer.answer_text ||
+                "";
             } else {
               initialAnswers[field.id] = existingAnswer.answer_text || "";
             }
           } else {
-            initialAnswers[field.id] = field.type === "FILE" ? null : "";
+            initialAnswers[field.id] =
+              field.type === "FILE"
+                ? null
+                : field.type === "MULTI_SELECT"
+                  ? []
+                  : "";
           }
         });
 
@@ -223,6 +250,10 @@ const FormApplication = () => {
           newErrors[field.id] = `${field.label} wajib diunggah`;
         } else if (value instanceof File && value.size > 5 * 1024 * 1024) {
           newErrors[field.id] = `${field.label} tidak boleh lebih dari 5MB`;
+        }
+      } else if (field.type === "MULTI_SELECT") {
+        if (!Array.isArray(value) || value.length === 0) {
+          newErrors[field.id] = `${field.label} wajib dipilih`;
         }
       } else {
         if (!value || (typeof value === "string" && value.trim() === "")) {
@@ -415,11 +446,35 @@ const FormApplication = () => {
             optionFilterProp="children"
           >
             {field.options.map((option, index) => (
-              <Option key={index} value={option}>
-                {option}
+              <Option key={getOptionValue(option) || index} value={getOptionValue(option)}>
+                {getOptionLabel(option)}
               </Option>
             ))}
           </Select>
+        );
+
+      case "MULTI_SELECT":
+        return (
+          <Checkbox.Group
+            value={Array.isArray(value) ? value : []}
+            onChange={(checkedValues) =>
+              handleAnswerChange(field.id, checkedValues)
+            }
+            className="w-full"
+          >
+            <div className="space-y-2">
+              {field.options.map((option, index) => (
+                <div
+                  key={getOptionValue(option) || index}
+                  className="flex items-center rounded-lg border border-gray-200 px-3 py-2"
+                >
+                  <Checkbox value={getOptionValue(option)}>
+                    {getOptionLabel(option)}
+                  </Checkbox>
+                </div>
+              ))}
+            </div>
+          </Checkbox.Group>
         );
 
       case "FILE":
@@ -710,6 +765,12 @@ const FormApplication = () => {
                       <span className="text-red-500 ml-1 text-base">*</span>
                     )}
                   </label>
+
+                  {field.type === "MULTI_SELECT" && (
+                    <div className="text-xs font-medium text-blue-600">
+                      Anda dapat memilih lebih dari satu opsi
+                    </div>
+                  )}
 
                   {renderField(field)}
 
