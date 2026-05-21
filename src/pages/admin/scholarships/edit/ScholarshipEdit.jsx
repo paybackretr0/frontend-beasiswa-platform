@@ -85,19 +85,17 @@ const ScholarshipEdit = () => {
           })),
 
         faculties:
-          schema.directFaculties?.map((f) => f.id) ||
-          schema.faculties?.map((f) => f.id) ||
+          schema.faculties?.map((faculty) => faculty.id) ||
+          schema.eligibleFaculties?.map((faculty) => faculty.id) ||
           [],
-
         departments:
-          schema.directDepartments?.map((d) => d.id) ||
-          schema.departments?.map((d) => d.id) ||
+          schema.departments?.map((department) => department.id) ||
+          schema.eligibleDepartments?.map((department) => department.id) ||
           [],
-
         study_programs:
           schema.directStudyPrograms?.map((p) => p.id) ||
-          schema.studyPrograms?.map((p) => p.id) ||
           schema.study_programs?.map((p) => p.id) ||
+          schema.eligibleStudyPrograms?.map((p) => p.id) ||
           [],
       }));
 

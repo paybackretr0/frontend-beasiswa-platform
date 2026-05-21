@@ -224,7 +224,7 @@ export const updateScholarship = async (id, formData) => {
       semester_minimum: schema.semester_minimum,
       is_active: schema.is_active !== undefined ? schema.is_active : true,
 
-      requirements: schema.requirements.map((req) => ({
+      requirements: (schema.requirements || []).map((req) => ({
         type: req.type,
         text: req.type === "TEXT" ? req.text : null,
         existingFile:
@@ -234,7 +234,7 @@ export const updateScholarship = async (id, formData) => {
 
       documents: schema.documents || [],
 
-      stages: schema.stages.map((stage, index) => ({
+      stages: (schema.stages || []).map((stage, index) => ({
         name: stage.name || stage.stage_name,
         stage_name: stage.name || stage.stage_name,
         order_no: stage.order_no || index + 1,

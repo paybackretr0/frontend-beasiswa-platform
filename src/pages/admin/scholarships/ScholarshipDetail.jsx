@@ -343,11 +343,13 @@ const ScholarshipDetail = () => {
                           className="flex flex-wrap items-center gap-2"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {!scholarship.is_external && (
-                            <button
-                              type="button"
-                              onClick={() => handleFormNavigation(schema.id)}
-                              className="
+                          {!scholarship.is_external &&
+                            scholarship.is_active &&
+                            schema.is_active && (
+                              <button
+                                type="button"
+                                onClick={() => handleFormNavigation(schema.id)}
+                                className="
                                 inline-flex items-center gap-1.5
                                 rounded-full border border-emerald-200 bg-emerald-50
                                 px-3 py-1.5 text-xs font-semibold text-emerald-700
@@ -355,11 +357,11 @@ const ScholarshipDetail = () => {
                                 hover:bg-emerald-100 hover:border-emerald-300 hover:text-emerald-800
                                 hover:shadow-md active:scale-95 cursor-pointer
                               "
-                            >
-                              <FileTextOutlined className="text-sm" />
-                              Kelola Form
-                            </button>
-                          )}
+                              >
+                                <FileTextOutlined className="text-sm" />
+                                Kelola Form
+                              </button>
+                            )}
 
                           {!scholarship.is_external &&
                             scholarship.is_active && (

@@ -109,30 +109,13 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
   };
 
   const getTargetSummary = (schema) => {
-    const facultyCount = schema.faculties?.length || 0;
-    const departmentCount = schema.departments?.length || 0;
-    const studyProgramCount =
-      schema.study_programs?.length || schema.studyPrograms?.length || 0;
+    const studyProgramCount = schema.study_programs?.length || 0;
 
-    const parts = [];
-
-    if (facultyCount > 0) {
-      parts.push(`${facultyCount} Fakultas`);
+    if (studyProgramCount === 0) {
+      return "Belum ada program studi dipilih";
     }
 
-    if (departmentCount > 0) {
-      parts.push(`${departmentCount} Departemen`);
-    }
-
-    if (studyProgramCount > 0) {
-      parts.push(`${studyProgramCount} Program Studi`);
-    }
-
-    if (parts.length === 0) {
-      return "Semua Mahasiswa";
-    }
-
-    return parts.join(", ");
+    return `${studyProgramCount} Program Studi`;
   };
 
   const getTargetNote = (schema) => {

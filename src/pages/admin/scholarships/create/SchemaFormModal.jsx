@@ -11,6 +11,11 @@ import AlertContainer from "../../../../components/AlertContainer";
 const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   const { warning, alerts, removeAlert } = useAlert();
 
+  const normalizeIdList = (items = []) =>
+    items
+      .map((item) => (typeof item === "object" && item !== null ? item.id : item))
+      .filter(Boolean);
+
   const sortByName = (items = []) => {
     return [...items].sort((a, b) =>
       (a?.name || "").localeCompare(b?.name || "", "id-ID"),
@@ -132,9 +137,9 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
         : [{ id: 1, name: "ADMINISTRASI", order_no: 1 }],
     );
 
-    setSelectedFaculties(data.faculties || []);
-    setSelectedDepartments(data.departments || []);
-    setSelectedStudyPrograms(data.study_programs || []);
+    setSelectedFaculties(normalizeIdList(data.faculties || []));
+    setSelectedDepartments(normalizeIdList(data.departments || []));
+    setSelectedStudyPrograms(normalizeIdList(data.study_programs || []));
   };
 
   const resetForm = () => {
@@ -483,37 +488,43 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     return allAvailableSelected;
   };
 
-  const getCleanEligibilityPayload = () => {
-    const facultiesToSubmit = selectedFaculties;
+  const buildEligibilityPayload = () => {
+    const normalizedFacultyIds = [...new Set(selectedFaculties.filter(Boolean))];
+    const normalizedDepartmentIds = [
+      ...new Set(selectedDepartments.filter(Boolean)),
+    ];
+    const normalizedStudyProgramIds = [
+      ...new Set(selectedStudyPrograms.filter(Boolean)),
+    ];
 
-    const departmentsToSubmit = selectedDepartments.filter((departmentId) => {
+    const facultyDepartmentIds = departments
+      .filter((dept) => normalizedFacultyIds.includes(dept.faculty_id))
+      .map((dept) => dept.id);
+
+    const allSelectedDepartmentIds = [
+      ...new Set([...normalizedDepartmentIds, ...facultyDepartmentIds]),
+    ];
+
+    const departmentStudyProgramIds = studyPrograms
+      .filter((prog) => allSelectedDepartmentIds.includes(prog.department_id))
+      .map((prog) => prog.id);
+
+    const allStudyProgramIds = [
+      ...new Set([
+        ...normalizedStudyProgramIds,
+        ...departmentStudyProgramIds,
+      ]),
+    ];
+
+    const departmentsToSubmit = normalizedDepartmentIds.filter((departmentId) => {
       const department = departments.find((dept) => dept.id === departmentId);
-
-      return !selectedFaculties.includes(department?.faculty_id);
-    });
-
-    const studyProgramsToSubmit = selectedStudyPrograms.filter((programId) => {
-      const program = studyPrograms.find((prog) => prog.id === programId);
-
-      const programDepartment = departments.find(
-        (dept) => dept.id === program?.department_id,
-      );
-
-      const isCoveredByFaculty = selectedFaculties.includes(
-        programDepartment?.faculty_id,
-      );
-
-      const isCoveredByDepartment = departmentsToSubmit.includes(
-        program?.department_id,
-      );
-
-      return !isCoveredByFaculty && !isCoveredByDepartment;
+      return !normalizedFacultyIds.includes(department?.faculty_id);
     });
 
     return {
-      faculties: facultiesToSubmit,
+      faculties: normalizedFacultyIds,
       departments: departmentsToSubmit,
-      study_programs: studyProgramsToSubmit,
+      study_programs: allStudyProgramIds,
     };
   };
 
@@ -554,7 +565,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       return;
     }
 
-    const eligibilityPayload = getCleanEligibilityPayload();
+    const eligibilityPayload = buildEligibilityPayload();
 
     const schemaData = {
       ...formData,
