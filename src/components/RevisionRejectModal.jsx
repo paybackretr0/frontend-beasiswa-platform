@@ -26,6 +26,7 @@ const RevisionRejectModal = ({
   title,
   loading,
   type,
+  scholarshipEndDate,
   zIndex = 1000,
 }) => {
   const [form] = Form.useForm();
@@ -96,8 +97,24 @@ const RevisionRejectModal = ({
     return labels[type] || type;
   };
 
+  const scholarshipEndDay = scholarshipEndDate
+    ? dayjs.tz(scholarshipEndDate, "Asia/Jakarta").endOf("day")
+    : null;
+
+  const scholarshipEndDateLabel = scholarshipEndDay
+    ? scholarshipEndDay.format("DD MMMM YYYY")
+    : null;
+
   const disabledDate = (current) => {
-    return current && current < dayjs().startOf("day");
+    if (!current) return false;
+
+    const beforeToday = current < dayjs().startOf("day");
+    const afterScholarshipEnd =
+      type === "REVISION" &&
+      scholarshipEndDay &&
+      current.startOf("day").isAfter(scholarshipEndDay.startOf("day"));
+
+    return beforeToday || afterScholarshipEnd;
   };
 
   return (
@@ -111,6 +128,13 @@ const RevisionRejectModal = ({
       okText="Kirim"
       cancelText="Batal"
       zIndex={zIndex}
+      style={{ top: 24 }}
+      styles={{
+        body: {
+          maxHeight: "72vh",
+          overflowY: "auto",
+        },
+      }}
     >
       <Form form={form} layout="vertical">
         {type !== "VERIFICATION" && type !== "VALIDATION" && (
@@ -229,14 +253,27 @@ const RevisionRejectModal = ({
         {type === "REVISION" && (
           <Form.Item
             name="revision_deadline"
-            label="Deadline Revisi (WIB)"
+            label={
+              <span>
+                Deadline Revisi (WIB)
+                {scholarshipEndDateLabel && (
+                  <span className="ml-2 text-xs font-normal text-gray-500">
+                    Batas pendaftaran beasiswa: {scholarshipEndDateLabel}
+                  </span>
+                )}
+              </span>
+            }
             rules={[
               {
                 required: true,
                 message: "Deadline revisi harus ditentukan",
               },
             ]}
-            extra="Waktu akan disimpan dalam zona waktu WIB (UTC+7)"
+            extra={
+              scholarshipEndDateLabel
+                ? `Waktu disimpan dalam WIB (UTC+7). Deadline revisi tidak boleh melewati ${scholarshipEndDateLabel}.`
+                : "Waktu akan disimpan dalam zona waktu WIB (UTC+7)"
+            }
           >
             <DatePicker
               showTime

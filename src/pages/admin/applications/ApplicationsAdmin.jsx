@@ -107,6 +107,7 @@ const ApplicationsAdmin = () => {
         scholarship_id: item.scholarship_id,
         student_id: item.student_id,
         verification_level: item.verification_level,
+        scholarship_end_date: item.scholarship_end_date,
       }));
 
       setApplications(transformedData);
@@ -809,6 +810,7 @@ const ApplicationsAdmin = () => {
         }`}
         loading={rejectLoading}
         type="REJECTION"
+        scholarshipEndDate={selectedApplicationForReject?.scholarship_end_date}
         zIndex={1100}
       />
 
@@ -824,6 +826,7 @@ const ApplicationsAdmin = () => {
         }`}
         loading={revisionLoading}
         type="REVISION"
+        scholarshipEndDate={selectedApplicationForRevision?.scholarship_end_date}
         zIndex={1100}
       />
     </div>
