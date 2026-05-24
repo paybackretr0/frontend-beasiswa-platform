@@ -13,7 +13,7 @@ export const validateApplication = async (applicationId, payload = {}) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
-    }
+    },
   );
 
   if (!data.success) {
@@ -35,7 +35,7 @@ export const rejectApplicationByValidator = async (applicationId, payload) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
-    }
+    },
   );
 
   if (!response.success) {
@@ -57,7 +57,7 @@ export const requestRevisionByValidator = async (applicationId, payload) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
-    }
+    },
   );
 
   if (!response.success) {

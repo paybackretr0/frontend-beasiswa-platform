@@ -134,7 +134,20 @@ const DetailScholarship = () => {
   const getCurrentUser = () => {
     try {
       const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
+      if (!storedUser) return null;
+
+      const parsedUser = JSON.parse(storedUser);
+      const student = parsedUser?.student || null;
+
+      return {
+        ...parsedUser,
+        faculty_id:
+          parsedUser?.faculty_id || student?.faculty?.id || null,
+        department_id:
+          parsedUser?.department_id || student?.department?.id || null,
+        study_program_id:
+          parsedUser?.study_program_id || student?.study_program_id || null,
+      };
     } catch (error) {
       console.error("Error parsing user from localStorage:", error);
       return null;

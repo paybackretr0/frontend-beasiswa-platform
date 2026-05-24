@@ -125,14 +125,21 @@ const Mahasiswa = () => {
     loadReferenceData();
   }, [modalVisible, editingUser]);
 
-  const handleFacultyChange = async (facultyId) => {
+  const handleFacultyChange = async (facultyId, form) => {
     setDepartments([]);
     setStudyPrograms([]);
+    form?.setFieldsValue({
+      department_id: undefined,
+      study_program_id: undefined,
+    });
     await fetchDepartments(facultyId);
   };
 
-  const handleDepartmentChange = async (departmentId) => {
+  const handleDepartmentChange = async (departmentId, form) => {
     setStudyPrograms([]);
+    form?.setFieldsValue({
+      study_program_id: undefined,
+    });
     await fetchStudyPrograms(departmentId);
   };
 
@@ -142,6 +149,7 @@ const Mahasiswa = () => {
       await addMahasiswa(values);
       success("Sukses", "Mahasiswa berhasil ditambahkan");
       setModalVisible(false);
+      setEditingUser(null);
       fetchMahasiswa();
     } catch (err) {
       console.error("Error adding mahasiswa:", err);
@@ -215,6 +223,7 @@ const Mahasiswa = () => {
       await updateUser(id, values);
       success("Sukses", "User berhasil diperbarui");
       setModalVisible(false);
+      setEditingUser(null);
       fetchMahasiswa();
     } catch (err) {
       console.error("Error updating user:", err);
@@ -227,6 +236,13 @@ const Mahasiswa = () => {
   const columns = [
     createNumberColumn(),
     {
+      title: "NIM",
+      dataIndex: "nim",
+      key: "nim",
+      sorter: (a, b) => (a.nim || "").localeCompare(b.nim || ""),
+      render: (value) => value || "-",
+    },
+    {
       title: "Nama",
       dataIndex: "full_name",
       key: "full_name",
@@ -236,6 +252,27 @@ const Mahasiswa = () => {
       title: "Email",
       dataIndex: "email",
       key: "email",
+    },
+    {
+      title: "Fakultas",
+      dataIndex: ["faculty", "name"],
+      key: "faculty",
+      render: (_, record) => record.faculty?.name || "-",
+    },
+    {
+      title: "Departemen",
+      dataIndex: ["department", "name"],
+      key: "department",
+      render: (_, record) => record.department?.name || "-",
+    },
+    {
+      title: "Program Studi",
+      dataIndex: ["study_program", "name"],
+      key: "study_program",
+      render: (_, record) =>
+        record.study_program
+          ? `${record.study_program.degree ? `${record.study_program.degree} ` : ""}${record.study_program.name}`
+          : "-",
     },
     {
       title: "Login Terakhir",
@@ -313,10 +350,15 @@ const Mahasiswa = () => {
         columns={columns}
         rowKey="id"
         loading={loading}
-        searchFields={["full_name", "email"]}
-        searchPlaceholder="Cari nama atau email..."
+        searchFields={["nim", "full_name", "email"]}
+        searchPlaceholder="Cari NIM, nama, atau email..."
         addButtonText="Tambah Mahasiswa"
-        onAdd={() => setModalVisible(true)}
+        onAdd={() => {
+          setEditingUser(null);
+          setDepartments([]);
+          setStudyPrograms([]);
+          setModalVisible(true);
+        }}
       />
       <Modal
         title={
@@ -390,6 +432,8 @@ const Mahasiswa = () => {
                     { required: true, message: "Email wajib diisi" },
                     { type: "email", message: "Format email tidak valid" },
                   ],
+                  extra:
+                    "NIM akan otomatis diambil dari awalan email mahasiswa.",
                 },
                 {
                   name: "phone_number",
@@ -480,6 +524,8 @@ const Mahasiswa = () => {
                     { required: true, message: "Email wajib diisi" },
                     { type: "email", message: "Format email tidak valid" },
                   ],
+                  extra:
+                    "NIM akan otomatis diambil dari awalan email mahasiswa.",
                 },
                 {
                   name: "password",

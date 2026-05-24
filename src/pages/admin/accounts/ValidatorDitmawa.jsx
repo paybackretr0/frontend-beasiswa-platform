@@ -61,6 +61,7 @@ const Validator = () => {
       await addUser({ ...values, role: "VALIDATOR_DITMAWA" });
       success("Sukses", "Validator berhasil ditambahkan");
       setModalVisible(false);
+      setEditingUser(null);
       await fetchValidator();
     } catch (err) {
       console.error("Error adding Validator:", err);
@@ -134,6 +135,7 @@ const Validator = () => {
       await updateUser(id, values);
       success("Sukses", "User berhasil diperbarui");
       setModalVisible(false);
+      setEditingUser(null);
       fetchValidator();
     } catch (err) {
       console.error("Error updating user:", err);
@@ -235,7 +237,10 @@ const Validator = () => {
         searchFields={["full_name", "email"]}
         searchPlaceholder="Cari nama atau email..."
         addButtonText="Tambah Validator"
-        onAdd={() => setModalVisible(true)}
+        onAdd={() => {
+          setEditingUser(null);
+          setModalVisible(true);
+        }}
       />
 
       <UniversalModal

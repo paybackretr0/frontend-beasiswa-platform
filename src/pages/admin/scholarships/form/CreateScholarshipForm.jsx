@@ -30,6 +30,7 @@ import {
   UnorderedListOutlined,
   AlignLeftOutlined,
   DragOutlined,
+  CheckSquareOutlined,
 } from "@ant-design/icons";
 import {
   DndContext,
@@ -54,6 +55,9 @@ import {
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+const isOptionFieldType = (type) =>
+  type === "SELECT" || type === "MULTI_SELECT";
 
 function SortableFieldItem({
   field,
@@ -158,6 +162,9 @@ function SortableFieldItem({
                 <Option value="SELECT">
                   <UnorderedListOutlined /> Dropdown
                 </Option>
+                <Option value="MULTI_SELECT">
+                  <CheckSquareOutlined /> Multi Select
+                </Option>
               </Select>
             </div>
           </Col>
@@ -178,12 +185,14 @@ function SortableFieldItem({
           </Col>
         </Row>
 
-        {field.type === "SELECT" && (
+        {isOptionFieldType(field.type) && (
           <div className="mt-4 p-4 bg-white rounded-lg border">
             <div className="flex items-center justify-between mb-3">
               <Text strong className="flex items-center">
                 <UnorderedListOutlined className="mr-2" />
-                Opsi Dropdown
+                {field.type === "MULTI_SELECT"
+                  ? "Opsi Multi Select"
+                  : "Opsi Dropdown"}
               </Text>
               <Button
                 type="dashed"
@@ -251,6 +260,7 @@ const CreateScholarshipForm = () => {
     TEXTAREA: <AlignLeftOutlined />,
     FILE: <FileOutlined />,
     SELECT: <UnorderedListOutlined />,
+    MULTI_SELECT: <CheckSquareOutlined />,
   };
 
   useEffect(() => {
@@ -307,15 +317,11 @@ const CreateScholarshipForm = () => {
     const updatedFields = [...formFields];
     updatedFields[index][field] = value;
 
-    if (field === "type" && updatedFields[index].type !== "SELECT") {
+    if (field === "type" && !isOptionFieldType(updatedFields[index].type)) {
       updatedFields[index].options = [];
     }
 
-    if (
-      field === "type" &&
-      value === "SELECT" &&
-      updatedFields[index].options.length === 0
-    ) {
+    if (field === "type" && isOptionFieldType(value) && updatedFields[index].options.length === 0) {
       updatedFields[index].options = [""];
     }
 
@@ -351,13 +357,13 @@ const CreateScholarshipForm = () => {
         message.error(`Label field ${i + 1} tidak boleh kosong`);
         return false;
       }
-      if (field.type === "SELECT" && field.options.length === 0) {
+      if (isOptionFieldType(field.type) && field.options.length === 0) {
         message.error(
-          `Field dropdown "${field.label}" harus memiliki minimal satu opsi`,
+          `Field pilihan "${field.label}" harus memiliki minimal satu opsi`,
         );
         return false;
       }
-      if (field.type === "SELECT") {
+      if (isOptionFieldType(field.type)) {
         for (let j = 0; j < field.options.length; j++) {
           if (!field.options[j].trim()) {
             message.error(
@@ -549,6 +555,16 @@ const CreateScholarshipForm = () => {
                         </Option>
                       ))}
                     </Select>
+                  )}
+                  {field.type === "MULTI_SELECT" && (
+                    <Checkbox.Group
+                      className="flex flex-col gap-2"
+                      options={field.options.map((option, optionIndex) => ({
+                        label: option || `Opsi ${optionIndex + 1}`,
+                        value: option || `option-${optionIndex + 1}`,
+                      }))}
+                      disabled
+                    />
                   )}
                 </div>
               ))}

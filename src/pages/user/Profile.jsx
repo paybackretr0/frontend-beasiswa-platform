@@ -66,6 +66,29 @@ const Profile = () => {
     loadUserProfile();
   }, []);
 
+  const buildProfileFormData = (user) => {
+    const student = user?.student;
+    const staff = user?.staff;
+    const studyProgram = student?.study_program;
+    const department = studyProgram?.department;
+    const faculty = department?.faculty || staff?.faculty;
+
+    return {
+      full_name: user?.full_name || "",
+      email: user?.email || "",
+      nim: student?.nim || "",
+      phone_number: user?.phone_number || "",
+      gender: student?.gender || staff?.gender || "",
+      birth_date: student?.birth_date ? student.birth_date.split("T")[0] : "",
+      birth_place: student?.birth_place || "",
+      faculty: faculty?.name || "N/A",
+      department: department?.name || "N/A",
+      study_program: studyProgram
+        ? `${studyProgram.degree} - ${studyProgram.name}`
+        : "N/A",
+    };
+  };
+
   const loadUserProfile = async () => {
     try {
       setLoading(true);
@@ -73,20 +96,7 @@ const Profile = () => {
 
       if (response && response.data) {
         const user = response.data;
-        const userData = {
-          full_name: user.full_name || "",
-          email: user.email || "",
-          nim: user.nim || "",
-          phone_number: user.phone_number || "",
-          gender: user.gender || "",
-          birth_date: user.birth_date ? user.birth_date.split("T")[0] : "",
-          birth_place: user.birth_place || "",
-          faculty: user.faculty?.name || "N/A",
-          department: user.department?.name || "N/A",
-          study_program:
-            `${user.study_program?.degree} - ${user.study_program?.name}` ||
-            "N/A",
-        };
+        const userData = buildProfileFormData(user);
 
         setFormData(userData);
         setOriginalFormData(userData);
@@ -223,7 +233,11 @@ const Profile = () => {
         const updatedUser = { ...currentUser, ...response.data };
         localStorage.setItem("user", JSON.stringify(updatedUser));
 
-        const updatedFormData = { ...formData, ...response.data };
+        const updatedFormData = {
+          ...formData,
+          phone_number: response.data?.phone_number ?? formData.phone_number,
+          gender: response.data?.gender ?? formData.gender,
+        };
         setOriginalFormData(updatedFormData);
         setFormData(updatedFormData);
         setIsEditing(false);
@@ -313,7 +327,9 @@ const Profile = () => {
                   <h2 className="text-xl font-bold text-gray-800 mb-2">
                     {formData.full_name || "Nama Pengguna"}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-1">Mahasiswa</p>
+                  <p className="text-sm text-gray-500 mb-1">
+                    {formData.nim ? "Mahasiswa" : "Staff"}
+                  </p>
                   <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full">
                     <span className="text-sm font-medium text-blue-700">
                       {formData.nim}

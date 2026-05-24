@@ -4,6 +4,7 @@ import {
   Card,
   Input,
   Select,
+  Checkbox,
   Button,
   Space,
   Typography,
@@ -25,6 +26,7 @@ import {
   UnorderedListOutlined,
   AlignLeftOutlined,
   SettingOutlined,
+  CheckSquareOutlined,
 } from "@ant-design/icons";
 import { getFormFields } from "../../../../services/formService";
 import { SkeletonFormBuilder } from "../../../../components/common/skeleton";
@@ -46,6 +48,7 @@ const PreviewScholarshipForm = () => {
     TEXTAREA: <AlignLeftOutlined />,
     FILE: <FileOutlined />,
     SELECT: <UnorderedListOutlined />,
+    MULTI_SELECT: <CheckSquareOutlined />,
   };
 
   const typeLabels = {
@@ -55,6 +58,7 @@ const PreviewScholarshipForm = () => {
     TEXTAREA: "Textarea",
     FILE: "File Upload",
     SELECT: "Dropdown",
+    MULTI_SELECT: "Multi Select",
   };
 
   useEffect(() => {
@@ -108,6 +112,17 @@ const PreviewScholarshipForm = () => {
               </Option>
             )) || <Option value="">Tidak ada opsi</Option>}
           </Select>
+        );
+      case "MULTI_SELECT":
+        return (
+          <Checkbox.Group
+            className="flex flex-col gap-2"
+            options={(field.options || []).map((option, index) => ({
+              label: option || `Opsi ${index + 1}`,
+              value: option || `option-${index + 1}`,
+            }))}
+            disabled
+          />
         );
       default:
         return <Input {...commonProps} />;

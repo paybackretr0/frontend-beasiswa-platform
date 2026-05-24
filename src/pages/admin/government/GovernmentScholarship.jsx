@@ -41,6 +41,7 @@ import {
   getGovernmentScholarshipYearlyTrend,
   getGovernmentScholarshipList,
   exportGovernmentScholarships,
+  downloadGovernmentScholarshipTemplate,
   validateGovernmentScholarshipFile,
   importGovernmentScholarships,
 } from "../../../services/governmentService";
@@ -285,6 +286,15 @@ const GovernmentScholarship = () => {
     setSelectedFile(null);
     setImportMode("replace");
     setImportModalVisible(true);
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      await downloadGovernmentScholarshipTemplate();
+      success("Berhasil!", "Template import APBN berhasil diunduh");
+    } catch (err) {
+      error("Gagal!", err.message || "Gagal mengunduh template import APBN");
+    }
   };
 
   const handleFileSelect = async (file) => {
@@ -889,6 +899,15 @@ const GovernmentScholarship = () => {
                   Upload file Excel (.xlsx) yang berisi data penerima beasiswa
                   APBN
                 </p>
+                <div className="mt-3">
+                  <Button
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-2"
+                    icon={<DownloadOutlined />}
+                  >
+                    Download Template
+                  </Button>
+                </div>
               </div>
 
               <Upload.Dragger
@@ -913,15 +932,10 @@ const GovernmentScholarship = () => {
                   Format Excel yang diperlukan:
                 </p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>NIM (wajib)</li>
-                  <li>Nama Mahasiswa (wajib)</li>
-                  <li>Angkatan</li>
-                  <li>Program Studi</li>
-                  <li>Semester</li>
-                  <li>IPK</li>
-                  <li>Tahun Fiskal (wajib)</li>
-                  <li>Periode</li>
-                  <li>Skema Bantuan</li>
+                  <li>Gunakan template unduhan agar posisi kolom sesuai parser import APBN.</li>
+                  <li>Kolom wajib: NIM dan Nama Mahasiswa.</li>
+                  <li>Kolom yang dibaca sistem: Semester, Angkatan, Program Studi, dan Skema Bantuan.</li>
+                  <li>Periode dibaca dari judul file template, misalnya `PERIODE: Ganjil/2026`.</li>
                 </ul>
               </div>
             </>

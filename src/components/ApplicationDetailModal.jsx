@@ -248,6 +248,7 @@ const ApplicationDetailModal = ({
       schema_id: applicationDetail.schema_id,
       scholarship_id: applicationDetail.scholarship_id,
       student_id: applicationDetail.student_id,
+      scholarship_end_date: applicationDetail.scholarship?.end_date,
     };
 
     if (role === "VERIFIKATOR_FAKULTAS") {

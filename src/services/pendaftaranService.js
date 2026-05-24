@@ -47,6 +47,10 @@ export const submitApplication = async (
           mime_type: answer.mime_type || null,
           size_bytes: answer.size_bytes || null,
         };
+      } else if (Array.isArray(answer)) {
+        answersData[fieldId] = {
+          selected_option_ids: answer,
+        };
       } else {
         answersData[fieldId] = { answer_text: answer };
       }
@@ -99,6 +103,10 @@ export const submitRevision = async (applicationId, answers) => {
           file_path: answer.path,
           mime_type: answer.mime_type || null,
           size_bytes: answer.size_bytes || null,
+        };
+      } else if (Array.isArray(answer)) {
+        answersData[fieldId] = {
+          selected_option_ids: answer,
         };
       } else {
         answersData[fieldId] = { answer_text: answer };

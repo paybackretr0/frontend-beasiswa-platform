@@ -34,7 +34,7 @@ const PimpinanFakultas = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const { alerts, success, error, warning, removeAlert } = useAlert();
+  const { alerts, success, error, removeAlert } = useAlert();
 
   const fetchFaculties = async () => {
     try {
@@ -77,6 +77,7 @@ const PimpinanFakultas = () => {
       await addPimpinanFakultas(values);
       success("Sukses", "Pimpinan Fakultas berhasil ditambahkan");
       setModalVisible(false);
+      setEditingUser(null);
       await fetchPimpinanFakultas();
     } catch (err) {
       console.error("Error adding Pimpinan Fakultas:", err);
@@ -150,6 +151,7 @@ const PimpinanFakultas = () => {
       await updateUser(id, values);
       success("Sukses", "User berhasil diperbarui");
       setModalVisible(false);
+      setEditingUser(null);
       fetchPimpinanFakultas();
     } catch (err) {
       console.error("Error updating user:", err);
@@ -257,7 +259,10 @@ const PimpinanFakultas = () => {
         searchFields={["full_name", "email"]}
         searchPlaceholder="Cari nama atau email..."
         addButtonText="Tambah Pimpinan Fakultas"
-        onAdd={() => setModalVisible(true)}
+        onAdd={() => {
+          setEditingUser(null);
+          setModalVisible(true);
+        }}
       />
       <Modal
         title={
