@@ -34,7 +34,7 @@ const AdminLayout = ({ children }) => (
                 rel="noopener noreferrer"
                 className="text-[#2D60FF] hover:text-[#1E4FCC] font-semibold underline decoration-dotted underline-offset-4 transition-colors"
               >
-                Neo Telemetri
+                KNM
               </a>
             </span>
           </div>

@@ -62,7 +62,6 @@ const ChangePassword = () => {
     } catch (err) {
       console.error("Error changing password:", err);
       error("Gagal!", err.message || "Gagal mengubah password.");
-    } finally {
       setLoading(false);
     }
   };

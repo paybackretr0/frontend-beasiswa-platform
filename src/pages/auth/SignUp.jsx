@@ -229,7 +229,6 @@ const SignUp = () => {
     } catch (err) {
       console.error("Registration error:", err);
       error("Error", "Terjadi kesalahan server");
-    } finally {
       setLoading(false);
     }
   };

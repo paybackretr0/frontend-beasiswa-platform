@@ -97,7 +97,7 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 className="text-white hover:text-blue-200 font-semibold underline decoration-dotted underline-offset-4 transition-colors"
               >
-                Neo Telemetri
+                KNM
               </a>
             </p>
           </div>

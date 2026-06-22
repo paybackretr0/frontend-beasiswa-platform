@@ -91,7 +91,6 @@ const ScholarshipAdd = () => {
       }
 
       error(errorTitle, errorMessage);
-    } finally {
       setLoading(false);
     }
   };
