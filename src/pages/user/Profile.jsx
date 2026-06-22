@@ -10,7 +10,11 @@ import {
   InfoCircleOutlined,
   CalendarOutlined,
   EnvironmentOutlined,
+  ExclamationCircleOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
 } from "@ant-design/icons";
+import { Modal } from "antd";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import GuestLayout from "../../layouts/GuestLayout";
@@ -38,8 +42,14 @@ const Profile = () => {
     new_password: "",
     new_password_confirmation: "",
   });
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
   const [passwordErrors, setPasswordErrors] = useState({});
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -60,6 +70,13 @@ const Profile = () => {
   const [errors, setErrors] = useState({});
 
   const { alerts, success, error, removeAlert } = useAlert();
+
+  const togglePassword = (field) => {
+    setShowPassword((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
   useEffect(() => {
     document.title = "Profil Saya - Beasiswa";
@@ -176,7 +193,7 @@ const Profile = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handlePasswordSubmit = async (e) => {
+  const handlePasswordSubmit = (e) => {
     e.preventDefault();
 
     if (!validatePasswordForm()) {
@@ -184,6 +201,10 @@ const Profile = () => {
       return;
     }
 
+    setIsPasswordModalVisible(true);
+  };
+
+  const confirmPasswordChange = async () => {
     setPasswordLoading(true);
 
     try {
@@ -200,6 +221,7 @@ const Profile = () => {
         new_password_confirmation: "",
       });
       setPasswordErrors({});
+      setIsPasswordModalVisible(false);
     } catch (err) {
       console.error("Error changing password:", err);
       error("Gagal!", err.message || "Gagal mengubah password");
@@ -638,18 +660,31 @@ const Profile = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Password Lama
                   </label>
-                  <input
-                    type="password"
-                    name="current_password"
-                    value={passwordData.current_password}
-                    onChange={handlePasswordChange}
-                    className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      passwordErrors.current_password
-                        ? "border-red-300 focus:ring-red-500"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="Masukkan password lama"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword.current ? "text" : "password"}
+                      name="current_password"
+                      value={passwordData.current_password}
+                      onChange={handlePasswordChange}
+                      className={`w-full border rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        passwordErrors.current_password
+                          ? "border-red-300 focus:ring-red-500"
+                          : "border-gray-300"
+                      }`}
+                      placeholder="Masukkan password lama"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePassword("current")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword.current ? (
+                        <EyeOutlined />
+                      ) : (
+                        <EyeInvisibleOutlined />
+                      )}
+                    </button>
+                  </div>
                   {passwordErrors.current_password && (
                     <p className="text-red-500 text-xs mt-1">
                       {passwordErrors.current_password}
@@ -661,18 +696,31 @@ const Profile = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Password Baru
                   </label>
-                  <input
-                    type="password"
-                    name="new_password"
-                    value={passwordData.new_password}
-                    onChange={handlePasswordChange}
-                    className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      passwordErrors.new_password
-                        ? "border-red-300 focus:ring-red-500"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="Masukkan password baru"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword.new ? "text" : "password"}
+                      name="new_password"
+                      value={passwordData.new_password}
+                      onChange={handlePasswordChange}
+                      className={`w-full border rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        passwordErrors.new_password
+                          ? "border-red-300 focus:ring-red-500"
+                          : "border-gray-300"
+                      }`}
+                      placeholder="Masukkan password baru"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePassword("new")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword.new ? (
+                        <EyeOutlined />
+                      ) : (
+                        <EyeInvisibleOutlined />
+                      )}
+                    </button>
+                  </div>
                   {passwordErrors.new_password && (
                     <p className="text-red-500 text-xs mt-1">
                       {passwordErrors.new_password}
@@ -684,18 +732,31 @@ const Profile = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Konfirmasi Password Baru
                   </label>
-                  <input
-                    type="password"
-                    name="new_password_confirmation"
-                    value={passwordData.new_password_confirmation}
-                    onChange={handlePasswordChange}
-                    className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      passwordErrors.new_password_confirmation
-                        ? "border-red-300 focus:ring-red-500"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="Konfirmasi password baru"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword.confirm ? "text" : "password"}
+                      name="new_password_confirmation"
+                      value={passwordData.new_password_confirmation}
+                      onChange={handlePasswordChange}
+                      className={`w-full border rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        passwordErrors.new_password_confirmation
+                          ? "border-red-300 focus:ring-red-500"
+                          : "border-gray-300"
+                      }`}
+                      placeholder="Konfirmasi password baru"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePassword("confirm")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword.confirm ? (
+                        <EyeOutlined />
+                      ) : (
+                        <EyeInvisibleOutlined />
+                      )}
+                    </button>
+                  </div>
                   {passwordErrors.new_password_confirmation && (
                     <p className="text-red-500 text-xs mt-1">
                       {passwordErrors.new_password_confirmation}
@@ -717,6 +778,29 @@ const Profile = () => {
           </div>
         </div>
       </GuestLayout>
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <ExclamationCircleOutlined style={{ color: "#faad14" }} />
+            <span>Konfirmasi Ubah Password</span>
+          </div>
+        }
+        open={isPasswordModalVisible}
+        onOk={confirmPasswordChange}
+        onCancel={() => setIsPasswordModalVisible(false)}
+        confirmLoading={passwordLoading}
+        okText="Ya, Ubah Password"
+        cancelText="Batal"
+        okButtonProps={{
+          type: "primary",
+          className: "bg-blue-600 hover:bg-blue-700",
+        }}
+      >
+        <p className="text-gray-600">
+          Apakah Anda yakin ingin mengubah password akun Anda? Pastikan Anda
+          mengingat password baru yang telah dibuat.
+        </p>
+      </Modal>
     </>
   );
 };

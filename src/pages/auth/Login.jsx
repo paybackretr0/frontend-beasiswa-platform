@@ -43,7 +43,6 @@ const Login = () => {
     } catch (err) {
       console.error("Login error:", err);
       setError("Terjadi kesalahan pada server. Coba lagi nanti.");
-    } finally {
       setLoading(false);
     }
   };

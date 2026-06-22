@@ -158,7 +158,6 @@ const ScholarshipEdit = () => {
     } catch (err) {
       console.error("Error updating scholarship:", err);
       error("Gagal!", err.message || "Gagal memperbarui beasiswa");
-    } finally {
       setLoading(false);
     }
   };

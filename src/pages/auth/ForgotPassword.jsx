@@ -79,7 +79,6 @@ const ForgotPassword = () => {
     } catch (err) {
       console.error("Error sending reset email:", err);
       error("Gagal!", err.message || "Gagal mengirim kode reset.");
-    } finally {
       setLoading(false);
     }
   };

@@ -340,7 +340,11 @@ const EditScholarshipForm = () => {
       updatedFields[index].options = [];
     }
 
-    if (field === "type" && isOptionFieldType(value) && updatedFields[index].options.length === 0) {
+    if (
+      field === "type" &&
+      isOptionFieldType(value) &&
+      updatedFields[index].options.length === 0
+    ) {
       updatedFields[index].options = [""];
     }
 
@@ -419,7 +423,6 @@ const EditScholarshipForm = () => {
     } catch (error) {
       console.error("Error updating form:", error);
       error("Gagal!", "Gagal mengupdate form");
-    } finally {
       setLoading(false);
     }
   };

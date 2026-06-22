@@ -321,7 +321,11 @@ const CreateScholarshipForm = () => {
       updatedFields[index].options = [];
     }
 
-    if (field === "type" && isOptionFieldType(value) && updatedFields[index].options.length === 0) {
+    if (
+      field === "type" &&
+      isOptionFieldType(value) &&
+      updatedFields[index].options.length === 0
+    ) {
       updatedFields[index].options = [""];
     }
 
@@ -391,7 +395,6 @@ const CreateScholarshipForm = () => {
     } catch (error) {
       console.error("Error creating form:", error);
       message.error("Gagal membuat form");
-    } finally {
       setLoading(false);
     }
   };

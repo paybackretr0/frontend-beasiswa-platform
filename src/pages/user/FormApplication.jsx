@@ -371,7 +371,6 @@ const FormApplication = () => {
       }
     } catch (err) {
       error("Gagal!", err.message || "Gagal mengirim pendaftaran.");
-    } finally {
       setSubmitting(false);
     }
   };
@@ -446,7 +445,10 @@ const FormApplication = () => {
             optionFilterProp="children"
           >
             {field.options.map((option, index) => (
-              <Option key={getOptionValue(option) || index} value={getOptionValue(option)}>
+              <Option
+                key={getOptionValue(option) || index}
+                value={getOptionValue(option)}
+              >
                 {getOptionLabel(option)}
               </Option>
             ))}

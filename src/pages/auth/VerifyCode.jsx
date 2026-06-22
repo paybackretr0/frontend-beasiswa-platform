@@ -75,9 +75,8 @@ const VerifyCode = () => {
       console.error("Verification error:", err);
       error(
         "Verifikasi Gagal",
-        err.message || "Terjadi kesalahan saat verifikasi"
+        err.message || "Terjadi kesalahan saat verifikasi",
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -95,19 +94,19 @@ const VerifyCode = () => {
       if (res.success) {
         success(
           "Kode Terkirim",
-          "Kode verifikasi baru telah dikirim ke email Anda"
+          "Kode verifikasi baru telah dikirim ke email Anda",
         );
       } else {
         error(
           "Gagal Kirim Ulang",
-          res.message || "Gagal mengirim ulang kode verifikasi"
+          res.message || "Gagal mengirim ulang kode verifikasi",
         );
       }
     } catch (err) {
       console.error("Resend code error:", err);
       error(
         "Gagal Kirim Ulang",
-        err.message || "Terjadi kesalahan saat mengirim ulang kode"
+        err.message || "Terjadi kesalahan saat mengirim ulang kode",
       );
     } finally {
       setResendLoading(false);
