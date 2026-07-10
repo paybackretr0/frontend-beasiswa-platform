@@ -82,6 +82,8 @@ const ScholarshipEdit = () => {
             name: stage.stage_name,
             stage_name: stage.stage_name,
             order_no: stage.order_no,
+            start_date: stage.start_date || "",
+            end_date: stage.end_date || "",
           })),
 
         faculties:

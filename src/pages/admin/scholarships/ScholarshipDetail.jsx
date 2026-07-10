@@ -511,13 +511,22 @@ const ScholarshipDetail = () => {
                             <Timeline>
                               {schema.stages
                                 .sort((a, b) => a.order_no - b.order_no)
-                                .map((stage) => (
-                                  <Timeline.Item key={stage.id}>
-                                    <span className="font-medium">
-                                      {stage.stage_name}
-                                    </span>
-                                  </Timeline.Item>
-                                ))}
+                                .map((stage) => {
+                                  const sf = (d) => d ? new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "";
+                                  const range = stage.start_date || stage.end_date
+                                    ? ` (${sf(stage.start_date)}${stage.start_date && stage.end_date ? " — " : ""}${sf(stage.end_date)})`
+                                    : "";
+                                  return (
+                                    <Timeline.Item key={stage.id}>
+                                      <span className="font-medium">
+                                        {stage.stage_name}
+                                      </span>
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        {range || "TBA"}
+                                      </span>
+                                    </Timeline.Item>
+                                  );
+                                })}
                             </Timeline>
                           ) : (
                             <Empty

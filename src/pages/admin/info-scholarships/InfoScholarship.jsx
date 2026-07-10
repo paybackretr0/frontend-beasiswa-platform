@@ -133,7 +133,13 @@ const InfoScholarship = () => {
 
     const stages =
       schema.stages
-        ?.map((stage, idx) => `${idx + 1}. ${stage.stage_name}`)
+        ?.map((stage, idx) => {
+          const fmt = (d) => d ? new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "";
+          const range = stage.start_date || stage.end_date
+            ? ` (${fmt(stage.start_date)}${stage.start_date && stage.end_date ? " — " : ""}${fmt(stage.end_date)})`
+            : "";
+          return `${idx + 1}. ${stage.stage_name}${range}`;
+        })
         .join("\n   ") || "-";
 
     const textRequirements = schema.requirements
@@ -501,11 +507,17 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                               Tahapan
                             </h5>
                             <div className="flex flex-wrap gap-2">
-                              {schema.stages.map((stage, i) => (
-                                <Tag key={i} color="purple" className="text-xs">
-                                  {i + 1}. {stage.stage_name}
-                                </Tag>
-                              ))}
+                              {schema.stages.map((stage, i) => {
+                                const sf = (d) => d ? new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "";
+                                const range = stage.start_date || stage.end_date
+                                  ? ` (${sf(stage.start_date)}${stage.start_date && stage.end_date ? " - " : ""}${sf(stage.end_date)})`
+                                  : "";
+                                return (
+                                  <Tag key={i} color="purple" className="text-xs">
+                                    {i + 1}. {stage.stage_name}{range}
+                                  </Tag>
+                                );
+                              })}
                             </div>
                           </div>
                         )}

@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Empty, Tag, Timeline, Divider, Tabs, Card as AntCard, Modal as AntModal } from "antd";
+import {
+  Empty,
+  Tag,
+  Timeline,
+  Divider,
+  Tabs,
+  Card as AntCard,
+  Modal as AntModal,
+} from "antd";
 import {
   HomeOutlined,
   ReloadOutlined,
@@ -270,7 +278,8 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
   const handleCopyTemplate = () => {
     const activeSchemas = getActiveSchemas();
-    const schema = activeSchemas.find((s) => s.id === selectedSchemaId) || activeSchemas[0];
+    const schema =
+      activeSchemas.find((s) => s.id === selectedSchemaId) || activeSchemas[0];
     const template = generateShareTemplate(schema);
     navigator.clipboard.writeText(template);
     success("Berhasil!", "Template pengumuman berhasil disalin ke clipboard");
@@ -278,7 +287,8 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
   const handleWhatsAppShare = () => {
     const activeSchemas = getActiveSchemas();
-    const schema = activeSchemas.find((s) => s.id === selectedSchemaId) || activeSchemas[0];
+    const schema =
+      activeSchemas.find((s) => s.id === selectedSchemaId) || activeSchemas[0];
     const template = generateShareTemplate(schema);
     const encodedMessage = encodeURIComponent(template);
     window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
@@ -538,9 +548,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
           </div>
           <Button
             className="w-full bg-green-600 hover:bg-green-700"
-            onClick={() =>
-              handleExternalApplication(scholarship.website_url)
-            }
+            onClick={() => handleExternalApplication(scholarship.website_url)}
           >
             Daftar di Website Penyedia
           </Button>
@@ -724,20 +732,50 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                 <Timeline
                   items={schema.stages
                     .sort((a, b) => a.order_no - b.order_no)
-                    .map((stage, stageIdx) => ({
-                      dot: (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {stageIdx + 1}
-                        </div>
-                      ),
-                      children: (
-                        <div className="ml-4">
-                          <h4 className="font-semibold text-gray-900">
-                            {stage.stage_name}
-                          </h4>
-                        </div>
-                      ),
-                    }))}
+                    .map((stage, stageIdx) => {
+                      const formatStageDate = (date) => {
+                        if (!date) return null;
+                        return new Date(date).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+                      };
+
+                      const startLabel = stage.start_date
+                        ? formatStageDate(stage.start_date)
+                        : null;
+                      const endLabel = stage.end_date
+                        ? formatStageDate(stage.end_date)
+                        : null;
+
+                      return {
+                        dot: (
+                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            {stageIdx + 1}
+                          </div>
+                        ),
+                        children: (
+                          <div className="ml-4">
+                            <h4 className="font-semibold text-gray-900">
+                              {stage.stage_name}
+                            </h4>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Waktu Pelaksanaan:{" "}
+                              {startLabel && endLabel
+                                ? `${startLabel} — ${endLabel}`
+                                : startLabel
+                                  ? `${startLabel}`
+                                  : endLabel
+                                    ? `${endLabel}`
+                                    : "TBA"}
+                            </p>
+                          </div>
+                        ),
+                      };
+                    })}
                 />
               ) : (
                 <Empty
@@ -997,222 +1035,224 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
   return (
     <>
-    <GuestLayout>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+      <GuestLayout>
+        <AlertContainer
+          alerts={alerts}
+          onRemove={removeAlert}
+          position="top-right"
+        />
 
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-          <nav className="mb-8 text-sm opacity-80">
-            <Link
-              to="/scholarship"
-              className="hover:text-blue-200 transition-colors"
-            >
-              Beasiswa
-            </Link>
-            <span className="mx-2">/</span>
-            <span>{scholarship.name}</span>
-          </nav>
+        <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
+          <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
+            <nav className="mb-8 text-sm opacity-80">
+              <Link
+                to="/scholarship"
+                className="hover:text-blue-200 transition-colors"
+              >
+                Beasiswa
+              </Link>
+              <span className="mx-2">/</span>
+              <span>{scholarship.name}</span>
+            </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl p-4 shadow-lg">
-                <img
-                  src={getImageSource(scholarship.logo_path)}
-                  alt={scholarship.name}
-                  className="w-full h-48 object-cover rounded-xl"
-                />
-              </div>
-            </div>
-
-            <div className="lg:col-span-2 space-y-6">
-              <div>
-                <h1 className="text-4xl font-bold mb-4">{scholarship.name}</h1>
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
-                    <BankOutlined className="mr-2" />
-                    {scholarship.organizer}
-                  </span>
-                  <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
-                    <CalendarOutlined className="mr-2" />
-                    {scholarship.year}
-                  </span>
-                  {getStatusTag(scholarship.is_active, scholarship.end_date)}
-                  <button
-                    onClick={handleOpenShare}
-                    className="flex items-center bg-white/10 backdrop-blur-sm hover:bg-white/20 px-3 py-1 rounded-lg transition-colors ml-auto"
-                    title="Bagikan beasiswa"
-                  >
-                    <ShareAltOutlined className="mr-1" />
-                    <span className="text-sm">Bagikan</span>
-                  </button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-2xl p-4 shadow-lg">
+                  <img
+                    src={getImageSource(scholarship.logo_path)}
+                    alt={scholarship.name}
+                    className="w-full h-48 object-cover rounded-xl"
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(scholarship.scholarship_value)}
+              <div className="lg:col-span-2 space-y-6">
+                <div>
+                  <h1 className="text-4xl font-bold mb-4">
+                    {scholarship.name}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
+                      <BankOutlined className="mr-2" />
+                      {scholarship.organizer}
+                    </span>
+                    <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
+                      <CalendarOutlined className="mr-2" />
+                      {scholarship.year}
+                    </span>
+                    {getStatusTag(scholarship.is_active, scholarship.end_date)}
+                    <button
+                      onClick={handleOpenShare}
+                      className="flex items-center bg-white/10 backdrop-blur-sm hover:bg-white/20 px-3 py-1 rounded-lg transition-colors ml-auto"
+                      title="Bagikan beasiswa"
+                    >
+                      <ShareAltOutlined className="mr-1" />
+                      <span className="text-sm">Bagikan</span>
+                    </button>
                   </div>
-                  <div className="text-sm opacity-80">Nilai Beasiswa</div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold">
-                    {scholarship.duration_semesters}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(scholarship.scholarship_value)}
+                    </div>
+                    <div className="text-sm opacity-80">Nilai Beasiswa</div>
                   </div>
-                  <div className="text-sm opacity-80">Durasi (Semester)</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold">
-                    {scholarship.schemas?.filter((s) => s.is_active).length ||
-                      0}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold">
+                      {scholarship.duration_semesters}
+                    </div>
+                    <div className="text-sm opacity-80">Durasi (Semester)</div>
                   </div>
-                  <div className="text-sm opacity-80">Skema Aktif</div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold">
+                      {scholarship.schemas?.filter((s) => s.is_active).length ||
+                        0}
+                    </div>
+                    <div className="text-sm opacity-80">Skema Aktif</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="border-l-4 border-l-blue-500">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <StarOutlined className="mr-2 text-blue-500" />
-                Informasi Umum
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Periode Pendaftaran:</span>
-                  <span className="font-semibold">
-                    {formatDate(scholarship.start_date)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Batas Pendaftaran:</span>
-                  <span className="font-semibold text-red-600">
-                    {formatDate(scholarship.end_date)}
-                  </span>
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <FileTextOutlined className="mr-2 text-blue-500" />
-                Deskripsi Beasiswa
-              </h2>
-              {scholarship.description ? (
-                <div className="prose max-w-none text-gray-700 leading-relaxed">
-                  {scholarship.description
-                    .split("\n")
-                    .map((paragraph, index) => (
-                      <p key={index} className="mb-4 last:mb-0 text-justify">
-                        {paragraph}
-                      </p>
-                    ))}
-                </div>
-              ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Belum ada deskripsi"
-                  className="my-8"
-                />
-              )}
-            </Card>
-
-            {scholarship.benefits && scholarship.benefits.length > 0 && (
-              <Card>
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <StarOutlined className="mr-2 text-yellow-500" />
-                  Benefit Beasiswa
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              <Card className="border-l-4 border-l-blue-500">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <StarOutlined className="mr-2 text-blue-500" />
+                  Informasi Umum
                 </h2>
-                <div className="space-y-3">
-                  {scholarship.benefits.map((benefit, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400"
-                    >
-                      <span className="text-gray-700">
-                        {benefit.benefit_text}
-                      </span>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Periode Pendaftaran:</span>
+                    <span className="font-semibold">
+                      {formatDate(scholarship.start_date)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Batas Pendaftaran:</span>
+                    <span className="font-semibold text-red-600">
+                      {formatDate(scholarship.end_date)}
+                    </span>
+                  </div>
                 </div>
               </Card>
-            )}
 
-            <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <FormOutlined className="mr-2 text-indigo-500" />
-                Skema Beasiswa yang Tersedia
-              </h2>
-              {renderSchemaTabs()}
-            </Card>
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="sticky top-20 space-y-6">
               <Card>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Beasiswa Lainnya
-                </h3>
-                {otherScholarships.length > 0 ? (
-                  <div className="space-y-4">
-                    {otherScholarships.map((otherScholarship) => (
-                      <Link
-                        key={otherScholarship.id}
-                        to={`/scholarship/${otherScholarship.id}`}
-                        className="block group"
-                      >
-                        <div className="flex space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group-hover:shadow-md">
-                          <img
-                            src={getImageSource(otherScholarship.logo_path)}
-                            alt={otherScholarship.name}
-                            className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600">
-                              {otherScholarship.name}
-                            </h4>
-                            <p className="text-xs text-gray-500 truncate">
-                              {otherScholarship.organizer}
-                            </p>
-                            <div className="text-xs font-semibold text-green-600">
-                              {formatCurrency(
-                                otherScholarship.scholarship_value,
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                    <Divider className="my-4" />
-                    <Link
-                      to="/scholarship"
-                      className="block text-center text-blue-600 hover:text-blue-800 font-medium text-sm py-2 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                      Lihat Semua Beasiswa →
-                    </Link>
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <FileTextOutlined className="mr-2 text-blue-500" />
+                  Deskripsi Beasiswa
+                </h2>
+                {scholarship.description ? (
+                  <div className="prose max-w-none text-gray-700 leading-relaxed">
+                    {scholarship.description
+                      .split("\n")
+                      .map((paragraph, index) => (
+                        <p key={index} className="mb-4 last:mb-0 text-justify">
+                          {paragraph}
+                        </p>
+                      ))}
                   </div>
                 ) : (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="Belum ada beasiswa lainnya"
-                    className="my-4"
+                    description="Belum ada deskripsi"
+                    className="my-8"
                   />
                 )}
               </Card>
+
+              {scholarship.benefits && scholarship.benefits.length > 0 && (
+                <Card>
+                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <StarOutlined className="mr-2 text-yellow-500" />
+                    Benefit Beasiswa
+                  </h2>
+                  <div className="space-y-3">
+                    {scholarship.benefits.map((benefit, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400"
+                      >
+                        <span className="text-gray-700">
+                          {benefit.benefit_text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              <Card>
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <FormOutlined className="mr-2 text-indigo-500" />
+                  Skema Beasiswa yang Tersedia
+                </h2>
+                {renderSchemaTabs()}
+              </Card>
+            </div>
+
+            <div className="lg:col-span-1">
+              <div className="sticky top-20 space-y-6">
+                <Card>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    Beasiswa Lainnya
+                  </h3>
+                  {otherScholarships.length > 0 ? (
+                    <div className="space-y-4">
+                      {otherScholarships.map((otherScholarship) => (
+                        <Link
+                          key={otherScholarship.id}
+                          to={`/scholarship/${otherScholarship.id}`}
+                          className="block group"
+                        >
+                          <div className="flex space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group-hover:shadow-md">
+                            <img
+                              src={getImageSource(otherScholarship.logo_path)}
+                              alt={otherScholarship.name}
+                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600">
+                                {otherScholarship.name}
+                              </h4>
+                              <p className="text-xs text-gray-500 truncate">
+                                {otherScholarship.organizer}
+                              </p>
+                              <div className="text-xs font-semibold text-green-600">
+                                {formatCurrency(
+                                  otherScholarship.scholarship_value,
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                      <Divider className="my-4" />
+                      <Link
+                        to="/scholarship"
+                        className="block text-center text-blue-600 hover:text-blue-800 font-medium text-sm py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        Lihat Semua Beasiswa →
+                      </Link>
+                    </div>
+                  ) : (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Belum ada beasiswa lainnya"
+                      className="my-4"
+                    />
+                  )}
+                </Card>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </GuestLayout>
+      </GuestLayout>
 
       <AntModal
         title={
