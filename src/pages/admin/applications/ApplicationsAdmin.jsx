@@ -227,22 +227,32 @@ const ApplicationsAdmin = () => {
 
       console.log("[assign-awardee] api result", result);
 
-      success(
-        "Berhasil!",
-        `${result.updated_count || 0} pendaftaran berhasil jadi awardee`,
-      );
+      const updatedCount = result.updated_count || 0;
+      const skipped = result.skipped || [];
+      const notFoundIds = result.not_found_ids || [];
 
-      const skippedCount = Array.isArray(result.skipped)
-        ? result.skipped.length
-        : 0;
-      const notFoundCount = Array.isArray(result.not_found_ids)
-        ? result.not_found_ids.length
-        : 0;
+      if (updatedCount === 0) {
+        const expiredCount = skipped.filter(
+          (s) =>
+            s.reason === "SCHOLARSHIP_EXPIRED" ||
+            s.reason === "SCHOLARSHIP_NOT_ACTIVE",
+        ).length;
 
-      if (skippedCount > 0 || notFoundCount > 0) {
-        warning(
-          "Sebagian dilewati",
-          `${skippedCount} tidak VALIDATED, ${notFoundCount} tidak ditemukan`,
+        if (expiredCount > 0) {
+          warning(
+            "Tidak bisa assign awardee",
+            "Beasiswa sudah tidak aktif atau sudah lewat lebih dari 6 bulan sejak batas pendaftaran",
+          );
+        } else {
+          warning(
+            "Tidak bisa assign awardee",
+            `${skipped.length} pendaftaran belum divalidasi${notFoundIds.length > 0 ? `, ${notFoundIds.length} tidak ditemukan` : ""}`,
+          );
+        }
+      } else {
+        success(
+          "Berhasil!",
+          `${updatedCount} pendaftaran berhasil jadi awardee`,
         );
       }
 
