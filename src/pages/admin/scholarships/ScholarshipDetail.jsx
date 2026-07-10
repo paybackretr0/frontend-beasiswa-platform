@@ -164,7 +164,7 @@ const ScholarshipDetail = () => {
       ? logoPath.startsWith("http")
         ? logoPath
         : `${import.meta.env.VITE_IMAGE_URL}/${logoPath}`
-      : "https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=400&q=80";
+      : "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=600&auto=format&fit=crop";
 
   if (loading) {
     return (

@@ -159,6 +159,32 @@ const History = () => {
         ),
     },
     {
+      title: "Batas Daftar",
+      dataIndex: "deadline_pendaftaran",
+      key: "deadline_pendaftaran",
+      sorter: (a, b) => {
+        if (!a.deadline_pendaftaran) return 1;
+        if (!b.deadline_pendaftaran) return -1;
+        return new Date(a.deadline_pendaftaran) - new Date(b.deadline_pendaftaran);
+      },
+      render: (date) => {
+        if (!date) return <span className="text-gray-400 text-xs">-</span>;
+        const deadlinePassed = new Date(date) < new Date();
+        return (
+          <div className={`text-sm ${deadlinePassed ? "text-red-600" : "text-orange-600"}`}>
+            {new Date(date).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+            {deadlinePassed && (
+              <Tag color="red" className="ml-1 text-xs">Tutup</Tag>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",

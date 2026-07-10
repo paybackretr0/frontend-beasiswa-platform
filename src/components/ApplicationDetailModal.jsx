@@ -626,6 +626,32 @@ const ApplicationDetailModal = ({
             <Descriptions.Item label="Nama Beasiswa" span={3}>
               {applicationDetail.scholarship.name}
             </Descriptions.Item>
+            {applicationDetail.scholarship.end_date && (
+              <Descriptions.Item label="Batas Pendaftaran" span={3}>
+                <Tag
+                  color={
+                    new Date(applicationDetail.scholarship.end_date) < new Date()
+                      ? "red"
+                      : "orange"
+                  }
+                  className="text-sm font-medium"
+                >
+                  {new Date(
+                    applicationDetail.scholarship.end_date,
+                  ).toLocaleDateString("id-ID", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </Tag>
+                {new Date(applicationDetail.scholarship.end_date) <
+                  new Date() && (
+                  <span className="text-red-600 text-sm ml-2">
+                    Pendaftaran telah ditutup
+                  </span>
+                )}
+              </Descriptions.Item>
+            )}
             <Descriptions.Item label="Deskripsi" span={3}>
               {applicationDetail.scholarship.description || "-"}
             </Descriptions.Item>
