@@ -238,6 +238,8 @@ export const updateScholarship = async (id, formData) => {
         name: stage.name || stage.stage_name,
         stage_name: stage.name || stage.stage_name,
         order_no: stage.order_no || index + 1,
+        start_date: stage.start_date || null,
+        end_date: stage.end_date || null,
       })),
 
       faculties: schema.faculties || [],

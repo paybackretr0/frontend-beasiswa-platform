@@ -13,7 +13,9 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
 
   const normalizeIdList = (items = []) =>
     items
-      .map((item) => (typeof item === "object" && item !== null ? item.id : item))
+      .map((item) =>
+        typeof item === "object" && item !== null ? item.id : item,
+      )
       .filter(Boolean);
 
   const sortByName = (items = []) => {
@@ -129,12 +131,22 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
         id: s.id || Date.now() + i,
         name: s.name || s.stage_name,
         order_no: s.order_no || i + 1,
+        start_date: s.start_date || "",
+        end_date: s.end_date || "",
       }));
 
     setStages(
       sortedStages.length > 0
         ? sortedStages
-        : [{ id: 1, name: "ADMINISTRASI", order_no: 1 }],
+        : [
+            {
+              id: 1,
+              name: "ADMINISTRASI",
+              order_no: 1,
+              start_date: "",
+              end_date: "",
+            },
+          ],
     );
 
     setSelectedFaculties(normalizeIdList(data.faculties || []));
@@ -229,7 +241,16 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
 
   const addStage = () => {
     const newOrderNo = stages.length + 1;
-    setStages([...stages, { id: Date.now(), name: "", order_no: newOrderNo }]);
+    setStages([
+      ...stages,
+      {
+        id: Date.now(),
+        name: "",
+        order_no: newOrderNo,
+        start_date: "",
+        end_date: "",
+      },
+    ]);
   };
 
   const removeStage = (id) => {
@@ -243,8 +264,8 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     setStages(updatedStages);
   };
 
-  const updateStage = (id, value) => {
-    setStages(stages.map((s) => (s.id === id ? { ...s, name: value } : s)));
+  const updateStage = (id, field, value) => {
+    setStages(stages.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
   };
 
   const toggleDocument = (doc) => {
@@ -489,7 +510,9 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   };
 
   const buildEligibilityPayload = () => {
-    const normalizedFacultyIds = [...new Set(selectedFaculties.filter(Boolean))];
+    const normalizedFacultyIds = [
+      ...new Set(selectedFaculties.filter(Boolean)),
+    ];
     const normalizedDepartmentIds = [
       ...new Set(selectedDepartments.filter(Boolean)),
     ];
@@ -510,16 +533,15 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       .map((prog) => prog.id);
 
     const allStudyProgramIds = [
-      ...new Set([
-        ...normalizedStudyProgramIds,
-        ...departmentStudyProgramIds,
-      ]),
+      ...new Set([...normalizedStudyProgramIds, ...departmentStudyProgramIds]),
     ];
 
-    const departmentsToSubmit = normalizedDepartmentIds.filter((departmentId) => {
-      const department = departments.find((dept) => dept.id === departmentId);
-      return !normalizedFacultyIds.includes(department?.faculty_id);
-    });
+    const departmentsToSubmit = normalizedDepartmentIds.filter(
+      (departmentId) => {
+        const department = departments.find((dept) => dept.id === departmentId);
+        return !normalizedFacultyIds.includes(department?.faculty_id);
+      },
+    );
 
     return {
       faculties: normalizedFacultyIds,
@@ -541,7 +563,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       if (r.type === "TEXT") {
         return r.text.trim() !== "";
       } else {
-        return r.file !== null;
+        return r.file !== null || r.existingFile;
       }
     });
 
@@ -553,6 +575,41 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
     if (stages.some((s) => !s.name.trim())) {
       warning("Tahapan Tidak Valid", "Semua tahapan harus diisi");
       return;
+    }
+
+    const filledStages = stages.filter((s) => s.start_date);
+    for (let i = 1; i < filledStages.length; i++) {
+      if (
+        filledStages[i].start_date &&
+        filledStages[i - 1].start_date &&
+        new Date(filledStages[i].start_date) <
+          new Date(filledStages[i - 1].start_date)
+      ) {
+        const prev = new Date(
+          filledStages[i - 1].start_date,
+        ).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const curr = new Date(filledStages[i].start_date).toLocaleDateString(
+          "id-ID",
+          {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          },
+        );
+        warning(
+          "Urutan Tanggal Tidak Valid",
+          `"${filledStages[i].name}" dimulai ${curr}, lebih awal dari "${filledStages[i - 1].name}" yang dimulai ${prev}`,
+        );
+        return;
+      }
     }
 
     const allDocuments = [...documents, ...customDocuments];
@@ -581,6 +638,8 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
         name: s.name,
         stage_name: s.name,
         order_no: index + 1,
+        start_date: s.start_date || null,
+        end_date: s.end_date || null,
       })),
       faculties: eligibilityPayload.faculties,
       departments: eligibilityPayload.departments,
@@ -783,21 +842,51 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
               Urutan tahapan seleksi beasiswa (otomatis terurut)
             </p>
             {stages.map((stage, index) => (
-              <div key={stage.id} className="flex gap-2 mb-2 items-center">
-                <span className="text-sm font-medium text-gray-600 w-8">
+              <div key={stage.id} className="flex gap-2 mb-2 items-start">
+                <span className="text-sm font-medium text-gray-600 mt-2 w-8">
                   {index + 1}.
                 </span>
-                <input
-                  type="text"
-                  value={stage.name}
-                  onChange={(e) => updateStage(stage.id, e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  placeholder="Contoh: ADMINISTRASI, WAWANCARA, PENGUMUMAN"
-                />
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    value={stage.name}
+                    onChange={(e) =>
+                      updateStage(stage.id, "name", e.target.value)
+                    }
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    placeholder="Nama tahapan"
+                  />
+                  <input
+                    type="datetime-local"
+                    value={
+                      stage.start_date ? stage.start_date.slice(0, 16) : ""
+                    }
+                    onChange={(e) =>
+                      updateStage(
+                        stage.id,
+                        "start_date",
+                        e.target.value ? e.target.value + ":00" : "",
+                      )
+                    }
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="datetime-local"
+                    value={stage.end_date ? stage.end_date.slice(0, 16) : ""}
+                    onChange={(e) =>
+                      updateStage(
+                        stage.id,
+                        "end_date",
+                        e.target.value ? e.target.value + ":00" : "",
+                      )
+                    }
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  />
+                </div>
                 {stages.length > 1 && (
                   <button
                     onClick={() => removeStage(stage.id)}
-                    className="text-red-500 hover:text-red-700 px-2"
+                    className="text-red-500 hover:text-red-700 px-2 mt-2"
                   >
                     <DeleteOutlined />
                   </button>

@@ -39,6 +39,7 @@ const Login = () => {
         }
       } else {
         setError(res?.message || "Email atau kata sandi salah");
+        setLoading(false);
       }
     } catch (err) {
       console.error("Login error:", err);

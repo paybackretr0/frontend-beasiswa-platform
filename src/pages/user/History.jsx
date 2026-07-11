@@ -19,6 +19,7 @@ import {
   isDeadlinePassed as checkDeadlinePassed,
 } from "../../utils/timezone";
 import { SkeletonHistory } from "../../components/common/skeleton";
+import CelebrationOverlay from "../../components/CelebrationOverlay";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -41,6 +42,9 @@ const History = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [newAwardees, setNewAwardees] = useState([]);
+
   const { alerts, success, error, removeAlert } = useAlert();
 
   let user = null;
@@ -60,6 +64,31 @@ const History = () => {
       const data = await getUserApplications();
       setApplications(data || []);
       setFilteredData(data || []);
+
+      const awardeeApps = (data || []).filter(
+        (item) => item.status === "AWARDEE",
+      );
+      if (awardeeApps.length > 0) {
+        const seenIds = JSON.parse(
+          localStorage.getItem("seen_awardees") || "[]",
+        );
+        const unseenIds = awardeeApps.filter(
+          (a) => !seenIds.includes(a.id),
+        );
+
+        if (unseenIds.length > 0) {
+          const updated = [
+            ...seenIds,
+            ...unseenIds.map((a) => a.id),
+          ];
+          localStorage.setItem(
+            "seen_awardees",
+            JSON.stringify(updated),
+          );
+          setNewAwardees(unseenIds);
+          setShowCelebration(true);
+        }
+      }
     } catch (err) {
       console.error("Error fetching applications:", err);
       error("Gagal!", "Gagal memuat data riwayat pendaftaran");
@@ -157,6 +186,32 @@ const History = () => {
         ) : (
           <span className="text-gray-400 text-xs">Belum disubmit</span>
         ),
+    },
+    {
+      title: "Batas Daftar",
+      dataIndex: "deadline_pendaftaran",
+      key: "deadline_pendaftaran",
+      sorter: (a, b) => {
+        if (!a.deadline_pendaftaran) return 1;
+        if (!b.deadline_pendaftaran) return -1;
+        return new Date(a.deadline_pendaftaran) - new Date(b.deadline_pendaftaran);
+      },
+      render: (date) => {
+        if (!date) return <span className="text-gray-400 text-xs">-</span>;
+        const deadlinePassed = new Date(date) < new Date();
+        return (
+          <div className={`text-sm ${deadlinePassed ? "text-red-600" : "text-orange-600"}`}>
+            {new Date(date).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+            {deadlinePassed && (
+              <Tag color="red" className="ml-1 text-xs">Tutup</Tag>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "Status",
@@ -418,6 +473,13 @@ const History = () => {
                     role={role}
                   />
                 </div>
+
+                {showCelebration && newAwardees.length > 0 && (
+                  <CelebrationOverlay
+                    awardees={newAwardees}
+                    onDismiss={() => setShowCelebration(false)}
+                  />
+                )}
               </>
             )}
           </div>

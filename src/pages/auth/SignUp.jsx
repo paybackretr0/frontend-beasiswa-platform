@@ -225,6 +225,7 @@ const SignUp = () => {
           "Registrasi Gagal",
           res.message || "Terjadi kesalahan saat registrasi",
         );
+        setLoading(false);
       }
     } catch (err) {
       console.error("Registration error:", err);

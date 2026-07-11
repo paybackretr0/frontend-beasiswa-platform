@@ -164,7 +164,7 @@ const ScholarshipDetail = () => {
       ? logoPath.startsWith("http")
         ? logoPath
         : `${import.meta.env.VITE_IMAGE_URL}/${logoPath}`
-      : "https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=400&q=80";
+      : "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=600&auto=format&fit=crop";
 
   if (loading) {
     return (
@@ -511,13 +511,22 @@ const ScholarshipDetail = () => {
                             <Timeline>
                               {schema.stages
                                 .sort((a, b) => a.order_no - b.order_no)
-                                .map((stage) => (
-                                  <Timeline.Item key={stage.id}>
-                                    <span className="font-medium">
-                                      {stage.stage_name}
-                                    </span>
-                                  </Timeline.Item>
-                                ))}
+                                .map((stage) => {
+                                  const sf = (d) => d ? new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "";
+                                  const range = stage.start_date || stage.end_date
+                                    ? ` (${sf(stage.start_date)}${stage.start_date && stage.end_date ? " — " : ""}${sf(stage.end_date)})`
+                                    : "";
+                                  return (
+                                    <Timeline.Item key={stage.id}>
+                                      <span className="font-medium">
+                                        {stage.stage_name}
+                                      </span>
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        {range || "TBA"}
+                                      </span>
+                                    </Timeline.Item>
+                                  );
+                                })}
                             </Timeline>
                           ) : (
                             <Empty

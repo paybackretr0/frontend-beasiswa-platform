@@ -5,6 +5,7 @@ import {
   ExclamationCircleOutlined,
   ClockCircleOutlined,
   InfoCircleOutlined,
+  CloseCircleOutlined,
   SearchOutlined,
   FilterOutlined,
   SortAscendingOutlined,
@@ -16,6 +17,48 @@ import { fetchActiveScholarships } from "../services/scholarshipService";
 import { Link } from "react-router-dom";
 import EmptyInformation from "../assets/empty-state-news.svg";
 import { SkeletonScholarshipCard } from "../components/common/skeleton";
+
+const getCurrentUser = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) return null;
+    const parsedUser = JSON.parse(storedUser);
+    const student = parsedUser?.student || null;
+    return {
+      ...parsedUser,
+      faculty_id: parsedUser?.faculty_id || student?.faculty?.id || null,
+      department_id:
+        parsedUser?.department_id || student?.department?.id || null,
+      study_program_id:
+        parsedUser?.study_program_id || student?.study_program_id || null,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const isStudentEligibleForAnySchema = (user, schemas) => {
+  if (!user || !schemas || schemas.length === 0) return false;
+
+  return schemas.some((schema) => {
+    const facultyIds = new Set((schema.faculties || []).map((f) => f.id));
+    const departmentIds = new Set((schema.departments || []).map((d) => d.id));
+    const studyProgramIds = new Set(
+      (schema.study_programs || []).map((sp) => sp.id),
+    );
+
+    const hasRestriction =
+      facultyIds.size > 0 || departmentIds.size > 0 || studyProgramIds.size > 0;
+
+    if (!hasRestriction) return true;
+
+    return (
+      studyProgramIds.has(user.study_program_id) ||
+      departmentIds.has(user.department_id) ||
+      facultyIds.has(user.faculty_id)
+    );
+  });
+};
 
 const { Option } = Select;
 const { Search } = Input;
@@ -133,6 +176,32 @@ const Scholarship = () => {
   const remainingCount = filteredScholarships.length - displayCount;
   const hasMore = displayCount < filteredScholarships.length;
 
+  const [currentUser] = useState(() => getCurrentUser());
+
+  const getRegistrationInfo = (scholarship) => {
+    if (!scholarship.is_active) return { canRegister: false, reason: "tutup" };
+
+    const deadlinePassed =
+      scholarship.end_date && new Date(scholarship.end_date) < new Date();
+    if (deadlinePassed) return { canRegister: false, reason: "tutup" };
+
+    if (!currentUser) return { canRegister: false, reason: "not_logged_in" };
+
+    if (String(currentUser.role || "").toUpperCase() !== "MAHASISWA") {
+      return { canRegister: false, reason: "not_mahasiswa" };
+    }
+
+    const eligible = isStudentEligibleForAnySchema(
+      currentUser,
+      scholarship.schemas || [],
+    );
+
+    return {
+      canRegister: eligible,
+      reason: eligible ? "eligible" : "not_eligible",
+    };
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -157,10 +226,10 @@ const Scholarship = () => {
         ? logoPath
         : `${import.meta.env.VITE_IMAGE_URL}/${logoPath}`;
     }
-    return "https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=400&q=80";
+    return "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=600&auto=format&fit=crop";
   };
 
-  const getStatusTag = (isActive, endDate) => {
+  const getStatusTags = (isActive, endDate) => {
     if (!isActive) {
       return (
         <Tag color="red" icon={<ExclamationCircleOutlined />}>
@@ -172,7 +241,7 @@ const Scholarship = () => {
     if (!endDate) {
       return (
         <Tag color="green" icon={<CheckCircleOutlined />}>
-          Buka
+          Aktif
         </Tag>
       );
     }
@@ -189,17 +258,16 @@ const Scholarship = () => {
         </Tag>
       );
     }
-    if (diffDays <= 7) {
-      return (
+
+    return (
+      <>
+        <Tag color="green" icon={<CheckCircleOutlined />}>
+          Aktif
+        </Tag>
         <Tag color="orange" icon={<ClockCircleOutlined />}>
           Berakhir {diffDays} hari lagi
         </Tag>
-      );
-    }
-    return (
-      <Tag color="green" icon={<CheckCircleOutlined />}>
-        Aktif
-      </Tag>
+      </>
     );
   };
 
@@ -387,7 +455,7 @@ const Scholarship = () => {
                 >
                   <div className="mt-4 space-y-3">
                     <div className="flex flex-wrap gap-2">
-                      {getStatusTag(
+                      {getStatusTags(
                         scholarship.is_active,
                         scholarship.end_date,
                       )}
@@ -473,6 +541,35 @@ const Scholarship = () => {
                           </div>
                         </Tooltip>
                       )}
+
+                    {(() => {
+                      const info = getRegistrationInfo(scholarship);
+                      if (info.canRegister) {
+                        return (
+                          <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5 mt-2">
+                            <CheckCircleOutlined className="text-green-600" />
+                            <span>Kamu bisa mendaftar di beasiswa ini</span>
+                          </div>
+                        );
+                      }
+                      if (info.reason === "not_eligible") {
+                        return (
+                          <div className="flex items-center gap-1 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5 mt-2">
+                            <CloseCircleOutlined className="text-red-600" />
+                            <span>Tidak sesuai fakultas/prodi kamu</span>
+                          </div>
+                        );
+                      }
+                      if (info.reason === "not_logged_in") {
+                        return (
+                          <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 mt-2">
+                            <InfoCircleOutlined className="text-blue-600" />
+                            <span>Login untuk cek eligibility kamu</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
 
                     <div className="pt-2">
                       <Link

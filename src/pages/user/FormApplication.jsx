@@ -25,6 +25,7 @@ import {
   submitApplication,
   saveDraft,
   submitRevision,
+  getPreviousFiles,
 } from "../../services/pendaftaranService";
 import { getApplicationDetailUser } from "../../services/applicationService";
 import AlertContainer from "../../components/AlertContainer";
@@ -99,6 +100,8 @@ const FormApplication = () => {
 
   const [isRevisionMode, setIsRevisionMode] = useState(false);
   const [revisionApplicationId, setRevisionApplicationId] = useState(null);
+  const [previousFiles, setPreviousFiles] = useState([]);
+  const [usePreviousFile, setUsePreviousFile] = useState({});
 
   const { alerts, success, warning, error, removeAlert } = useAlert();
 
@@ -213,6 +216,9 @@ const FormApplication = () => {
         setAnswers(initialAnswers);
         document.title = `Daftar ${data.scholarship.name} - ${data.selected_schema.name}`;
       }
+
+      const prevFiles = await getPreviousFiles();
+      setPreviousFiles(prevFiles || []);
     } catch (err) {
       console.error("Error loading form:", err);
       error("Gagal!", err.message || "Gagal memuat form pendaftaran.");
@@ -479,7 +485,15 @@ const FormApplication = () => {
           </Checkbox.Group>
         );
 
-      case "FILE":
+      case "FILE": {
+        const normalizedLabel = field.label.trim().toLowerCase();
+        const matchingGroup = previousFiles.find((g) => {
+          const gl = (g.field_label || "").trim().toLowerCase();
+          return gl === normalizedLabel || gl.includes(normalizedLabel) || normalizedLabel.includes(gl);
+        });
+        const fieldPrevFiles = matchingGroup?.files?.slice(0, 5) || [];
+        const selectedPrevId = usePreviousFile[field.id];
+
         return (
           <div>
             <Upload
@@ -487,6 +501,10 @@ const FormApplication = () => {
               onChange={(info) => {
                 if (info.file) {
                   handleAnswerChange(field.id, info.file);
+                  setUsePreviousFile((prev) => ({
+                    ...prev,
+                    [field.id]: null,
+                  }));
                 }
               }}
               onRemove={() => {
@@ -520,8 +538,64 @@ const FormApplication = () => {
                 {value.size && ` (${(value.size / 1024 / 1024).toFixed(2)} MB)`}
               </div>
             )}
+
+            {fieldPrevFiles.length > 0 && !value && !selectedPrevId && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-xs font-medium text-gray-500 mb-2">
+                  ── Atau gunakan dari pendaftaran sebelumnya ──
+                </p>
+                <div className="space-y-1.5">
+                  {fieldPrevFiles.map((file) => (
+                    <label
+                      key={file.id}
+                      className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer border transition-colors ${
+                        selectedPrevId === file.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`prev_file_${field.id}`}
+                        checked={selectedPrevId === file.id}
+                        onChange={() => {
+                          setUsePreviousFile((prev) => ({
+                            ...prev,
+                            [field.id]: file.id,
+                          }));
+                          handleAnswerChange(field.id, {
+                            id: file.id,
+                            name: file.original_filename,
+                            path: file.file_path,
+                            mime_type: file.mime_type,
+                            isPrevious: true,
+                          });
+                        }}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {file.original_filename}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {file.scholarship_name}
+                          {file.schema_name ? ` - ${file.schema_name}` : ""}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {fieldPrevFiles.length === 0 && !value && !selectedPrevId && previousFiles.length > 0 && (
+              <div className="mt-2 text-xs text-gray-400 italic">
+                Tidak ada file "{field.label}" dari pendaftaran sebelumnya
+              </div>
+            )}
           </div>
         );
+      }
 
       default:
         return (
