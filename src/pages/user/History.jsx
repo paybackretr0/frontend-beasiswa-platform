@@ -72,19 +72,11 @@ const History = () => {
         const seenIds = JSON.parse(
           localStorage.getItem("seen_awardees") || "[]",
         );
-        const unseenIds = awardeeApps.filter(
-          (a) => !seenIds.includes(a.id),
-        );
+        const unseenIds = awardeeApps.filter((a) => !seenIds.includes(a.id));
 
         if (unseenIds.length > 0) {
-          const updated = [
-            ...seenIds,
-            ...unseenIds.map((a) => a.id),
-          ];
-          localStorage.setItem(
-            "seen_awardees",
-            JSON.stringify(updated),
-          );
+          const updated = [...seenIds, ...unseenIds.map((a) => a.id)];
+          localStorage.setItem("seen_awardees", JSON.stringify(updated));
           setNewAwardees(unseenIds);
           setShowCelebration(true);
         }
@@ -194,20 +186,31 @@ const History = () => {
       sorter: (a, b) => {
         if (!a.deadline_pendaftaran) return 1;
         if (!b.deadline_pendaftaran) return -1;
-        return new Date(a.deadline_pendaftaran) - new Date(b.deadline_pendaftaran);
+        return (
+          new Date(a.deadline_pendaftaran) - new Date(b.deadline_pendaftaran)
+        );
       },
       render: (date) => {
         if (!date) return <span className="text-gray-400 text-xs">-</span>;
         const deadlinePassed = new Date(date) < new Date();
         return (
-          <div className={`text-sm ${deadlinePassed ? "text-red-600" : "text-orange-600"}`}>
-            {new Date(date).toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
+          <div
+            className={`flex items-center gap-2 text-sm ${
+              deadlinePassed ? "text-red-600" : "text-orange-600"
+            }`}
+          >
+            <span>
+              {new Date(date).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+
             {deadlinePassed && (
-              <Tag color="red" className="ml-1 text-xs">Tutup</Tag>
+              <Tag color="red" className="text-xs m-0">
+                Tutup
+              </Tag>
             )}
           </div>
         );
