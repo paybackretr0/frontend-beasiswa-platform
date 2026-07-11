@@ -359,11 +359,15 @@ const History = () => {
   );
 
   const totalApplications = applications.length;
+  const awardeeCount = applications.filter(
+    (item) => item.status === "AWARDEE",
+  ).length;
   const validatedCount = applications.filter(
     (item) => item.status === "VALIDATED",
   ).length;
   const inProgressCount = applications.filter(
-    (item) => !["VALIDATED", "REJECTED", "DRAFT"].includes(item.status),
+    (item) =>
+      !["VALIDATED", "AWARDEE", "REJECTED", "DRAFT"].includes(item.status),
   ).length;
   const draftCount = applications.filter(
     (item) => item.status === "DRAFT",
@@ -392,7 +396,7 @@ const History = () => {
               <SkeletonHistory />
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
                   <Card className="text-center bg-white">
                     <div className="p-4">
                       <div className="text-2xl font-bold text-blue-600 mb-1">
@@ -407,6 +411,17 @@ const History = () => {
                   <Card className="text-center bg-white">
                     <div className="p-4">
                       <div className="text-2xl font-bold text-green-600 mb-1">
+                        {awardeeCount}
+                      </div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        Diterima
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="text-center bg-white">
+                    <div className="p-4">
+                      <div className="text-2xl font-bold text-emerald-600 mb-1">
                         {validatedCount}
                       </div>
                       <div className="text-xs text-gray-600 font-medium">
@@ -432,7 +447,7 @@ const History = () => {
                         {draftCount}
                       </div>
                       <div className="text-xs text-gray-600 font-medium">
-                        Draft Belum Selesai
+                        Draft
                       </div>
                     </div>
                   </Card>
