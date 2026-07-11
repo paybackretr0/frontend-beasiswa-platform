@@ -34,6 +34,14 @@ export const submitApplication = async (
     Object.keys(answers).forEach((fieldId) => {
       const answer = answers[fieldId];
 
+      if (answer && answer.isPrevious) {
+        answersData[fieldId] = {
+          file_path: answer.path,
+          mime_type: answer.mime_type || null,
+        };
+        return;
+      }
+
       if (answer instanceof File) {
         formData.append(`field_${fieldId}`, answer);
         answersData[fieldId] = {
@@ -57,8 +65,15 @@ export const submitApplication = async (
     });
 
     formData.append("answers", JSON.stringify(answersData));
-    formData.append("schemaId", schemaId); // ✅ ADD schema ID
+    formData.append("schemaId", schemaId);
     formData.append("isDraft", isDraft.toString());
+
+    Object.keys(answers).forEach((fieldId) => {
+      const answer = answers[fieldId];
+      if (answer && answer.isPrevious && answer.id) {
+        formData.append(`use_previous_file_${fieldId}`, answer.id);
+      }
+    });
 
     const response = await authFetch(
       `${API_BASE_URL}/pendaftaran/scholarship/${scholarshipId}/submit`,
@@ -81,6 +96,25 @@ export const submitApplication = async (
 
 export const saveDraft = async (scholarshipId, schemaId, answers) => {
   return submitApplication(scholarshipId, schemaId, answers, true);
+};
+
+export const getPreviousFiles = async () => {
+  try {
+    const response = await authFetch(
+      `${API_BASE_URL}/pendaftaran/previous-files`,
+    );
+
+    if (!response.success) {
+      throw new Error(
+        response.message || "Gagal mengambil file sebelumnya",
+      );
+    }
+
+    return response.data.files;
+  } catch (error) {
+    console.error("Error fetching previous files:", error);
+    return [];
+  }
 };
 
 export const submitRevision = async (applicationId, answers) => {

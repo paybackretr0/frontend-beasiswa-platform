@@ -563,7 +563,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       if (r.type === "TEXT") {
         return r.text.trim() !== "";
       } else {
-        return r.file !== null;
+        return r.file !== null || r.existingFile;
       }
     });
 
