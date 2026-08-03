@@ -1,13 +1,32 @@
-# Use Nginx directly (no build stage)
+# ---------- Stage 1: Build ----------
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Vite inlines env vars at build time, so they must be present before `npm run build`
+ARG VITE_API_URL
+ARG VITE_IMAGE_URL
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_IMAGE_URL=$VITE_IMAGE_URL
+
+# Install dependencies first so this layer is cached unless the lockfile changes
+COPY package*.json ./
+RUN npm ci
+
+# Copy source (node_modules and dist are excluded by .dockerignore)
+COPY . .
+
+RUN npm run build
+
+# ---------- Stage 2: Serve ----------
 FROM nginx:alpine
 
-# Copy pre-built files from local dist folder
-COPY dist /usr/share/nginx/html
+# Copy build output from the builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Set permissions
 RUN chmod -R 755 /usr/share/nginx/html
 
 EXPOSE 80
