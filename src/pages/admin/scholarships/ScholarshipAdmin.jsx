@@ -53,6 +53,7 @@ const ScholarshipAdmin = () => {
         penyedia: item.organizer || "Tidak Diketahui",
         tahun: item.year,
         status: item.is_active ? "Aktif" : "Nonaktif",
+        rawEndDate: item.end_date,
         batasWaktu: item.end_date ? formatDate(item.end_date) : "Tidak Ada",
         is_external: item.is_external,
         jenis: item.is_external ? "Eksternal" : "Internal",
@@ -170,6 +171,12 @@ const ScholarshipAdmin = () => {
       dataIndex: "batasWaktu",
       key: "batasWaktu",
       width: "15%",
+      sorter: (a, b) => {
+        if (!a.rawEndDate && !b.rawEndDate) return 0;
+        if (!a.rawEndDate) return 1;
+        if (!b.rawEndDate) return -1;
+        return new Date(a.rawEndDate) - new Date(b.rawEndDate);
+      },
     },
     createActionColumn(
       [
