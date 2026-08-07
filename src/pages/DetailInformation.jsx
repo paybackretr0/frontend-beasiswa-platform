@@ -17,7 +17,7 @@ import {
   getInformationBySlug,
   getLatestInformation,
 } from "../services/websiteService";
-import AlertContainer from "../components/AlertContainer";
+
 import useAlert from "../hooks/useAlert";
 import { SkeletonDetailInformation } from "../components/common/skeleton";
 
@@ -29,7 +29,7 @@ const DetailInformation = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { alerts, success, error: alertError, removeAlert } = useAlert();
+  const { success, error: alertError } = useAlert();
 
   useEffect(() => {
     loadInformationDetail();
@@ -78,11 +78,7 @@ const DetailInformation = () => {
   if (loading) {
     return (
       <GuestLayout>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonDetailInformation />
       </GuestLayout>
     );
@@ -91,11 +87,7 @@ const DetailInformation = () => {
   if (error && !information) {
     return (
       <GuestLayout>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
           <div className="flex justify-center items-center min-h-96">
             <div className="text-center max-w-md">
@@ -138,11 +130,7 @@ const DetailInformation = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <GuestLayout>
         <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">

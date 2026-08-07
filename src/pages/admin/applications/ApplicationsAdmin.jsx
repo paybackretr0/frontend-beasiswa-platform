@@ -28,7 +28,7 @@ import {
   requestRevisionByValidator,
 } from "../../../services/validatorService";
 import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import RevisionRejectModal from "../../../components/RevisionRejectModal";
 import UniversalModal from "../../../components/Modal";
@@ -72,8 +72,7 @@ const ApplicationsAdmin = () => {
   const [awardeeLoading, setAwardeeLoading] = useState(false);
   const [awardeeConfirmVisible, setAwardeeConfirmVisible] = useState(false);
 
-  const { alerts, success, error, removeAlert, clearAlerts, warning } =
-    useAlert();
+  const { success, error, clearAlerts, warning } = useAlert();
 
   let user = null;
   try {
@@ -658,11 +657,7 @@ const ApplicationsAdmin = () => {
   if (loading && summaryLoading) {
     return (
       <div className="space-y-6">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         {(role === "VERIFIKATOR_FAKULTAS" ||
           role === "VERIFIKATOR_DITMAWA") && (
@@ -695,11 +690,7 @@ const ApplicationsAdmin = () => {
 
   return (
     <div className="space-y-6">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       {(role === "VERIFIKATOR_FAKULTAS" || role === "VERIFIKATOR_DITMAWA") && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

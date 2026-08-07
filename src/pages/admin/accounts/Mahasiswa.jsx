@@ -5,7 +5,7 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import {
   EditOutlined,
@@ -38,7 +38,7 @@ const Mahasiswa = () => {
   const [departments, setDepartments] = useState([]);
   const [studyPrograms, setStudyPrograms] = useState([]);
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const fetchMahasiswa = async () => {
     setLoading(true);
@@ -327,11 +327,7 @@ const Mahasiswa = () => {
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonAccount />
       </>
     );
@@ -339,11 +335,7 @@ const Mahasiswa = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <UniversalTable
         title="Kelola Mahasiswa"
         data={mahasiswaData}

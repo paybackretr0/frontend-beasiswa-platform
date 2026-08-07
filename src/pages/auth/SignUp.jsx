@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
-import AuthImg from "../../assets/auth.png";
+import AuthImg from "../../assets/auth.webp";
 import Button from "../../components/Button";
 import useAlert from "../../hooks/useAlert";
 import { register } from "../../services/authService";
 import { getPublicFaculties } from "../../services/facultyService";
 import { getDepartmentsByFaculty } from "../../services/departmentService";
 import { getStudyProgramsByDepartment } from "../../services/studyProgramService";
-import AlertContainer from "../../components/AlertContainer";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { success, error, alerts, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const [form, setForm] = useState({
     full_name: "",
@@ -247,11 +246,7 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen flex">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="hidden lg:block w-0 lg:w-[60%] relative">
         <img

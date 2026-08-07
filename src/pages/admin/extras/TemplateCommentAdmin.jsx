@@ -10,7 +10,7 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { SkeletonTable } from "../../../components/common/skeleton";
 import {
@@ -39,7 +39,7 @@ const TemplateCommentAdmin = () => {
     status: "Semua",
   });
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   useEffect(() => {
     document.title = "Template Komentar - Admin";
@@ -317,11 +317,7 @@ const TemplateCommentAdmin = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
@@ -354,11 +350,7 @@ const TemplateCommentAdmin = () => {
 
   return (
     <div className="space-y-6">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">

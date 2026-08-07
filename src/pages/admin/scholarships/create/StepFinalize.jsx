@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Button from "../../../../components/Button";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
+
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
 const StepFinalize = ({
@@ -34,7 +34,7 @@ const StepFinalize = ({
       : [{ id: 1, text: "" }],
   );
 
-  const { warning, alerts, removeAlert } = useAlert();
+  const { warning } = useAlert();
 
   useEffect(() => {
     setFormData({
@@ -166,11 +166,7 @@ const StepFinalize = ({
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="mb-6">
         <p className="text-sm text-gray-500">

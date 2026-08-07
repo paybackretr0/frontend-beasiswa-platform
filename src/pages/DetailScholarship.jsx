@@ -38,7 +38,7 @@ import {
   getOtherScholarships,
 } from "../services/scholarshipService";
 import useAlert from "../hooks/useAlert";
-import AlertContainer from "../components/AlertContainer";
+
 import { SkeletonDetailScholarship } from "../components/common/skeleton";
 
 const getCurrentUser = () => {
@@ -77,7 +77,7 @@ const DetailScholarship = () => {
     studyPrograms: false,
   });
 
-  const { alerts, removeAlert, warning, error: alertError } = useAlert();
+  const { warning, error: alertError } = useAlert();
 
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -975,11 +975,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   if (loading) {
     return (
       <GuestLayout>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonDetailScholarship />
       </GuestLayout>
     );
@@ -988,11 +984,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   if (error && !scholarship) {
     return (
       <GuestLayout>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
           <div className="flex justify-center items-center min-h-96">
             <div className="text-center max-w-md">
@@ -1036,11 +1028,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   return (
     <>
       <GuestLayout>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">

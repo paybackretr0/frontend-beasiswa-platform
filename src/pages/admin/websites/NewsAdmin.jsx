@@ -19,7 +19,7 @@ import {
   publishInformation,
   archiveInformation,
 } from "../../../services/websiteService";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { SkeletonTable } from "../../../components/common/skeleton";
 
@@ -36,7 +36,7 @@ const NewsAdmin = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const { alerts, success, error, removeAlert, warning } = useAlert();
+  const { success, error, warning } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Berita - Admin";
@@ -339,11 +339,7 @@ const NewsAdmin = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-6">
@@ -364,11 +360,7 @@ const NewsAdmin = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <UniversalTable
         title="Kelola Berita"
         data={newsData}

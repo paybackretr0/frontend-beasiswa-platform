@@ -25,7 +25,7 @@ import {
   getGovernmentScholarshipCategories,
   getGovernmentScholarshipYearlyTrend,
 } from "../../services/governmentService";
-import AlertContainer from "../../components/AlertContainer";
+
 import useAlert from "../../hooks/useAlert";
 import { SkeletonDashboard } from "../../components/common/skeleton";
 
@@ -54,7 +54,7 @@ const AdminDashboard = () => {
   const [govYearlyData, setGovYearlyData] = useState([]);
   const [statusData, setStatusData] = useState([]);
 
-  const { alerts, error, removeAlert } = useAlert();
+  const { error } = useAlert();
 
   let user = null;
   try {
@@ -285,11 +285,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
-      <AlertContainer
-        alerts={alerts}
-        removeAlert={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">

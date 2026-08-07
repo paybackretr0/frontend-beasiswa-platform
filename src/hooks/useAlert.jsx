@@ -1,36 +1,59 @@
-import { useState } from "react";
+import { toast } from "sonner";
+
+// useAlert now wraps Sonner (modern minimal toast library).
+// API-nya dipertahankan sama persis dengan versi custom lama,
+// jadi semua halaman (30+) yang memanggil success/error/warning/info
+// langsung otomatis memakai toast Sonner tanpa diubah satu pun.
+//
+// Rendering toast dilakukan oleh <Toaster /> yang dipasang di App.jsx.
+
+const typeMap = {
+  success: toast.success,
+  error: toast.error,
+  warning: toast.warning,
+  info: toast.info,
+};
 
 const useAlert = () => {
-  const [alerts, setAlerts] = useState([]);
-
   const showAlert = (type, title, message, options = {}) => {
-    const id = Date.now() + Math.random();
-    const alert = {
-      id,
-      type,
-      title,
-      message,
-      duration: options.duration || 4000,
-      ...options,
-    };
+    const { duration = 4000, ...rest } = options;
 
-    setAlerts((prev) => [...prev, alert]);
+    const render = typeMap[type] || toast;
 
-    if (alert.duration > 0) {
-      setTimeout(() => {
-        removeAlert(id);
-      }, alert.duration);
-    }
+    // `duration <= 0` berarti tahan sampai ditutup manual
+    const id = render(title, {
+      description: message || undefined,
+      duration: duration > 0 ? duration : Infinity,
+      ...rest,
+    });
 
     return id;
   };
 
-  const removeAlert = (id) => {
-    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  const clearAlerts = () => {
+    toast.dismiss();
   };
 
-  const clearAlerts = () => {
-    setAlerts([]);
+  /**
+   * Toast untuk operasi async: 1 toast berpindah otomatis
+   * loading -> success/error mengikuti hasil promise.
+   *
+   * @param {Promise} promiseFn - promise hasil operasi async
+   * @param {{loading?: string|Function, success?: string|Function, error?: string|Function}} [messages]
+   */
+  const promise = (promiseFn, messages = {}) => {
+    const {
+      loading = "Memproses...",
+      success = "Berhasil!",
+      error = "Gagal",
+    } = messages;
+
+    return toast.promise(promiseFn, {
+      loading,
+      success,
+      error: (err) =>
+        typeof error === "function" ? error(err) : err?.message || error,
+    });
   };
 
   const success = (title, message, options) =>
@@ -46,9 +69,8 @@ const useAlert = () => {
     showAlert("info", title, message, options);
 
   return {
-    alerts,
     showAlert,
-    removeAlert,
+    promise,
     clearAlerts,
     success,
     error,

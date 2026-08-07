@@ -28,7 +28,7 @@ import {
   getPreviousFiles,
 } from "../../services/pendaftaranService";
 import { getApplicationDetailUser } from "../../services/applicationService";
-import AlertContainer from "../../components/AlertContainer";
+
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
 import { SkeletonFormApplication } from "../../components/common/skeleton";
@@ -103,7 +103,7 @@ const FormApplication = () => {
   const [previousFiles, setPreviousFiles] = useState([]);
   const [usePreviousFile, setUsePreviousFile] = useState({});
 
-  const { alerts, success, warning, error, removeAlert } = useAlert();
+  const { success, warning, error } = useAlert();
 
   useEffect(() => {
     loadForm();
@@ -682,11 +682,7 @@ const FormApplication = () => {
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <GuestLayout>
           <SkeletonFormApplication fieldCount={5} />
         </GuestLayout>
@@ -741,11 +737,7 @@ const FormApplication = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <GuestLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
           {isRevisionMode && (

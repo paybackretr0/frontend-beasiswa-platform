@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Button from "../../../../components/Button";
 import SchemaFormModal from "../create/SchemaFormModal";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
+
 import {
   DeleteOutlined,
   EditOutlined,
@@ -12,7 +12,7 @@ import {
 } from "@ant-design/icons";
 
 const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
-  const { warning, success: successAlert, alerts, removeAlert } = useAlert();
+  const { warning, success: successAlert } = useAlert();
   const [schemas, setSchemas] = useState(initialData.schemas || []);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSchema, setEditingSchema] = useState(null);
@@ -135,11 +135,7 @@ const EditStepSchemas = ({ onNext, onBack, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="mb-6">
         <p className="text-sm text-gray-500">

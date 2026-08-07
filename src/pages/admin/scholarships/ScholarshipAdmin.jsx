@@ -15,7 +15,7 @@ import {
   deactivateScholarship,
   activateScholarship,
 } from "../../../services/scholarshipService";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { useNavigate } from "react-router-dom";
 import { SkeletonTable } from "../../../components/common/skeleton";
@@ -25,7 +25,7 @@ const ScholarshipAdmin = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Beasiswa - Admin";
@@ -211,11 +211,7 @@ const ScholarshipAdmin = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-6">
@@ -236,11 +232,7 @@ const ScholarshipAdmin = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <UniversalTable
         title="Kelola Beasiswa"
         data={scholarships}

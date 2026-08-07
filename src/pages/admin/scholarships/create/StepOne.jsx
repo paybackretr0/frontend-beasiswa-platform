@@ -1,10 +1,9 @@
 import { useState } from "react";
 import Button from "../../../../components/Button";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
 
 const StepOne = ({ onNext, initialData = {} }) => {
-  const { warning, alerts, removeAlert } = useAlert();
+  const { warning } = useAlert();
   const [formData, setFormData] = useState({
     name: initialData.name || "",
     organizer: initialData.organizer || "",
@@ -70,11 +69,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           Tambah Beasiswa Baru

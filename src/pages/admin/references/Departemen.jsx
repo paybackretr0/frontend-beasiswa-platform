@@ -18,7 +18,7 @@ import {
   deactivateDepartment,
 } from "../../../services/departmentService";
 import { getFaculties } from "../../../services/facultyService";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { SkeletonTable } from "../../../components/common/skeleton";
 
@@ -36,7 +36,7 @@ const Departemen = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Departemen - Admin";
@@ -206,11 +206,7 @@ const Departemen = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-6">
@@ -300,11 +296,7 @@ const Departemen = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <UniversalTable
         title="Kelola Departemen"
         data={filteredDepartments}

@@ -4,7 +4,6 @@ import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import { changePassword } from "../../services/authService";
 import Button from "../../components/Button";
 import useAlert from "../../hooks/useAlert";
-import AlertContainer from "../../components/AlertContainer";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -21,7 +20,7 @@ const ChangePassword = () => {
     confirm: false,
   });
 
-  const { success, error, alerts, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -68,11 +67,7 @@ const ChangePassword = () => {
 
   return (
     <div className="flex items-center justify-center">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
           Ubah Password

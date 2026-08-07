@@ -8,7 +8,7 @@ import {
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import UniversalModal from "../../../components/Modal";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { getAllBackups, createBackup } from "../../../services/extraService";
 import { SkeletonBackup } from "../../../components/common/skeleton";
@@ -21,7 +21,7 @@ const BackupAdmin = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const pageSize = 6;
 
-  const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
+  const { success, error, info, clearAlerts, promise } = useAlert();
 
   useEffect(() => {
     document.title = "Backup Data - Admin";
@@ -45,22 +45,20 @@ const BackupAdmin = () => {
     setIsCreatingBackup(true);
     const backupTypeText = values.backupType === "excel" ? "Excel" : "SQL";
 
-    info("Membuat Backup", `Sedang membuat backup ${backupTypeText}...`);
+    const backupPromise = createBackup(values.backupType);
+    promise(backupPromise, {
+      loading: `Membuat backup ${backupTypeText}...`,
+      success: `Backup ${backupTypeText} berhasil dibuat`,
+      error: (err) => err.message || `Gagal membuat backup ${backupTypeText}`,
+    });
 
     try {
-      await createBackup(values.backupType);
-      clearAlerts();
-      success("Berhasil!", `Backup ${backupTypeText} berhasil dibuat`);
-
+      await backupPromise;
       setModalVisible(false);
       await fetchBackups();
     } catch (err) {
       console.error("Error creating backup:", err);
-      clearAlerts();
-      error(
-        "Gagal Membuat Backup",
-        err.message || `Gagal membuat backup ${backupTypeText}`,
-      );
+      // Toast error sudah ditampilkan otomatis oleh toast.promise
     } finally {
       setIsCreatingBackup(false);
     }
@@ -121,11 +119,7 @@ const BackupAdmin = () => {
 
   return (
     <div>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="flex justify-between items-center mb-6">
         <div>

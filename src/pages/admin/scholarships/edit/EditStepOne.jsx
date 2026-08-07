@@ -3,7 +3,6 @@ import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../../../../components/Button";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
 
 const EditStepOne = ({ onNext, initialData = {} }) => {
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
     initialData.existingLogo || null,
   );
 
-  const { warning, alerts, removeAlert } = useAlert();
+  const { warning } = useAlert();
 
   useEffect(() => {
     setFormData({
@@ -103,11 +102,7 @@ const EditStepOne = ({ onNext, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="mb-6 flex items-center gap-2">
         <button

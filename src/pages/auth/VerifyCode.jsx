@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import AuthImg from "../../assets/auth.png";
+import AuthImg from "../../assets/auth.webp";
 import Button from "../../components/Button";
 import useAlert from "../../hooks/useAlert";
-import AlertContainer from "../../components/AlertContainer";
+
 import {
   verifyEmail,
   resendVerificationCode,
@@ -12,7 +12,7 @@ import {
 const VerifyCode = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { success, error, alerts, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const [form, setForm] = useState({
     email: "",
@@ -115,11 +115,7 @@ const VerifyCode = () => {
 
   return (
     <div className="min-h-screen flex">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="hidden md:block w-0 md:w-[70%] relative">
         <img
           src={AuthImg}

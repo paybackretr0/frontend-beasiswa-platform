@@ -8,7 +8,7 @@ import {
   getBeasiswaById,
 } from "../../../../services/scholarshipService";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
+
 import { SkeletonScholarshipEdit } from "../../../../components/common/skeleton";
 
 const ScholarshipEdit = () => {
@@ -18,7 +18,7 @@ const ScholarshipEdit = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
 
-  const { success, error, alerts, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const [scholarshipData, setScholarshipData] = useState({
     name: "",
@@ -167,11 +167,7 @@ const ScholarshipEdit = () => {
   if (initialLoading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonScholarshipEdit step={currentStep} />
       </>
     );
@@ -179,11 +175,7 @@ const ScholarshipEdit = () => {
 
   return (
     <div>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       {currentStep === 1 && (
         <EditStepOne onNext={handleNext} initialData={scholarshipData} />

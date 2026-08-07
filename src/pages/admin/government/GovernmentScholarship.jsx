@@ -45,7 +45,7 @@ import {
   validateGovernmentScholarshipFile,
   importGovernmentScholarships,
 } from "../../../services/governmentService";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import {
   SkeletonCard,
@@ -97,7 +97,7 @@ const GovernmentScholarship = () => {
     programs: ["Semua"],
   });
 
-  const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
+  const { success, error, info, clearAlerts } = useAlert();
 
   useEffect(() => {
     document.title = "Beasiswa APBN - Admin";
@@ -629,11 +629,7 @@ const GovernmentScholarship = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="flex justify-between items-center">
           <div>
@@ -693,11 +689,7 @@ const GovernmentScholarship = () => {
 
   return (
     <div className="space-y-6">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <ExportLoadingModal visible={exportLoading} />
 

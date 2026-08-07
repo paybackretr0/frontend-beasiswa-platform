@@ -23,7 +23,7 @@ import {
   updateProfile,
   changePassword,
 } from "../../services/authService";
-import AlertContainer from "../../components/AlertContainer";
+
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
 import { SkeletonProfile } from "../../components/common/skeleton";
@@ -69,7 +69,7 @@ const Profile = () => {
   const [originalFormData, setOriginalFormData] = useState({});
   const [errors, setErrors] = useState({});
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const togglePassword = (field) => {
     setShowPassword((prev) => ({
@@ -299,11 +299,7 @@ const Profile = () => {
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <GuestLayout>
           <div className="min-h-screen py-8">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -323,11 +319,7 @@ const Profile = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <GuestLayout>
         <div className="min-h-screen py-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

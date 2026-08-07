@@ -5,7 +5,7 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import {
   EditOutlined,
@@ -32,7 +32,7 @@ const Validator = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const fetchValidator = async () => {
     setLoading(true);
@@ -211,11 +211,7 @@ const Validator = () => {
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonAccount />
       </>
     );
@@ -223,11 +219,7 @@ const Validator = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <UniversalTable
         title="Kelola Validator"
         data={ValidatorData}

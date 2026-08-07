@@ -11,13 +11,12 @@ import {
   verifyEmail,
 } from "../../services/authService";
 import useAlert from "../../hooks/useAlert";
-import AlertContainer from "../../components/AlertContainer";
 
 const EmailVerificationPrompt = ({ userEmail, onVerificationSuccess }) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const { success, error, alerts, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const handleResendCode = async () => {
     try {
@@ -65,11 +64,7 @@ const EmailVerificationPrompt = ({ userEmail, onVerificationSuccess }) => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <div className="text-center mb-6">
