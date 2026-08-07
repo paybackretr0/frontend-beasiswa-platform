@@ -59,6 +59,15 @@ const StepOne = ({ onNext, initialData = {} }) => {
       return;
     }
 
+    const currentYear = new Date().getFullYear();
+    if (formData.year < 2000 || formData.year > currentYear + 1) {
+      warning(
+        "Tahun Tidak Valid",
+        `Tahun beasiswa harus antara 2000 hingga ${currentYear + 1}`,
+      );
+      return;
+    }
+
     const stepData = {
       ...formData,
       logoFile: logoFile,
@@ -209,7 +218,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
               onChange={(e) =>
                 handleInputChange("year", parseInt(e.target.value))
               }
-              min="2024"
+              min="2000"
               max={new Date().getFullYear() + 1}
               className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
             />

@@ -576,6 +576,20 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       return;
     }
 
+    for (let i = 0; i < stages.length; i++) {
+      if (
+        stages[i].start_date &&
+        stages[i].end_date &&
+        new Date(stages[i].end_date) < new Date(stages[i].start_date)
+      ) {
+        warning(
+          "Tanggal Berakhir Tidak Valid",
+          `Pada tahapan "${stages[i].name}", tanggal berakhir tidak boleh mendahului tanggal mulai.`,
+        );
+        return;
+      }
+    }
+
     const filledStages = stages.filter((s) => s.start_date);
     for (let i = 1; i < filledStages.length; i++) {
       if (
