@@ -1,10 +1,9 @@
 import { useState } from "react";
 import Button from "../../../../components/Button";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
 
 const StepOne = ({ onNext, initialData = {} }) => {
-  const { warning, alerts, removeAlert } = useAlert();
+  const { warning } = useAlert();
   const [formData, setFormData] = useState({
     name: initialData.name || "",
     organizer: initialData.organizer || "",
@@ -60,6 +59,15 @@ const StepOne = ({ onNext, initialData = {} }) => {
       return;
     }
 
+    const currentYear = new Date().getFullYear();
+    if (formData.year < 2000 || formData.year > currentYear + 1) {
+      warning(
+        "Tahun Tidak Valid",
+        `Tahun beasiswa harus antara 2000 hingga ${currentYear + 1}`,
+      );
+      return;
+    }
+
     const stepData = {
       ...formData,
       logoFile: logoFile,
@@ -70,11 +78,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           Tambah Beasiswa Baru
@@ -214,7 +218,7 @@ const StepOne = ({ onNext, initialData = {} }) => {
               onChange={(e) =>
                 handleInputChange("year", parseInt(e.target.value))
               }
-              min="2024"
+              min="2000"
               max={new Date().getFullYear() + 1}
               className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
             />

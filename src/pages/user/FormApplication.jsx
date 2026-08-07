@@ -28,8 +28,9 @@ import {
   getPreviousFiles,
 } from "../../services/pendaftaranService";
 import { getApplicationDetailUser } from "../../services/applicationService";
-import AlertContainer from "../../components/AlertContainer";
+
 import useAlert from "../../hooks/useAlert";
+import { getProfileCompleteness } from "../../utils/profileUtils";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
 import { SkeletonFormApplication } from "../../components/common/skeleton";
 
@@ -103,7 +104,7 @@ const FormApplication = () => {
   const [previousFiles, setPreviousFiles] = useState([]);
   const [usePreviousFile, setUsePreviousFile] = useState({});
 
-  const { alerts, success, warning, error, removeAlert } = useAlert();
+  const { success, warning, error } = useAlert();
 
   useEffect(() => {
     loadForm();
@@ -172,6 +173,25 @@ const FormApplication = () => {
         document.title = `Revisi Pendaftaran ${formData.scholarship.name}`;
       } else {
         const data = await getScholarshipForm(scholarshipId, schemaIdFromUrl);
+
+        // Profil harus lengkap dulu sebelum mendaftar baru (anti-bypass via URL
+        // langsung). Tidak diterapkan bila sudah punya pendaftaran (draft/status).
+        if (!data.has_existing_application) {
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          const { complete: isProfileComplete, missing: missingFields } =
+            getProfileCompleteness(storedUser);
+
+          if (!isProfileComplete) {
+            warning(
+              "Lengkapi Profil",
+              `Lengkapi data berikut terlebih dahulu: ${missingFields
+                .map((f) => f.label)
+                .join(", ")}`,
+            );
+            navigate(`/scholarship/${scholarshipId}`);
+            return;
+          }
+        }
 
         setScholarship(data.scholarship);
         setSelectedSchema(data.selected_schema);
@@ -682,11 +702,7 @@ const FormApplication = () => {
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <GuestLayout>
           <SkeletonFormApplication fieldCount={5} />
         </GuestLayout>
@@ -741,11 +757,7 @@ const FormApplication = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <GuestLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
           {isRevisionMode && (

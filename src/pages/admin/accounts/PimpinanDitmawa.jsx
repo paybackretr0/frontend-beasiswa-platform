@@ -5,7 +5,7 @@ import UniversalTable, {
   createActionColumn,
 } from "../../../components/Table";
 import UniversalModal from "../../../components/Modal";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import {
   EditOutlined,
@@ -32,7 +32,7 @@ const PimpinanDitmawa = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const fetchPimpinanDitmawa = async () => {
     setLoading(true);
@@ -214,11 +214,7 @@ const PimpinanDitmawa = () => {
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonAccount />
       </>
     );
@@ -226,11 +222,7 @@ const PimpinanDitmawa = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <UniversalTable
         title="Kelola Pimpinan Ditmawa"
         data={pimpinanDitmawaData}

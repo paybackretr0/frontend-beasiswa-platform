@@ -39,14 +39,13 @@ import {
 import { getApplicationDetail } from "../../../services/applicationService";
 import { fetchActiveScholarships } from "../../../services/scholarshipService";
 import ApplicationDetailModal from "../../../components/ApplicationDetailModal";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import {
   SkeletonCard,
   SkeletonChart,
   SkeletonTable,
 } from "../../../components/common/skeleton";
-import ExportLoadingModal from "../../../components/ExportLoadingModal";
 
 const { Option } = Select;
 
@@ -70,7 +69,6 @@ const ReportsAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [chartsLoading, setChartsLoading] = useState(true);
 
-  const [exportLoading, setExportLoading] = useState(false);
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [exportMode, setExportMode] = useState("ALL");
   const [exportScholarships, setExportScholarships] = useState([]);
@@ -95,7 +93,7 @@ const ReportsAdmin = () => {
   const [tahunData, setTahunData] = useState([]);
   const [genderData, setGenderData] = useState([]);
 
-  const [pendaftarData, setPendaftarData] = useState([]);
+  const [, setPendaftarData] = useState([]);
   const [filteredPendaftar, setFilteredPendaftar] = useState([]);
 
   const [monthlyData, setMonthlyData] = useState([]);
@@ -106,7 +104,7 @@ const ReportsAdmin = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const { alerts, success, error, removeAlert, info, clearAlerts } = useAlert();
+  const { success, error, info, promise } = useAlert();
 
   const [filters, setFilters] = useState({
     fakultas: "Semua",
@@ -404,10 +402,10 @@ const ReportsAdmin = () => {
 
     try {
       setExportModalVisible(false);
-      setExportLoading(true);
 
+      let exportPromise;
       if (exportMode === "ALL") {
-        await exportLaporanBeasiswa(selectedYear);
+        exportPromise = exportLaporanBeasiswa(selectedYear);
       } else {
         const selectedScholarshipObj = exportScholarships.find(
           (scholarship) => scholarship.id === selectedExportScholarship,
@@ -431,7 +429,7 @@ const ReportsAdmin = () => {
         if (schemaName) fileNameParts.push(schemaName);
         if (yearPart) fileNameParts.push(yearPart);
 
-        await exportLaporanPendaftar({
+        exportPromise = exportLaporanPendaftar({
           year: selectedYear,
           scholarshipId: selectedExportScholarship || null,
           schemaId:
@@ -440,13 +438,16 @@ const ReportsAdmin = () => {
         });
       }
 
-      setTimeout(() => {
-        setExportLoading(false);
-        success("Berhasil!", "Laporan berhasil diexport!");
-      }, 1200);
+      promise(exportPromise, {
+        loading: "Mengekspor laporan...",
+        success: "Laporan berhasil diexport!",
+        error: (err) => err.message || "Gagal mengekspor data pendaftar",
+      });
+
+      await exportPromise;
     } catch (err) {
-      setExportLoading(false);
-      error("Gagal", err.message || "Gagal mengekspor data pendaftar");
+      console.error("Error exporting report:", err);
+      // Toast error sudah ditampilkan otomatis oleh toast.promise
     }
   };
 
@@ -473,13 +474,16 @@ const ReportsAdmin = () => {
 
   const handleDownloadImportTemplate = async () => {
     try {
-      setExportLoading(true);
-      await downloadRecipientImportTemplate();
-      success("Berhasil!", "Template import penerima berhasil diunduh");
+      const templatePromise = downloadRecipientImportTemplate();
+      promise(templatePromise, {
+        loading: "Mengunduh template import...",
+        success: "Template import penerima berhasil diunduh",
+        error: (err) => err.message || "Gagal mengunduh template import",
+      });
+
+      await templatePromise;
     } catch (err) {
-      error("Gagal", err.message || "Gagal mengunduh template import");
-    } finally {
-      setExportLoading(false);
+      console.error("Error downloading import template:", err);
     }
   };
 
@@ -574,17 +578,21 @@ const ReportsAdmin = () => {
       formData.append("schemaId", selectedImportSchema);
 
       setImportLoading(true);
-      const result = await importScholarshipRecipients(formData);
+      const importPromise = importScholarshipRecipients(formData);
 
-      success(
-        "Import Berhasil",
-        `${result.created_applications} data baru, ${result.updated_applications} data diperbarui, ${result.created_dummy_users} akun dummy dibuat`,
-      );
+      promise(importPromise, {
+        loading: "Mengimpor data penerima...",
+        success: (result) =>
+          `${result.created_applications} data baru, ${result.updated_applications} data diperbarui, ${result.created_dummy_users} akun dummy dibuat`,
+        error: (err) => err.message || "Gagal mengimpor data penerima",
+      });
+
+      await importPromise;
 
       handleCloseImportModal();
       fetchAllData();
     } catch (err) {
-      error("Gagal", err.message || "Gagal mengimpor data penerima");
+      console.error("Error importing recipients:", err);
     } finally {
       setImportLoading(false);
     }
@@ -741,11 +749,7 @@ const ReportsAdmin = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="flex justify-between items-center">
           <div>
@@ -831,13 +835,7 @@ const ReportsAdmin = () => {
 
   return (
     <div className="space-y-6">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
 
-      <ExportLoadingModal visible={exportLoading} />
 
       <div className="flex justify-between items-center">
         <div>

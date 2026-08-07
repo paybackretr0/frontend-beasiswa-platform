@@ -50,7 +50,7 @@ import {
   getFormFields,
   updateFormField,
 } from "../../../../services/formService";
-import AlertContainer from "../../../../components/AlertContainer";
+
 import useAlert from "../../../../hooks/useAlert";
 import { SkeletonFormBuilder } from "../../../../components/common/skeleton";
 
@@ -243,7 +243,7 @@ const EditScholarshipForm = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const { alerts, success, warning, info, error, removeAlert } = useAlert();
+  const { success, warning, info, error } = useAlert();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -443,11 +443,7 @@ const EditScholarshipForm = () => {
   if (initialLoading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonFormBuilder fieldCount={3} />
       </>
     );
@@ -455,11 +451,7 @@ const EditScholarshipForm = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="bg-gray-50 min-h-screen">
         <Card className="mb-6 border-0 shadow-sm">
           <div className="flex items-center justify-between">

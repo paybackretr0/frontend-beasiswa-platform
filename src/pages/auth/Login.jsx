@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthImg from "../../assets/auth.png";
+import AuthImg from "../../assets/auth.webp";
 import Button from "../../components/Button";
 import { login } from "../../services/authService";
 

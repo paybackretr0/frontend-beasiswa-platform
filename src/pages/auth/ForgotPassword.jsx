@@ -14,7 +14,6 @@ import {
   resetPassword,
 } from "../../services/authService";
 import useAlert from "../../hooks/useAlert";
-import AlertContainer from "../../components/AlertContainer";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -30,7 +29,7 @@ const ForgotPassword = () => {
     confirm_password: "",
   });
 
-  const { success, error, alerts, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   useEffect(() => {
     document.title = "Lupa Password - Beasiswa";
@@ -142,11 +141,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           <div className="mb-8">

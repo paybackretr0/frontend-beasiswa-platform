@@ -2,7 +2,7 @@ import { useState } from "react";
 import Button from "../../../../components/Button";
 import SchemaFormModal from "./SchemaFormModal";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
+
 import {
   PlusOutlined,
   EditOutlined,
@@ -11,7 +11,7 @@ import {
 } from "@ant-design/icons";
 
 const StepSchemas = ({ onNext, onBack, initialData = {} }) => {
-  const { warning, success: successAlert, alerts, removeAlert } = useAlert();
+  const { warning, success: successAlert } = useAlert();
   const [schemas, setSchemas] = useState(initialData.schemas || []);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSchema, setEditingSchema] = useState(null);
@@ -124,11 +124,7 @@ const StepSchemas = ({ onNext, onBack, initialData = {} }) => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="mb-6">
         <p className="text-sm text-gray-500">

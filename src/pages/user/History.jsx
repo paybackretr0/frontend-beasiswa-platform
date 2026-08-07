@@ -11,7 +11,7 @@ import Card from "../../components/Card";
 import { getUserApplications } from "../../services/historyService";
 import ApplicationDetailModal from "../../components/ApplicationDetailModal";
 import { getApplicationDetailUser } from "../../services/applicationService";
-import AlertContainer from "../../components/AlertContainer";
+
 import useAlert from "../../hooks/useAlert";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
 import {
@@ -45,7 +45,7 @@ const History = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [newAwardees, setNewAwardees] = useState([]);
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   let user = null;
   try {
@@ -375,11 +375,7 @@ const History = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <GuestLayout>
         <div className="min-h-screen bg-gray-50">
           <div className="max-w-7xl mx-auto px-6 py-8">

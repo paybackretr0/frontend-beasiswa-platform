@@ -10,7 +10,7 @@ import {
   getAllActivityLogs,
   exportActivityLogs,
 } from "../../../services/extraService";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { SkeletonLog } from "../../../components/common/skeleton";
 import ExportLoadingModal from "../../../components/ExportLoadingModal";
@@ -45,7 +45,7 @@ const LogAdmin = () => {
   });
   const pageSize = 15;
 
-  const { alerts, success, error, removeAlert, clearAlerts, info } = useAlert();
+  const { success, error, clearAlerts, info } = useAlert();
 
   useEffect(() => {
     document.title = "Log Aktivitas - Admin";
@@ -162,11 +162,7 @@ const LogAdmin = () => {
 
   return (
     <div>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <ExportLoadingModal visible={exportLoading} />
 

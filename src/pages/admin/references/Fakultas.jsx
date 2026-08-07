@@ -17,7 +17,7 @@ import {
   activateFaculty,
   deactivateFaculty,
 } from "../../../services/facultyService";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { SkeletonTable } from "../../../components/common/skeleton";
 
@@ -34,7 +34,7 @@ const Fakultas = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   useEffect(() => {
     document.title = "Kelola Fakultas - Admin";
@@ -175,11 +175,7 @@ const Fakultas = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
 
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-6">
@@ -267,11 +263,7 @@ const Fakultas = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <UniversalTable
         title="Kelola Fakultas"
         data={filteredFaculties}

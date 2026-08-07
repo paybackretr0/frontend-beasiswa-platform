@@ -19,7 +19,7 @@ import {
 import Card from "../../../components/Card";
 import { fetchActiveScholarshipsForInfo } from "../../../services/scholarshipService";
 import useAlert from "../../../hooks/useAlert";
-import AlertContainer from "../../../components/AlertContainer";
+
 import { SkeletonInfoScholarship } from "../../../components/common/skeleton";
 
 const InfoScholarship = () => {
@@ -31,7 +31,7 @@ const InfoScholarship = () => {
   const [selectedScholarship, setSelectedScholarship] = useState(null);
   const [selectedSchemaId, setSelectedSchemaId] = useState(null);
 
-  const { alerts, success, error, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   useEffect(() => {
     document.title = "Informasi Beasiswa";
@@ -257,11 +257,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          removeAlert={removeAlert}
-          position="top-right"
-        />
+
         <SkeletonInfoScholarship items={4} />
       </>
     );
@@ -269,11 +265,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
   return (
     <div className="space-y-6">
-      <AlertContainer
-        alerts={alerts}
-        removeAlert={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

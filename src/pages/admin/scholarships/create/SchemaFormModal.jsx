@@ -6,10 +6,9 @@ import { getDepartments } from "../../../../services/departmentService";
 import { getStudyPrograms } from "../../../../services/studyProgramService";
 import useAlert from "../../../../hooks/useAlert";
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import AlertContainer from "../../../../components/AlertContainer";
 
 const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
-  const { warning, alerts, removeAlert } = useAlert();
+  const { warning } = useAlert();
 
   const normalizeIdList = (items = []) =>
     items
@@ -577,6 +576,20 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
       return;
     }
 
+    for (let i = 0; i < stages.length; i++) {
+      if (
+        stages[i].start_date &&
+        stages[i].end_date &&
+        new Date(stages[i].end_date) < new Date(stages[i].start_date)
+      ) {
+        warning(
+          "Tanggal Berakhir Tidak Valid",
+          `Pada tahapan "${stages[i].name}", tanggal berakhir tidak boleh mendahului tanggal mulai.`,
+        );
+        return;
+      }
+    }
+
     const filledStages = stages.filter((s) => s.start_date);
     for (let i = 1; i < filledStages.length; i++) {
       if (
@@ -653,11 +666,7 @@ const SchemaFormModal = ({ visible, onClose, onSave, initialData }) => {
   return (
     <>
       <div style={{ position: "relative", zIndex: 1050 }}>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
       </div>
       <Modal
         title={initialData ? "Edit Skema" : "Tambah Skema Baru"}

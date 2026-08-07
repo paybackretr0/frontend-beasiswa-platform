@@ -5,14 +5,13 @@ import StepSchemas from "./StepSchemas";
 import StepFinalize from "./StepFinalize";
 import { createScholarship } from "../../../../services/scholarshipService";
 import useAlert from "../../../../hooks/useAlert";
-import AlertContainer from "../../../../components/AlertContainer";
 
 const ScholarshipAdd = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { success, error, alerts, removeAlert } = useAlert();
+  const { success, error } = useAlert();
 
   const [scholarshipData, setScholarshipData] = useState({
     name: "",
@@ -101,11 +100,7 @@ const ScholarshipAdd = () => {
 
   return (
     <div>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
 
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
         <div className="flex items-center justify-between max-w-2xl mx-auto">

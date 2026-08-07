@@ -23,7 +23,7 @@ import {
 } from "@ant-design/icons";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
-import AlertContainer from "../../../components/AlertContainer";
+
 import useAlert from "../../../hooks/useAlert";
 import { SkeletonDetailScholarship } from "../../../components/common/skeleton";
 
@@ -36,7 +36,7 @@ const ScholarshipDetail = () => {
   const [loading, setLoading] = useState(true);
   const [expandedEligible, setExpandedEligible] = useState({});
 
-  const { alerts, error, success, removeAlert } = useAlert();
+  const { error, success } = useAlert();
 
   useEffect(() => {
     document.title = "Detail Beasiswa - Admin";
@@ -169,11 +169,7 @@ const ScholarshipDetail = () => {
   if (loading) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -198,11 +194,7 @@ const ScholarshipDetail = () => {
   if (!scholarship) {
     return (
       <>
-        <AlertContainer
-          alerts={alerts}
-          onRemove={removeAlert}
-          position="top-right"
-        />
+
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg mb-4">
             Beasiswa tidak ditemukan
@@ -217,11 +209,7 @@ const ScholarshipDetail = () => {
 
   return (
     <>
-      <AlertContainer
-        alerts={alerts}
-        onRemove={removeAlert}
-        position="top-right"
-      />
+
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
