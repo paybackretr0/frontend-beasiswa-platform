@@ -30,6 +30,7 @@ import {
 import { getApplicationDetailUser } from "../../services/applicationService";
 
 import useAlert from "../../hooks/useAlert";
+import { getProfileCompleteness } from "../../utils/profileUtils";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
 import { SkeletonFormApplication } from "../../components/common/skeleton";
 
@@ -172,6 +173,25 @@ const FormApplication = () => {
         document.title = `Revisi Pendaftaran ${formData.scholarship.name}`;
       } else {
         const data = await getScholarshipForm(scholarshipId, schemaIdFromUrl);
+
+        // Profil harus lengkap dulu sebelum mendaftar baru (anti-bypass via URL
+        // langsung). Tidak diterapkan bila sudah punya pendaftaran (draft/status).
+        if (!data.has_existing_application) {
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          const { complete: isProfileComplete, missing: missingFields } =
+            getProfileCompleteness(storedUser);
+
+          if (!isProfileComplete) {
+            warning(
+              "Lengkapi Profil",
+              `Lengkapi data berikut terlebih dahulu: ${missingFields
+                .map((f) => f.label)
+                .join(", ")}`,
+            );
+            navigate(`/scholarship/${scholarshipId}`);
+            return;
+          }
+        }
 
         setScholarship(data.scholarship);
         setSelectedSchema(data.selected_schema);

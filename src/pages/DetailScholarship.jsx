@@ -38,6 +38,7 @@ import {
   getOtherScholarships,
 } from "../services/scholarshipService";
 import useAlert from "../hooks/useAlert";
+import { getProfileCompleteness } from "../utils/profileUtils";
 
 import { SkeletonDetailScholarship } from "../components/common/skeleton";
 
@@ -77,7 +78,7 @@ const DetailScholarship = () => {
     studyPrograms: false,
   });
 
-  const { warning, error: alertError } = useAlert();
+  const { success, warning, error: alertError } = useAlert();
 
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -362,6 +363,20 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
       return;
     }
 
+    const { complete: isProfileComplete, missing: missingFields } =
+      getProfileCompleteness(user);
+
+    if (!isProfileComplete) {
+      warning(
+        "Lengkapi Profil",
+        `Lengkapi data berikut terlebih dahulu: ${missingFields
+          .map((f) => f.label)
+          .join(", ")}`,
+      );
+      navigate("/profile");
+      return;
+    }
+
     navigate(`/scholarship/${id}/apply?schema=${schema.id}`);
   };
 
@@ -553,6 +568,38 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
             Daftar di Website Penyedia
           </Button>
         </>
+      );
+    }
+
+    const { complete: isProfileComplete, missing: missingFields } =
+      getProfileCompleteness(user);
+
+    if (!isProfileComplete) {
+      return (
+        <div className="space-y-4">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <ExclamationCircleOutlined className="text-amber-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-amber-800 font-medium">
+                  Lengkapi profil Anda terlebih dahulu
+                </p>
+                <p className="text-sm text-amber-700 mt-1">
+                  Data berikut belum lengkap:{" "}
+                  <strong>{missingFields.map((f) => f.label).join(", ")}</strong>
+                  . Silakan lengkapi data di halaman profil agar dapat
+                  mendaftar beasiswa ini.
+                </p>
+              </div>
+            </div>
+          </div>
+          <Button
+            className="w-full bg-amber-500 hover:bg-amber-600 border-amber-500"
+            onClick={() => navigate("/profile")}
+          >
+            Lengkapi Profil
+          </Button>
+        </div>
       );
     }
 

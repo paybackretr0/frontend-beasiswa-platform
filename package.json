@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.1.13",
     "antd": "^5.27.4",
     "axios": "^1.11.0",
+    "canvas-confetti": "^1.9.4",
     "dayjs": "^1.11.19",
     "lottie-react": "^2.4.1",
     "moment": "^2.30.1",

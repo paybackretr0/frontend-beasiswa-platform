@@ -25,6 +25,7 @@ import {
 } from "../../services/authService";
 
 import useAlert from "../../hooks/useAlert";
+import { getProfileCompleteness } from "../../utils/profileUtils";
 import RequireEmailVerification from "../../components/RequireEmailVerification";
 import { SkeletonProfile } from "../../components/common/skeleton";
 
@@ -138,6 +139,15 @@ const Profile = () => {
       newErrors.phone_number = "Format nomor telepon tidak valid";
     }
 
+    if (formData.birth_date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const birthDate = new Date(formData.birth_date);
+      if (birthDate > today) {
+        newErrors.birth_date = "Tanggal lahir tidak boleh di masa depan";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -244,6 +254,8 @@ const Profile = () => {
       const updateData = {
         phone_number: formData.phone_number || null,
         gender: formData.gender || null,
+        birth_date: formData.birth_date || null,
+        birth_place: formData.birth_place || null,
       };
 
       const response = await updateProfile(updateData);
@@ -252,13 +264,32 @@ const Profile = () => {
         success("Berhasil!", "Profil berhasil diperbarui!");
 
         const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const updatedUser = { ...currentUser, ...response.data };
+        const updatedUser = {
+          ...currentUser,
+          ...response.data,
+          student: currentUser.student
+            ? {
+                ...currentUser.student,
+                gender:
+                  response.data?.gender ?? currentUser.student.gender,
+                birth_date:
+                  response.data?.birth_date ?? currentUser.student.birth_date,
+                birth_place:
+                  response.data?.birth_place ?? currentUser.student.birth_place,
+              }
+            : currentUser.student,
+        };
         localStorage.setItem("user", JSON.stringify(updatedUser));
 
         const updatedFormData = {
           ...formData,
           phone_number: response.data?.phone_number ?? formData.phone_number,
           gender: response.data?.gender ?? formData.gender,
+          birth_date: response.data?.birth_date
+            ? response.data.birth_date.split("T")[0]
+            : formData.birth_date,
+          birth_place:
+            response.data?.birth_place ?? formData.birth_place,
         };
         setOriginalFormData(updatedFormData);
         setFormData(updatedFormData);
@@ -296,6 +327,13 @@ const Profile = () => {
     });
   };
 
+  const { missing: missingFields } = getProfileCompleteness({
+    phone_number: formData.phone_number,
+    student: formData,
+  });
+  const missingFieldLabels = missingFields.map((field) => field.label);
+  const isProfileComplete = missingFields.length === 0;
+
   if (loading) {
     return (
       <>
@@ -328,6 +366,21 @@ const Profile = () => {
                 Profil Saya
               </h1>
             </div>
+
+            {!isProfileComplete && (
+              <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+                <ExclamationCircleOutlined className="text-amber-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-amber-800">
+                    Profil Anda belum lengkap
+                  </h3>
+                  <p className="text-amber-700 text-sm mt-1">
+                    Lengkapi data berikut agar dapat mendaftar beasiswa:{" "}
+                    <strong>{missingFieldLabels.join(", ")}</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-4 space-y-6">
@@ -412,11 +465,12 @@ const Profile = () => {
                         Informasi Penting
                       </h3>
                       <p className="text-blue-700 text-sm leading-relaxed">
-                        Hanya <strong>nomor telepon</strong> dan{" "}
-                        <strong>jenis kelamin</strong> yang dapat diubah melalui
+                        Hanya <strong>nomor telepon</strong>,{" "}
+                        <strong>jenis kelamin</strong>,{" "}
+                        <strong>tempat lahir</strong>, dan{" "}
+                        <strong>tanggal lahir</strong> yang dapat diubah melalui
                         profil ini. Untuk perubahan data lainnya seperti nama,
-                        email, tempat/tanggal lahir, fakultas, atau program
-                        studi, silakan menghubungi
+                        email, fakultas, atau program studi, silakan menghubungi
                         <strong>
                           {" "}
                           Direktorat Kemahasiswaan Universitas Andalas
@@ -496,29 +550,46 @@ const Profile = () => {
 
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Tempat Lahir
+                          Tempat Lahir ✏️
                         </label>
                         <input
                           type="text"
                           name="birth_place"
                           value={formData.birth_place}
-                          disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
-                          placeholder="Tidak dapat diubah disini"
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                            !isEditing
+                              ? "bg-gray-50 text-gray-600 border-gray-200"
+                              : "border-gray-300 hover:border-gray-400"
+                          }`}
+                          placeholder="Contoh: Padang"
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Tanggal Lahir
+                          Tanggal Lahir ✏️
                         </label>
                         <input
                           type="date"
                           name="birth_date"
                           value={formData.birth_date}
-                          disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                            !isEditing
+                              ? "bg-gray-50 text-gray-600 border-gray-200"
+                              : errors.birth_date
+                                ? "border-red-300 focus:ring-red-500"
+                                : "border-gray-300 hover:border-gray-400"
+                          }`}
                         />
+                        {errors.birth_date && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.birth_date}
+                          </p>
+                        )}
                       </div>
 
                       <div>
