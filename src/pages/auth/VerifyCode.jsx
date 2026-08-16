@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import AuthImg from "../../assets/auth.webp";
 import Button from "../../components/Button";
 import useAlert from "../../hooks/useAlert";
 
@@ -115,30 +114,48 @@ const VerifyCode = () => {
 
   return (
     <div className="min-h-screen flex">
+      <div className="hidden md:flex md:w-[70%] bg-[#142a5c] flex-col justify-between p-10 lg:p-16">
+        <div className="flex items-center gap-3">
+          <img
+            src="/unand.png"
+            alt="Logo Universitas Andalas"
+            className="h-10 w-10 object-contain"
+          />
+          <div>
+            <p className="font-bold text-white text-lg leading-tight">
+              BeasiswaApp
+            </p>
+            <p className="text-blue-200 text-xs">Universitas Andalas</p>
+          </div>
+        </div>
 
-      <div className="hidden md:block w-0 md:w-[70%] relative">
-        <img
-          src={AuthImg}
-          alt="Auth Illustration"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#2D60FF]/70 via-[#eaf0ff]/60 to-transparent" />
+        <div className="max-w-md">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Sistem Informasi Beasiswa
+          </h2>
+          <p className="text-blue-200 leading-relaxed">
+            Platform resmi untuk pendaftaran, verifikasi, dan pemantauan
+            beasiswa Non-APBN di lingkungan Universitas Andalas.
+          </p>
+        </div>
+
+        <p className="text-blue-200 text-sm">
+          © {new Date().getFullYear()} Universitas Andalas
+        </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Verifikasi Email
-            </h2>
-            <p className="text-gray-600 text-sm">
-              Kami telah mengirim kode verifikasi 6 digit ke email Anda
-            </p>
-          </div>
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">
+            Verifikasi Email
+          </h2>
+          <p className="text-slate-600 text-sm text-center mb-6">
+            Kami telah mengirim kode verifikasi 6 digit ke email Anda
+          </p>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Email
               </label>
               <input
@@ -146,7 +163,7 @@ const VerifyCode = () => {
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF] bg-gray-50"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50 disabled:bg-slate-100"
                 placeholder="Masukkan email Anda"
                 required
                 disabled={!!location.state?.email}
@@ -154,7 +171,7 @@ const VerifyCode = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Kode Verifikasi
               </label>
               <input
@@ -162,14 +179,14 @@ const VerifyCode = () => {
                 name="code"
                 value={form.code}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-[#2D60FF] text-center text-xl font-mono tracking-wider"
+                className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-xl font-mono tracking-wider"
                 placeholder="000000"
                 maxLength="6"
                 pattern="[0-9]{6}"
                 required
                 autoComplete="one-time-code"
               />
-              <p className="text-xs text-gray-500 mt-1 text-center">
+              <p className="text-xs text-slate-500 mt-1 text-center">
                 Masukkan 6 digit kode yang dikirim ke email Anda
               </p>
             </div>
@@ -184,12 +201,12 @@ const VerifyCode = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 mb-3">Tidak menerima kode?</p>
+            <p className="text-sm text-slate-600 mb-3">Tidak menerima kode?</p>
             <button
               type="button"
               onClick={handleResendCode}
               disabled={resendLoading || !form.email}
-              className="text-[#2D60FF] font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
+              className="text-[#2D60FF] font-semibold hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
             >
               {resendLoading ? "Mengirim..." : "Kirim Ulang Kode"}
             </button>

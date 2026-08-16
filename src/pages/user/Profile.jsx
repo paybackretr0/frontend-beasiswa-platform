@@ -16,7 +16,6 @@ import {
 } from "@ant-design/icons";
 import { Modal } from "antd";
 import Button from "../../components/Button";
-import Card from "../../components/Card";
 import GuestLayout from "../../layouts/GuestLayout";
 import {
   getProfile,
@@ -336,40 +335,36 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <>
-
-        <GuestLayout>
-          <div className="min-h-screen py-8">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 text-center">
-                  Profil Saya
-                </h1>
-              </div>
-
-              <SkeletonProfile />
+      <GuestLayout>
+        <div className="min-h-screen py-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 text-center">
+                Profil Saya
+              </h1>
             </div>
+
+            <SkeletonProfile />
           </div>
-        </GuestLayout>
-      </>
+        </div>
+      </GuestLayout>
     );
   }
 
   return (
     <>
-
       <GuestLayout>
         <div className="min-h-screen py-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800 text-center">
+              <h1 className="text-3xl font-bold text-slate-900 text-center">
                 Profil Saya
               </h1>
             </div>
 
             {!isProfileComplete && (
-              <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-                <ExclamationCircleOutlined className="text-amber-500 mt-1 flex-shrink-0" />
+              <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                <ExclamationCircleOutlined className="text-amber-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-amber-800">
                     Profil Anda belum lengkap
@@ -384,120 +379,113 @@ const Profile = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-4 space-y-6">
-                <Card className="text-center">
-                  <div className="relative">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <UserOutlined className="text-3xl text-white" />
-                    </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-6 text-center">
+                  <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <UserOutlined className="text-3xl text-white" />
                   </div>
 
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                  <h2 className="text-xl font-bold text-slate-900 mb-2">
                     {formData.full_name || "Nama Pengguna"}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-1">
+                  <p className="text-sm text-slate-500 mb-1">
                     {formData.nim ? "Mahasiswa" : "Staff"}
                   </p>
-                  <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full">
+                  <div className="inline-flex items-center justify-center gap-2 px-3 py-1">
                     <span className="text-sm font-medium text-blue-700">
                       {formData.nim}
                     </span>
                   </div>
-                </Card>
+                </div>
 
-                <Card>
-                  <h3 className="font-semibold text-gray-800 mb-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                  <h3 className="font-semibold text-slate-900 mb-4">
                     Informasi Kontak
                   </h3>
                   <div className="space-y-4">
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <MailOutlined className="text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-gray-500 mb-1">Email</p>
-                        <p className="text-sm text-gray-800 break-all">
+                        <p className="text-xs text-slate-500 mb-1">Email</p>
+                        <p className="text-sm text-slate-900 break-all">
                           {formData.email}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <PhoneOutlined className="text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-gray-500 mb-1">Telepon</p>
-                        <p className="text-sm text-gray-800">
+                        <p className="text-xs text-slate-500 mb-1">Telepon</p>
+                        <p className="text-sm text-slate-900">
                           {formData.phone_number || "Belum diatur"}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <CalendarOutlined className="text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-gray-500 mb-1">
+                        <p className="text-xs text-slate-500 mb-1">
                           Tanggal Lahir
                         </p>
-                        <p className="text-sm text-gray-800">
+                        <p className="text-sm text-slate-900">
                           {formatDate(formData.birth_date)}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                       <EnvironmentOutlined className="text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-gray-500 mb-1">
+                        <p className="text-xs text-slate-500 mb-1">
                           Tempat Lahir
                         </p>
-                        <p className="text-sm text-gray-800">
+                        <p className="text-sm text-slate-900">
                           {formData.birth_place || "Belum diatur"}
                         </p>
                       </div>
                     </div>
                   </div>
-                </Card>
+                </div>
               </div>
 
               <div className="lg:col-span-8">
-                <Card className="mb-6 bg-blue-50 border-blue-200">
-                  <div className="flex items-start gap-3">
-                    <InfoCircleOutlined className="text-blue-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-800 mb-2">
-                        Informasi Penting
-                      </h3>
-                      <p className="text-blue-700 text-sm leading-relaxed">
-                        Hanya <strong>nomor telepon</strong>,{" "}
-                        <strong>jenis kelamin</strong>,{" "}
-                        <strong>tempat lahir</strong>, dan{" "}
-                        <strong>tanggal lahir</strong> yang dapat diubah melalui
-                        profil ini. Untuk perubahan data lainnya seperti nama,
-                        email, fakultas, atau program studi, silakan menghubungi
-                        <strong>
-                          {" "}
-                          Direktorat Kemahasiswaan Universitas Andalas
-                        </strong>
-                        .
-                      </p>
-                    </div>
+                <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 flex items-start gap-3">
+                  <InfoCircleOutlined className="text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-2">
+                      Informasi Penting
+                    </h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      Hanya <strong>nomor telepon</strong>,{" "}
+                      <strong>jenis kelamin</strong>,{" "}
+                      <strong>tempat lahir</strong>, dan{" "}
+                      <strong>tanggal lahir</strong> yang dapat diubah melalui
+                      profil ini. Untuk perubahan data lainnya seperti nama,
+                      email, fakultas, atau program studi, silakan menghubungi
+                      <strong>
+                        {" "}
+                        Direktorat Kemahasiswaan Universitas Andalas
+                      </strong>
+                      .
+                    </p>
                   </div>
-                </Card>
+                </div>
 
-                <Card>
+                <div className="bg-white border border-slate-200 rounded-lg p-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                      <h2 className="text-2xl font-bold text-slate-900 mb-2">
                         Informasi Profil
                       </h2>
-                      <p className="text-gray-600">
+                      <p className="text-slate-600">
                         {isEditing
                           ? "Edit informasi profil Anda di bawah ini"
                           : "Kelola dan perbarui data profil Anda"}
                       </p>
                     </div>
                     {!isEditing && (
-                      <Button
-                        onClick={handleStartEdit}
-                        className="bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm"
-                      >
+                      <Button onClick={handleStartEdit}>
                         <EditOutlined className="mr-2" />
                         Edit Profil
                       </Button>
@@ -507,7 +495,7 @@ const Profile = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
                           Nama Lengkap
                         </label>
                         <input
@@ -515,13 +503,13 @@ const Profile = () => {
                           name="full_name"
                           value={formData.full_name}
                           disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 bg-slate-50 text-slate-500"
                           placeholder="Tidak dapat diubah disini"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
                           Email Unand
                         </label>
                         <input
@@ -529,13 +517,13 @@ const Profile = () => {
                           name="email"
                           value={formData.email}
                           disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 bg-slate-50 text-slate-500"
                           placeholder="Email tidak dapat diubah"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
                           NIM
                         </label>
                         <input
@@ -543,14 +531,14 @@ const Profile = () => {
                           name="nim"
                           value={formData.nim}
                           disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 bg-slate-50 text-slate-500"
                           placeholder="NIM tidak dapat diubah"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Tempat Lahir ✏️
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          Tempat Lahir
                         </label>
                         <input
                           type="text"
@@ -558,18 +546,18 @@ const Profile = () => {
                           value={formData.birth_place}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             !isEditing
-                              ? "bg-gray-50 text-gray-600 border-gray-200"
-                              : "border-gray-300 hover:border-gray-400"
+                              ? "bg-slate-50 text-slate-500 border-slate-200"
+                              : "border-slate-300"
                           }`}
                           placeholder="Contoh: Padang"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Tanggal Lahir ✏️
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          Tanggal Lahir
                         </label>
                         <input
                           type="date"
@@ -577,12 +565,12 @@ const Profile = () => {
                           value={formData.birth_date}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             !isEditing
-                              ? "bg-gray-50 text-gray-600 border-gray-200"
+                              ? "bg-slate-50 text-slate-500 border-slate-200"
                               : errors.birth_date
                                 ? "border-red-300 focus:ring-red-500"
-                                : "border-gray-300 hover:border-gray-400"
+                                : "border-slate-300"
                           }`}
                         />
                         {errors.birth_date && (
@@ -593,8 +581,8 @@ const Profile = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          No. Telepon ✏️
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          No. Telepon
                         </label>
                         <input
                           type="tel"
@@ -602,12 +590,12 @@ const Profile = () => {
                           value={formData.phone_number}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             !isEditing
-                              ? "bg-gray-50 text-gray-600 border-gray-200"
+                              ? "bg-slate-50 text-slate-500 border-slate-200"
                               : errors.phone_number
                                 ? "border-red-300 focus:ring-red-500"
-                                : "border-gray-300 hover:border-gray-400"
+                                : "border-slate-300"
                           }`}
                           placeholder="Contoh: 081234567890"
                         />
@@ -619,18 +607,18 @@ const Profile = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Jenis Kelamin ✏️
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          Jenis Kelamin
                         </label>
                         <select
                           name="gender"
                           value={formData.gender}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             !isEditing
-                              ? "bg-gray-50 text-gray-600 border-gray-200"
-                              : "border-gray-300 hover:border-gray-400"
+                              ? "bg-slate-50 text-slate-500 border-slate-200"
+                              : "border-slate-300"
                           }`}
                         >
                           <option value="">Pilih jenis kelamin</option>
@@ -640,9 +628,9 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
                           Fakultas
                         </label>
                         <input
@@ -650,13 +638,13 @@ const Profile = () => {
                           name="faculty"
                           value={formData.faculty}
                           disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 bg-slate-50 text-slate-500"
                           placeholder="Fakultas berdasarkan NIM"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
                           Departemen
                         </label>
                         <input
@@ -664,13 +652,13 @@ const Profile = () => {
                           name="department"
                           value={formData.department}
                           disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 bg-slate-50 text-slate-500"
                           placeholder="Departemen berdasarkan NIM"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
                           Program Studi
                         </label>
                         <input
@@ -678,18 +666,19 @@ const Profile = () => {
                           name="study_program"
                           value={formData.study_program}
                           disabled={true}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-gray-600"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 bg-slate-50 text-slate-500"
                           placeholder="Program studi berdasarkan NIM"
                         />
                       </div>
                     </div>
 
                     {isEditing && (
-                      <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                      <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200">
                         <Button
                           type="submit"
+                          variant="success"
                           disabled={saveLoading}
-                          className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                          className="flex items-center justify-center gap-2"
                         >
                           {saveLoading ? (
                             <LoadingOutlined spin />
@@ -702,7 +691,7 @@ const Profile = () => {
                           type="button"
                           onClick={handleCancel}
                           disabled={saveLoading}
-                          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                          className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 flex items-center justify-center gap-2"
                         >
                           <CloseOutlined />
                           Batal
@@ -710,17 +699,17 @@ const Profile = () => {
                       </div>
                     )}
                   </form>
-                </Card>
+                </div>
               </div>
             </div>
 
-            <div className="mt-8 p-6 bg-white rounded-2xl border border-[#DFEAF2]">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            <div className="mt-8 p-6 bg-white rounded-lg border border-slate-200">
+              <h3 className="text-xl font-semibold text-slate-900 mb-4">
                 Ubah Password
               </h3>
               <form onSubmit={handlePasswordSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Password Lama
                   </label>
                   <div className="relative">
@@ -732,14 +721,14 @@ const Profile = () => {
                       className={`w-full border rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         passwordErrors.current_password
                           ? "border-red-300 focus:ring-red-500"
-                          : "border-gray-300"
+                          : "border-slate-300"
                       }`}
                       placeholder="Masukkan password lama"
                     />
                     <button
                       type="button"
                       onClick={() => togglePassword("current")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showPassword.current ? (
                         <EyeOutlined />
@@ -756,7 +745,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Password Baru
                   </label>
                   <div className="relative">
@@ -768,14 +757,14 @@ const Profile = () => {
                       className={`w-full border rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         passwordErrors.new_password
                           ? "border-red-300 focus:ring-red-500"
-                          : "border-gray-300"
+                          : "border-slate-300"
                       }`}
                       placeholder="Masukkan password baru"
                     />
                     <button
                       type="button"
                       onClick={() => togglePassword("new")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showPassword.new ? (
                         <EyeOutlined />
@@ -792,7 +781,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Konfirmasi Password Baru
                   </label>
                   <div className="relative">
@@ -804,14 +793,14 @@ const Profile = () => {
                       className={`w-full border rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         passwordErrors.new_password_confirmation
                           ? "border-red-300 focus:ring-red-500"
-                          : "border-gray-300"
+                          : "border-slate-300"
                       }`}
                       placeholder="Konfirmasi password baru"
                     />
                     <button
                       type="button"
                       onClick={() => togglePassword("confirm")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showPassword.confirm ? (
                         <EyeOutlined />
@@ -828,11 +817,7 @@ const Profile = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={passwordLoading}
-                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm"
-                  >
+                  <Button type="submit" disabled={passwordLoading}>
                     {passwordLoading ? "Menyimpan..." : "Ubah Password"}
                   </Button>
                 </div>
@@ -854,12 +839,8 @@ const Profile = () => {
         confirmLoading={passwordLoading}
         okText="Ya, Ubah Password"
         cancelText="Batal"
-        okButtonProps={{
-          type: "primary",
-          className: "bg-blue-600 hover:bg-blue-700",
-        }}
       >
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           Apakah Anda yakin ingin mengubah password akun Anda? Pastikan Anda
           mengingat password baru yang telah dibuat.
         </p>

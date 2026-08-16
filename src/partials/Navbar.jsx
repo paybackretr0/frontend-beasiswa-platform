@@ -49,19 +49,19 @@ const Navbar = () => {
   const isMahasiswa = role === "MAHASISWA";
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur bg-white/70">
+    <nav className="sticky top-0 z-50 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-12 py-3">
-        <NavLink to="/" className="flex items-center gap-3 no-underline group">
+        <NavLink to="/" className="flex items-center gap-3 no-underline">
           {/* Logo Unand */}
           <img
             src={unandLogo}
             alt="Logo Universitas Andalas"
-            className="h-10 w-10 object-contain transition-transform group-hover:scale-105"
+            className="h-10 w-10 object-contain"
           />
 
           {/* Brand Name */}
           <div className="flex flex-col">
-            <span className="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition-colors">
+            <span className="font-bold text-xl text-gray-800">
               BeasiswaApp
             </span>
             <span className="text-xs text-gray-500 hidden sm:block">

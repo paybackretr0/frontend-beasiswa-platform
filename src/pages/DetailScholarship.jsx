@@ -6,7 +6,6 @@ import {
   Timeline,
   Divider,
   Tabs,
-  Card as AntCard,
   Modal as AntModal,
 } from "antd";
 import {
@@ -21,7 +20,6 @@ import {
   BookOutlined,
   FileTextOutlined,
   BankOutlined,
-  ApartmentOutlined,
   RightOutlined,
   StarOutlined,
   InfoCircleOutlined,
@@ -32,7 +30,6 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import GuestLayout from "../layouts/GuestLayout";
 import Button from "../components/Button";
-import Card from "../components/Card";
 import {
   getScholarshipByIdPublic,
   getOtherScholarships,
@@ -380,16 +377,6 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
     navigate(`/scholarship/${id}/apply?schema=${schema.id}`);
   };
 
-  const getSelectedSchema = () => {
-    const activeSchemas = getActiveSchemas();
-    if (activeSchemas.length === 0) return null;
-
-    return (
-      activeSchemas.find((schema) => schema.id === activeSchemaTab) ||
-      activeSchemas[0]
-    );
-  };
-
   const getStatusTag = (isActive, endDate) => {
     if (!isActive) {
       return (
@@ -456,15 +443,15 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
     if (!isStillActive) {
       return (
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
           <div className="flex items-start space-x-2">
-            <ExclamationCircleOutlined className="text-gray-400 mt-0.5 flex-shrink-0" />
+            <ExclamationCircleOutlined className="text-slate-400 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-gray-600 font-medium">
+              <p className="text-slate-700 font-medium">
                 Pendaftaran telah ditutup
               </p>
               {scholarship.end_date && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-slate-500 mt-1">
                   Batas pendaftaran:{" "}
                   {new Date(scholarship.end_date).toLocaleDateString("id-ID", {
                     year: "numeric",
@@ -482,14 +469,14 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
     if (!user) {
       return (
         <div>
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-lg">
             <div className="flex items-start space-x-2">
-              <InfoCircleOutlined className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <InfoCircleOutlined className="text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-blue-800 font-medium">
+                <p className="text-slate-900 font-medium">
                   Silakan login terlebih dahulu
                 </p>
-                <p className="text-sm text-blue-600 mt-1">
+                <p className="text-sm text-slate-600 mt-1">
                   Anda perlu login sebagai mahasiswa untuk mendaftar beasiswa
                   ini.
                 </p>
@@ -514,14 +501,14 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
     if (String(user.role || "").toUpperCase() !== "MAHASISWA") {
       return (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
           <div className="flex items-start space-x-2">
-            <ExclamationCircleOutlined className="text-yellow-600 mt-0.5 flex-shrink-0" />
+            <ExclamationCircleOutlined className="text-amber-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-yellow-800 font-medium">
+              <p className="text-slate-900 font-medium">
                 Hanya mahasiswa yang dapat mendaftar
               </p>
-              <p className="text-sm text-yellow-700 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 Akun Anda terdaftar sebagai {user.role}, bukan sebagai
                 mahasiswa.
               </p>
@@ -533,14 +520,14 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
     if (schema && !isStudentEligibleForSchema(user, schema)) {
       return (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
           <div className="flex items-start space-x-2">
-            <ExclamationCircleOutlined className="text-red-500 mt-0.5 flex-shrink-0" />
+            <ExclamationCircleOutlined className="text-red-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-red-800 font-medium">
+              <p className="text-slate-900 font-medium">
                 Kamu tidak memenuhi cakupan skema ini
               </p>
-              <p className="text-sm text-red-600 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 Skema {schema.name} tidak mencakup fakultas/departemen/program
                 studi Anda.
               </p>
@@ -553,16 +540,17 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
     if (scholarship.is_external) {
       return (
         <>
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
             <div className="flex items-start space-x-2">
-              <ExclamationCircleOutlined className="text-blue-500 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-blue-800">
+              <ExclamationCircleOutlined className="text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-slate-700">
                 Pendaftaran dilakukan melalui website penyedia beasiswa.
               </div>
             </div>
           </div>
           <Button
-            className="w-full bg-green-600 hover:bg-green-700"
+            variant="success"
+            className="w-full"
             onClick={() => handleExternalApplication(scholarship.website_url)}
           >
             Daftar di Website Penyedia
@@ -577,14 +565,14 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
     if (!isProfileComplete) {
       return (
         <div className="space-y-4">
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
             <div className="flex items-start space-x-2">
-              <ExclamationCircleOutlined className="text-amber-500 mt-0.5 flex-shrink-0" />
+              <ExclamationCircleOutlined className="text-amber-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-amber-800 font-medium">
+                <p className="text-slate-900 font-medium">
                   Lengkapi profil Anda terlebih dahulu
                 </p>
-                <p className="text-sm text-amber-700 mt-1">
+                <p className="text-sm text-slate-600 mt-1">
                   Data berikut belum lengkap:{" "}
                   <strong>{missingFields.map((f) => f.label).join(", ")}</strong>
                   . Silakan lengkapi data di halaman profil agar dapat
@@ -594,7 +582,8 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
             </div>
           </div>
           <Button
-            className="w-full bg-amber-500 hover:bg-amber-600 border-amber-500"
+            variant="warning"
+            className="w-full"
             onClick={() => navigate("/profile")}
           >
             Lengkapi Profil
@@ -648,45 +637,45 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
         ),
         children: (
           <div className="space-y-6">
-            <AntCard className="border-l-4 border-l-blue-500">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <InfoCircleOutlined className="mr-2 text-blue-500" />
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                <InfoCircleOutlined className="mr-2 text-blue-600" />
                 Informasi Skema
               </h3>
               {schema.description && (
-                <p className="text-gray-700 mb-4">{schema.description}</p>
+                <p className="text-slate-700 mb-4">{schema.description}</p>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {schema.quota && (
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span className="text-gray-600">Kuota:</span>
-                    <span className="font-semibold text-lg">
+                  <div className="flex justify-between items-center p-3 bg-slate-50 rounded-md">
+                    <span className="text-slate-600">Kuota:</span>
+                    <span className="font-semibold text-slate-900">
                       {schema.quota} orang
                     </span>
                   </div>
                 )}
                 {schema.gpa_minimum && (
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="text-gray-600">Minimum IPK:</span>
-                    <span className="font-semibold text-lg">
+                  <div className="flex justify-between items-center p-3 bg-slate-50 rounded-md">
+                    <span className="text-slate-600">Minimum IPK:</span>
+                    <span className="font-semibold text-slate-900">
                       {schema.gpa_minimum}
                     </span>
                   </div>
                 )}
                 {schema.semester_minimum && (
-                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                    <span className="text-gray-600">Minimum Semester:</span>
-                    <span className="font-semibold text-lg">
+                  <div className="flex justify-between items-center p-3 bg-slate-50 rounded-md">
+                    <span className="text-slate-600">Minimum Semester:</span>
+                    <span className="font-semibold text-slate-900">
                       {schema.semester_minimum}
                     </span>
                   </div>
                 )}
               </div>
-            </AntCard>
+            </div>
 
-            <AntCard>
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <CheckCircleOutlined className="mr-2 text-green-500" />
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                <CheckCircleOutlined className="mr-2 text-emerald-600" />
                 Persyaratan Skema
               </h3>
               {schema.requirements && schema.requirements.length > 0 ? (
@@ -694,11 +683,11 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                   {schema.requirements.map((req, idx) => (
                     <div
                       key={idx}
-                      className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400"
+                      className="flex items-start space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-md"
                     >
                       <div className="flex-1">
                         {req.requirement_type === "TEXT" && (
-                          <span className="text-gray-700">
+                          <span className="text-slate-700">
                             {req.requirement_text}
                           </span>
                         )}
@@ -727,11 +716,11 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                   className="my-4"
                 />
               )}
-            </AntCard>
+            </div>
 
-            <AntCard>
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <FileTextOutlined className="mr-2 text-red-500" />
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                <FileTextOutlined className="mr-2 text-blue-600" />
                 Dokumen yang Diperlukan
               </h3>
               {schema.documents && schema.documents.length > 0 ? (
@@ -739,10 +728,10 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                   {schema.documents.map((doc, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-400"
+                      className="flex items-center space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-md"
                     >
                       <div className="flex-1">
-                        <span className="text-gray-700">
+                        <span className="text-slate-700">
                           {doc.document_name}
                         </span>
                         {doc.template_file && (
@@ -768,11 +757,11 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                   className="my-4"
                 />
               )}
-            </AntCard>
+            </div>
 
-            <AntCard>
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <TrophyOutlined className="mr-2 text-purple-500" />
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                <TrophyOutlined className="mr-2 text-blue-600" />
                 Tahapan Seleksi
               </h3>
               {schema.stages && schema.stages.length > 0 ? (
@@ -800,16 +789,16 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
                       return {
                         dot: (
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                             {stageIdx + 1}
                           </div>
                         ),
                         children: (
                           <div className="ml-4">
-                            <h4 className="font-semibold text-gray-900">
+                            <h4 className="font-semibold text-slate-900">
                               {stage.stage_name}
                             </h4>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-slate-500 mt-1">
                               Waktu Pelaksanaan:{" "}
                               {startLabel && endLabel
                                 ? `${startLabel} — ${endLabel}`
@@ -831,10 +820,10 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                   className="my-4"
                 />
               )}
-            </AntCard>
+            </div>
 
-            <AntCard>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">
                 Cakupan Eligible
               </h3>
 
@@ -857,10 +846,10 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                         .map((faculty) => (
                           <div
                             key={faculty.id}
-                            className="flex items-center space-x-2 p-2 bg-indigo-50 rounded-lg"
+                            className="flex items-center space-x-2 p-2 bg-slate-50 rounded-md"
                           >
-                            <RightOutlined className="text-indigo-500 text-xs" />
-                            <span className="text-gray-700">
+                            <RightOutlined className="text-slate-400 text-xs" />
+                            <span className="text-slate-700">
                               {faculty.name}
                             </span>
                           </div>
@@ -870,7 +859,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                         <button
                           type="button"
                           onClick={() => toggleEligible("faculties")}
-                          className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
                         >
                           {expandedEligible.faculties
                             ? "Sembunyikan"
@@ -879,7 +868,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                       )}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm">Tidak Ada</p>
+                    <p className="text-slate-500 text-sm">Tidak Ada</p>
                   )}
                 </div>
 
@@ -901,10 +890,10 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                         .map((department) => (
                           <div
                             key={department.id}
-                            className="flex items-center space-x-2 p-2 bg-orange-50 rounded-lg"
+                            className="flex items-center space-x-2 p-2 bg-slate-50 rounded-md"
                           >
-                            <RightOutlined className="text-orange-500 text-xs" />
-                            <span className="text-gray-700">
+                            <RightOutlined className="text-slate-400 text-xs" />
+                            <span className="text-slate-700">
                               {department.name}
                             </span>
                           </div>
@@ -914,7 +903,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                         <button
                           type="button"
                           onClick={() => toggleEligible("departments")}
-                          className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
                         >
                           {expandedEligible.departments
                             ? "Sembunyikan"
@@ -923,7 +912,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                       )}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm">Tidak Ada</p>
+                    <p className="text-slate-500 text-sm">Tidak Ada</p>
                   )}
                 </div>
               </div>
@@ -955,17 +944,17 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                       .map((studyProgram) => (
                         <div
                           key={studyProgram.id}
-                          className="flex items-center justify-between space-x-2 p-2 bg-emerald-50 rounded-lg"
+                          className="flex items-center justify-between space-x-2 p-2 bg-slate-50 rounded-md"
                         >
                           <div className="flex items-center space-x-2">
-                            <RightOutlined className="text-emerald-500 text-xs" />
-                            <span className="text-gray-700">
+                            <RightOutlined className="text-slate-400 text-xs" />
+                            <span className="text-slate-700">
                               {studyProgram.name}
                             </span>
                           </div>
 
                           {studyProgram.degree && (
-                            <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                            <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                               {studyProgram.degree}
                             </span>
                           )}
@@ -976,7 +965,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                       <button
                         type="button"
                         onClick={() => toggleEligible("studyPrograms")}
-                        className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
                       >
                         {expandedEligible.studyPrograms
                           ? "Sembunyikan"
@@ -985,13 +974,13 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                     )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm">Tidak Ada</p>
+                  <p className="text-slate-500 text-sm">Tidak Ada</p>
                 )}
               </div>
-            </AntCard>
+            </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl p-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+              <h4 className="text-lg font-bold text-slate-900 mb-3">
                 Tertarik dengan skema ini?
               </h4>
               {renderRegistrationSection(schema)}
@@ -1022,7 +1011,6 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   if (loading) {
     return (
       <GuestLayout>
-
         <SkeletonDetailScholarship />
       </GuestLayout>
     );
@@ -1031,20 +1019,19 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   if (error && !scholarship) {
     return (
       <GuestLayout>
-
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
           <div className="flex justify-center items-center min-h-96">
             <div className="text-center max-w-md">
               <Empty
                 image={
-                  <FileSearchOutlined className="text-6xl text-gray-300" />
+                  <FileSearchOutlined className="text-6xl text-slate-300" />
                 }
                 description={
                   <div className="space-y-2">
-                    <div className="text-lg font-semibold text-gray-700">
+                    <div className="text-lg font-semibold text-slate-700">
                       Beasiswa Tidak Ditemukan
                     </div>
-                    <div className="text-gray-500">{error}</div>
+                    <div className="text-slate-500">{error}</div>
                   </div>
                 }
               >
@@ -1057,8 +1044,9 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                     Kembali ke Daftar Beasiswa
                   </Button>
                   <Button
+                    variant="secondary"
                     onClick={loadScholarshipDetail}
-                    className="inline-flex items-center bg-gray-200 text-gray-700"
+                    className="inline-flex items-center"
                   >
                     <ReloadOutlined className="mr-2" />
                     Coba Lagi
@@ -1075,14 +1063,12 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
   return (
     <>
       <GuestLayout>
-
-
-        <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
+        <div className="bg-[#142a5c] text-white">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-            <nav className="mb-8 text-sm opacity-80">
+            <nav className="mb-8 text-sm text-blue-200">
               <Link
                 to="/scholarship"
-                className="hover:text-blue-200 transition-colors"
+                className="hover:text-white transition-colors"
               >
                 Beasiswa
               </Link>
@@ -1092,11 +1078,11 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl p-4 shadow-lg">
+                <div className="bg-white rounded-lg p-4">
                   <img
                     src={getImageSource(scholarship.logo_path)}
                     alt={scholarship.name}
-                    className="w-full h-48 object-cover rounded-xl"
+                    className="w-full h-48 object-cover rounded-md"
                   />
                 </div>
               </div>
@@ -1107,18 +1093,18 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                     {scholarship.name}
                   </h1>
                   <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
+                    <span className="flex items-center bg-white/10 px-3 py-1 rounded-md">
                       <BankOutlined className="mr-2" />
                       {scholarship.organizer}
                     </span>
-                    <span className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg">
+                    <span className="flex items-center bg-white/10 px-3 py-1 rounded-md">
                       <CalendarOutlined className="mr-2" />
                       {scholarship.year}
                     </span>
                     {getStatusTag(scholarship.is_active, scholarship.end_date)}
                     <button
                       onClick={handleOpenShare}
-                      className="flex items-center bg-white/10 backdrop-blur-sm hover:bg-white/20 px-3 py-1 rounded-lg transition-colors ml-auto"
+                      className="flex items-center bg-white/10 hover:bg-white/20 px-3 py-1 rounded-md transition-colors ml-auto"
                       title="Bagikan beasiswa"
                     >
                       <ShareAltOutlined className="mr-1" />
@@ -1128,24 +1114,28 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                  <div className="bg-white/10 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold">
                       {formatCurrency(scholarship.scholarship_value)}
                     </div>
-                    <div className="text-sm opacity-80">Nilai Beasiswa</div>
+                    <div className="text-sm text-blue-200">
+                      Nilai Beasiswa
+                    </div>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                  <div className="bg-white/10 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold">
                       {scholarship.duration_semesters}
                     </div>
-                    <div className="text-sm opacity-80">Durasi (Semester)</div>
+                    <div className="text-sm text-blue-200">
+                      Durasi (Semester)
+                    </div>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                  <div className="bg-white/10 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold">
                       {scholarship.schemas?.filter((s) => s.is_active).length ||
                         0}
                     </div>
-                    <div className="text-sm opacity-80">Skema Aktif</div>
+                    <div className="text-sm text-blue-200">Skema Aktif</div>
                   </div>
                 </div>
               </div>
@@ -1156,34 +1146,34 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
-              <Card className="border-l-4 border-l-blue-500">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <StarOutlined className="mr-2 text-blue-500" />
+              <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                  <StarOutlined className="mr-2 text-blue-600" />
                   Informasi Umum
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Periode Pendaftaran:</span>
-                    <span className="font-semibold">
+                    <span className="text-slate-600">Periode Pendaftaran:</span>
+                    <span className="font-semibold text-slate-900">
                       {formatDate(scholarship.start_date)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Batas Pendaftaran:</span>
+                    <span className="text-slate-600">Batas Pendaftaran:</span>
                     <span className="font-semibold text-red-600">
                       {formatDate(scholarship.end_date)}
                     </span>
                   </div>
                 </div>
-              </Card>
+              </div>
 
-              <Card>
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <FileTextOutlined className="mr-2 text-blue-500" />
+              <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                  <FileTextOutlined className="mr-2 text-blue-600" />
                   Deskripsi Beasiswa
                 </h2>
                 {scholarship.description ? (
-                  <div className="prose max-w-none text-gray-700 leading-relaxed">
+                  <div className="prose max-w-none text-slate-700 leading-relaxed">
                     {scholarship.description
                       .split("\n")
                       .map((paragraph, index) => (
@@ -1199,42 +1189,42 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                     className="my-8"
                   />
                 )}
-              </Card>
+              </div>
 
               {scholarship.benefits && scholarship.benefits.length > 0 && (
-                <Card>
-                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <StarOutlined className="mr-2 text-yellow-500" />
+                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                  <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                    <StarOutlined className="mr-2 text-blue-600" />
                     Benefit Beasiswa
                   </h2>
                   <div className="space-y-3">
                     {scholarship.benefits.map((benefit, index) => (
                       <div
                         key={index}
-                        className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400"
+                        className="flex items-start space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-md"
                       >
-                        <span className="text-gray-700">
+                        <span className="text-slate-700">
                           {benefit.benefit_text}
                         </span>
                       </div>
                     ))}
                   </div>
-                </Card>
+                </div>
               )}
 
-              <Card>
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <FormOutlined className="mr-2 text-indigo-500" />
+              <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                  <FormOutlined className="mr-2 text-blue-600" />
                   Skema Beasiswa yang Tersedia
                 </h2>
                 {renderSchemaTabs()}
-              </Card>
+              </div>
             </div>
 
             <div className="lg:col-span-1">
               <div className="sticky top-20 space-y-6">
-                <Card>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">
                     Beasiswa Lainnya
                   </h3>
                   {otherScholarships.length > 0 ? (
@@ -1243,22 +1233,22 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                         <Link
                           key={otherScholarship.id}
                           to={`/scholarship/${otherScholarship.id}`}
-                          className="block group"
+                          className="block"
                         >
-                          <div className="flex space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group-hover:shadow-md">
+                          <div className="flex space-x-3 p-3 rounded-md hover:bg-slate-50 transition-colors">
                             <img
                               src={getImageSource(otherScholarship.logo_path)}
                               alt={otherScholarship.name}
-                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                              className="w-12 h-12 object-cover rounded-md flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600">
+                              <h4 className="text-sm font-medium text-slate-900 truncate hover:text-blue-600">
                                 {otherScholarship.name}
                               </h4>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-xs text-slate-500 truncate">
                                 {otherScholarship.organizer}
                               </p>
-                              <div className="text-xs font-semibold text-green-600">
+                              <div className="text-xs font-semibold text-emerald-600">
                                 {formatCurrency(
                                   otherScholarship.scholarship_value,
                                 )}
@@ -1270,9 +1260,9 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                       <Divider className="my-4" />
                       <Link
                         to="/scholarship"
-                        className="block text-center text-blue-600 hover:text-blue-800 font-medium text-sm py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                        className="block text-center text-blue-600 hover:text-blue-800 font-medium text-sm py-2 rounded-md hover:bg-slate-50 transition-colors"
                       >
-                        Lihat Semua Beasiswa →
+                        Lihat Semua Beasiswa
                       </Link>
                     </div>
                   ) : (
@@ -1282,7 +1272,7 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
                       className="my-4"
                     />
                   )}
-                </Card>
+                </div>
               </div>
             </div>
           </div>
@@ -1306,16 +1296,16 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
       >
         {scholarship && (
           <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-gray-800">
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+              <h4 className="font-semibold text-slate-900">
                 {scholarship.name}
               </h4>
-              <p className="text-sm text-gray-600">{scholarship.organizer}</p>
+              <p className="text-sm text-slate-600">{scholarship.organizer}</p>
             </div>
 
             {getActiveSchemas().length > 1 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Pilih Skema:
                 </label>
                 <Tabs
@@ -1337,8 +1327,8 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
               </div>
             )}
 
-            <div className="bg-gray-50 p-4 rounded-lg max-h-72 overflow-y-auto border border-gray-200">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+            <div className="bg-white border border-slate-200 p-4 rounded-lg max-h-72 overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans">
                 {generateShareTemplate(
                   getActiveSchemas().find((s) => s.id === selectedSchemaId) ||
                     getActiveSchemas()[0],
@@ -1348,21 +1338,23 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                className="flex-1"
                 onClick={handleCopyLink}
               >
                 <CopyOutlined className="mr-1" />
                 Salin Link
               </Button>
               <Button
-                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white"
+                variant="secondary"
+                className="flex-1"
                 onClick={handleCopyTemplate}
               >
                 <CopyOutlined className="mr-1" />
                 Salin Template
               </Button>
               <Button
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                variant="success"
+                className="flex-1"
                 onClick={handleWhatsAppShare}
               >
                 <FaWhatsapp className="mr-1 inline" />
@@ -1370,8 +1362,8 @@ _Jangan lewatkan kesempatan emas ini! 🚀_
               </Button>
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-              <p className="text-xs text-yellow-800">
+            <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg">
+              <p className="text-xs text-slate-600">
                 <strong>Tips:</strong> Gunakan tombol WhatsApp untuk langsung
                 mengirim pengumuman, atau salin template untuk diedit terlebih
                 dahulu sebelum dibagikan.

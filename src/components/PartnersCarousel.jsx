@@ -79,9 +79,9 @@ const PartnersCarousel = () => {
 
   if (loading) {
     return (
-      <section className="bg-gray-50 py-12">
+      <section className="bg-white py-16 md:py-20 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <h2 className="text-center text-3xl font-semibold text-gray-700 mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">
             Mitra Beasiswa
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -99,21 +99,21 @@ const PartnersCarousel = () => {
 
   if (logos.length === 0) {
     return (
-      <section className="bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
-          <h2 className="text-3xl font-semibold text-gray-700 mb-4">
+      <section className="bg-white py-16 md:py-20 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
             Mitra Beasiswa
           </h2>
-          <p className="text-gray-500">Belum ada mitra beasiswa.</p>
+          <p className="text-slate-500">Belum ada mitra beasiswa.</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="bg-gray-50 py-12">
+    <section className="bg-white py-16 md:py-20 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <h2 className="text-center text-3xl font-semibold text-gray-700 mb-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">
           Mitra Beasiswa
         </h2>
         <style>
@@ -144,7 +144,7 @@ const PartnersCarousel = () => {
                   <img
                     src={logo}
                     alt={`Partner ${idx + 1}`}
-                    className="partner-logo loaded h-16 w-auto max-w-full object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    className="partner-logo loaded h-16 w-auto max-w-full object-contain grayscale"
                     loading="lazy"
                     onLoad={(e) => e.target.classList.add("loaded")}
                   />

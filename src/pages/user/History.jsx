@@ -7,7 +7,6 @@ import UniversalTable, {
   createActionColumn,
 } from "../../components/Table";
 import GuestLayout from "../../layouts/GuestLayout";
-import Card from "../../components/Card";
 import { getUserApplications } from "../../services/historyService";
 import ApplicationDetailModal from "../../components/ApplicationDetailModal";
 import { getApplicationDetailUser } from "../../services/applicationService";
@@ -50,7 +49,9 @@ const History = () => {
   let user = null;
   try {
     user = JSON.parse(localStorage.getItem("user"));
-  } catch (e) {}
+  } catch {
+    user = null;
+  }
   const role = user?.role?.toUpperCase() || null;
 
   useEffect(() => {
@@ -136,7 +137,7 @@ const History = () => {
       key: "beasiswa",
       sorter: (a, b) => a.beasiswa?.localeCompare(b.beasiswa) || 0,
       render: (text) => (
-        <div className="font-medium text-gray-800">{text || "-"}</div>
+        <div className="font-medium text-slate-900">{text || "-"}</div>
       ),
     },
     {
@@ -154,7 +155,7 @@ const History = () => {
       dataIndex: "penyelenggara",
       key: "penyelenggara",
       render: (text) => (
-        <div className="text-gray-600 text-sm">{text || "-"}</div>
+        <div className="text-slate-600 text-sm">{text || "-"}</div>
       ),
     },
     {
@@ -168,7 +169,7 @@ const History = () => {
       },
       render: (date) =>
         date ? (
-          <div className="text-gray-600 text-sm">
+          <div className="text-slate-600 text-sm">
             {new Date(date).toLocaleDateString("id-ID", {
               day: "numeric",
               month: "short",
@@ -176,7 +177,7 @@ const History = () => {
             })}
           </div>
         ) : (
-          <span className="text-gray-400 text-xs">Belum disubmit</span>
+          <span className="text-slate-400 text-xs">Belum disubmit</span>
         ),
     },
     {
@@ -191,7 +192,7 @@ const History = () => {
         );
       },
       render: (date) => {
-        if (!date) return <span className="text-gray-400 text-xs">-</span>;
+        if (!date) return <span className="text-slate-400 text-xs">-</span>;
         const deadlinePassed = new Date(date) < new Date();
         return (
           <div
@@ -373,17 +374,24 @@ const History = () => {
     (item) => item.status === "DRAFT",
   ).length;
 
+  const statCards = [
+    { label: "Total Pendaftaran", value: totalApplications },
+    { label: "Diterima", value: awardeeCount },
+    { label: "Divalidasi", value: validatedCount },
+    { label: "Dalam Proses", value: inProgressCount },
+    { label: "Draft", value: draftCount },
+  ];
+
   return (
     <>
-
       <GuestLayout>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-slate-50">
           <div className="max-w-7xl mx-auto px-6 py-8">
             <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">
                 Riwayat Pendaftaran Beasiswa
               </h1>
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 Data lengkap pendaftaran beasiswa yang pernah Anda lakukan
               </p>
             </div>
@@ -392,73 +400,32 @@ const History = () => {
               <SkeletonHistory />
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                  <Card className="text-center bg-white">
-                    <div className="p-4">
-                      <div className="text-2xl font-bold text-blue-600 mb-1">
-                        {totalApplications}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                  {statCards.map((card) => (
+                    <div
+                      key={card.label}
+                      className="bg-white border border-slate-200 rounded-lg p-4 text-center"
+                    >
+                      <div className="text-2xl font-bold text-slate-900 mb-1">
+                        {card.value}
                       </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        Total Pendaftaran
-                      </div>
-                    </div>
-                  </Card>
-
-                  <Card className="text-center bg-white">
-                    <div className="p-4">
-                      <div className="text-2xl font-bold text-green-600 mb-1">
-                        {awardeeCount}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        Diterima
+                      <div className="text-xs text-slate-500 font-medium">
+                        {card.label}
                       </div>
                     </div>
-                  </Card>
-
-                  <Card className="text-center bg-white">
-                    <div className="p-4">
-                      <div className="text-2xl font-bold text-emerald-600 mb-1">
-                        {validatedCount}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        Divalidasi
-                      </div>
-                    </div>
-                  </Card>
-
-                  <Card className="text-center bg-white">
-                    <div className="p-4">
-                      <div className="text-2xl font-bold text-blue-500 mb-1">
-                        {inProgressCount}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        Dalam Proses
-                      </div>
-                    </div>
-                  </Card>
-
-                  <Card className="text-center bg-white">
-                    <div className="p-4">
-                      <div className="text-2xl font-bold text-orange-600 mb-1">
-                        {draftCount}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        Draft
-                      </div>
-                    </div>
-                  </Card>
+                  ))}
                 </div>
 
                 {draftCount > 0 && (
-                  <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
                     <div className="flex items-center">
-                      <FormOutlined className="text-orange-600 mr-2 text-lg" />
+                      <FormOutlined className="text-amber-600 mr-2 text-lg" />
                       <div>
-                        <h4 className="font-semibold text-orange-800">
+                        <h4 className="font-semibold text-slate-900">
                           Anda memiliki {draftCount} pendaftaran yang belum
                           selesai
                         </h4>
-                        <p className="text-orange-700 text-sm">
+                        <p className="text-slate-600 text-sm">
                           Klik tombol "Lengkapi" pada tabel di bawah untuk
                           melanjutkan pendaftaran yang tersimpan sebagai draft.
                         </p>
@@ -467,7 +434,7 @@ const History = () => {
                   </div>
                 )}
 
-                <div className="bg-white rounded-lg shadow-sm">
+                <div className="bg-white rounded-lg border border-slate-200">
                   <UniversalTable
                     title="Riwayat Pendaftaran Beasiswa"
                     data={filteredData}
