@@ -7,12 +7,10 @@ import {
   FileSearchOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
-  StarOutlined,
   BookOutlined,
 } from "@ant-design/icons";
 import GuestLayout from "../layouts/GuestLayout";
 import Button from "../components/Button";
-import Card from "../components/Card";
 import {
   getInformationBySlug,
   getLatestInformation,
@@ -78,7 +76,6 @@ const DetailInformation = () => {
   if (loading) {
     return (
       <GuestLayout>
-
         <SkeletonDetailInformation />
       </GuestLayout>
     );
@@ -87,20 +84,19 @@ const DetailInformation = () => {
   if (error && !information) {
     return (
       <GuestLayout>
-
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
           <div className="flex justify-center items-center min-h-96">
             <div className="text-center max-w-md">
               <Empty
                 image={
-                  <FileSearchOutlined className="text-6xl text-gray-300" />
+                  <FileSearchOutlined className="text-6xl text-slate-300" />
                 }
                 description={
                   <div className="space-y-2">
-                    <div className="text-lg font-semibold text-gray-700">
+                    <div className="text-lg font-semibold text-slate-700">
                       Informasi Tidak Ditemukan
                     </div>
-                    <div className="text-gray-500">{error}</div>
+                    <div className="text-slate-500">{error}</div>
                   </div>
                 }
               >
@@ -113,8 +109,9 @@ const DetailInformation = () => {
                     Kembali ke Daftar Informasi
                   </Button>
                   <Button
+                    variant="secondary"
                     onClick={loadInformationDetail}
-                    className="inline-flex items-center bg-gray-200 text-gray-700"
+                    className="inline-flex items-center"
                   >
                     <ReloadOutlined className="mr-2" />
                     Coba Lagi
@@ -130,14 +127,13 @@ const DetailInformation = () => {
 
   return (
     <>
-
       <GuestLayout>
-        <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white">
+        <div className="bg-[#142a5c] text-white">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-            <nav className="mb-8 text-sm opacity-80">
+            <nav className="mb-8 text-sm text-blue-200">
               <Link
                 to="/informations"
-                className="hover:text-green-200 transition-colors"
+                className="hover:text-white transition-colors"
               >
                 Informasi
               </Link>
@@ -149,14 +145,14 @@ const DetailInformation = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl p-4 shadow-lg">
+                <div className="bg-white rounded-lg p-4">
                   <img
                     src={
                       information.cover_url ||
                       "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80"
                     }
                     alt={information.title}
-                    className="w-full h-48 object-cover rounded-xl"
+                    className="w-full h-48 object-cover rounded-md"
                   />
                 </div>
               </div>
@@ -166,7 +162,7 @@ const DetailInformation = () => {
                   <h1 className="text-4xl font-bold mb-4">
                     {information.title}
                   </h1>
-                  <div className="flex items-center space-x-6 text-sm opacity-80">
+                  <div className="flex items-center space-x-6 text-sm text-blue-200">
                     <span className="flex items-center">
                       <CalendarOutlined className="mr-2" />
                       {formatDate(information.published_at)}
@@ -175,16 +171,18 @@ const DetailInformation = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                  <div className="bg-white/10 rounded-lg p-4 text-center">
                     <ClockCircleOutlined className="text-2xl mb-2 text-yellow-400" />
-                    <div className="text-sm opacity-80">Dipublikasikan</div>
+                    <div className="text-sm text-blue-200">
+                      Dipublikasikan
+                    </div>
                     <div className="text-lg font-bold">
                       {formatDate(information.published_at)}
                     </div>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+                  <div className="bg-white/10 rounded-lg p-4 text-center">
                     <BookOutlined className="text-2xl mb-2 text-blue-400" />
-                    <div className="text-sm opacity-80">Kategori</div>
+                    <div className="text-sm text-blue-200">Kategori</div>
                     <div className="text-lg font-bold">
                       {getTypeLabel(information.type)}
                     </div>
@@ -198,13 +196,13 @@ const DetailInformation = () => {
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
-              <Card>
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <BookOutlined className="mr-2 text-green-500" />
+              <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                  <BookOutlined className="mr-2 text-blue-600" />
                   Konten
                 </h2>
                 {information.content ? (
-                  <div className="prose max-w-none text-gray-700 leading-relaxed">
+                  <div className="prose max-w-none text-slate-700 leading-relaxed">
                     {information.content.split("\n").map((paragraph, index) => (
                       <p key={index} className="mb-4 last:mb-0 text-justify">
                         {paragraph}
@@ -218,20 +216,20 @@ const DetailInformation = () => {
                     className="my-8"
                   />
                 )}
-              </Card>
+              </div>
             </div>
 
             <div className="lg:col-span-1">
               <div className="sticky top-20 space-y-6">
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">
                     Bagikan Informasi Ini
                   </h3>
-                  <p className="text-gray-600 text-sm mb-6">
+                  <p className="text-slate-600 text-sm mb-6">
                     Bagikan informasi ini kepada teman atau keluarga Anda.
                   </p>
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full"
                     onClick={() => {
                       if (navigator.share) {
                         navigator.share({
@@ -250,10 +248,10 @@ const DetailInformation = () => {
                   >
                     Bagikan
                   </Button>
-                </Card>
+                </div>
 
-                <Card>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">
                     Informasi Lainnya
                   </h3>
                   {otherInformation.length > 0 ? (
@@ -262,25 +260,25 @@ const DetailInformation = () => {
                         <Link
                           key={otherInfo.id}
                           to={`/informations/${otherInfo.slug}`}
-                          className="block group"
+                          className="block"
                         >
-                          <div className="flex space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group-hover:shadow-md">
+                          <div className="flex space-x-3 p-3 rounded-md hover:bg-slate-50 transition-colors">
                             <img
                               src={
                                 otherInfo.cover_url ||
                                 "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80"
                               }
                               alt={otherInfo.title}
-                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                              className="w-12 h-12 object-cover rounded-md flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-medium text-gray-900 truncate group-hover:text-[#2D60FF]">
+                              <h4 className="text-sm font-medium text-slate-900 truncate hover:text-blue-600">
                                 {otherInfo.title}
                               </h4>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-xs text-slate-500 truncate">
                                 {getTypeLabel(otherInfo.type)}
                               </p>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-slate-400">
                                 {formatDate(otherInfo.published_at)}
                               </div>
                             </div>
@@ -290,9 +288,9 @@ const DetailInformation = () => {
                       <Divider className="my-4" />
                       <Link
                         to="/informations"
-                        className="block text-center text-[#2D60FF] hover:text-blue-800 font-medium text-sm py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                        className="block text-center text-blue-600 hover:text-blue-800 font-medium text-sm py-2 rounded-md hover:bg-slate-50 transition-colors"
                       >
-                        Lihat Semua Informasi →
+                        Lihat Semua Informasi
                       </Link>
                     </div>
                   ) : (
@@ -302,7 +300,7 @@ const DetailInformation = () => {
                       className="my-4"
                     />
                   )}
-                </Card>
+                </div>
               </div>
             </div>
           </div>

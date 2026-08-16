@@ -9,7 +9,6 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import GuestLayout from "../layouts/GuestLayout";
-import Card from "../components/Card";
 import Button from "../components/Button";
 import { getAllInformations } from "../services/websiteService";
 import { Link } from "react-router-dom";
@@ -141,10 +140,10 @@ const Information = () => {
     <GuestLayout>
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">
+          <h1 className="text-3xl font-bold text-slate-900 mb-4">
             Berita & Artikel
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-slate-600 max-w-2xl mx-auto">
             Temukan berita terbaru dan artikel menarik seputar beasiswa di
             Universitas Andalas
           </p>
@@ -154,15 +153,15 @@ const Information = () => {
           <SkeletonInformation items={9} />
         ) : error ? (
           <div className="text-center py-12">
-            <div className="text-red-500 text-lg mb-4">⚠️ {error}</div>
+            <div className="text-red-600 text-lg mb-4">{error}</div>
             <Button onClick={loadInformations}>Coba Lagi</Button>
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8 shadow-sm">
+            <div className="bg-white rounded-lg border border-slate-200 p-6 mb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div className="lg:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     <SearchOutlined className="mr-1" />
                     Cari Informasi
                   </label>
@@ -176,7 +175,7 @@ const Information = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     <FilterOutlined className="mr-1" />
                     Tipe
                   </label>
@@ -193,7 +192,7 @@ const Information = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     <SortAscendingOutlined className="mr-1" />
                     Urutkan
                   </label>
@@ -211,15 +210,15 @@ const Information = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
+                <div className="flex items-center space-x-4 text-sm text-slate-600">
                   <span>
                     Menampilkan{" "}
-                    <span className="font-semibold text-gray-800">
+                    <span className="font-semibold text-slate-900">
                       {displayedInformations.length}
                     </span>{" "}
                     dari{" "}
-                    <span className="font-semibold text-gray-800">
+                    <span className="font-semibold text-slate-900">
                       {filteredInformations.length}
                     </span>{" "}
                     informasi
@@ -235,7 +234,8 @@ const Information = () => {
                   sortBy !== "newest") && (
                   <Button
                     onClick={clearFilters}
-                    className="text-sm bg-red-500 text-white hover:bg-red-700 px-4 py-2"
+                    variant="secondary"
+                    className="px-4 py-2 text-sm"
                   >
                     Reset Filter
                   </Button>
@@ -248,7 +248,7 @@ const Information = () => {
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    <div className="text-gray-500">
+                    <div className="text-slate-500">
                       {searchQuery || typeFilter !== "ALL"
                         ? "Tidak ada informasi yang sesuai dengan filter"
                         : "Belum ada informasi tersedia"}
@@ -256,7 +256,9 @@ const Information = () => {
                   }
                 >
                   {searchQuery || typeFilter !== "ALL" ? (
-                    <Button onClick={clearFilters}>Reset Filter</Button>
+                    <Button onClick={clearFilters} variant="secondary">
+                      Reset Filter
+                    </Button>
                   ) : null}
                 </Empty>
               </div>
@@ -264,25 +266,33 @@ const Information = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
                   {displayedInformations.map((information) => (
-                    <Card
+                    <article
                       key={information.id}
-                      image={getImageSource(information.cover_url)}
-                      title={information.title}
-                      subtitle={
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center text-gray-500">
-                            <CalendarOutlined className="mr-1" />
-                            {formatDate(
-                              information.published_at || information.createdAt,
-                            )}
-                          </span>
-                        </div>
-                      }
-                      description={information.content.slice(0, 120) + "..."}
+                      className="bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col"
                     >
-                      <div className="mt-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
+                      <img
+                        src={getImageSource(information.cover_url)}
+                        alt={information.title}
+                        className="w-full h-48 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="p-6 flex flex-col flex-1">
+                        <p className="flex items-center text-xs text-slate-400 mb-2">
+                          <CalendarOutlined className="mr-1" />
+                          {formatDate(
+                            information.published_at || information.createdAt,
+                          )}
+                        </p>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-3 leading-snug">
+                          {information.title}
+                        </h3>
+                        <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                          {information.content.slice(0, 120)}
+                          {information.content.length > 120 ? "…" : ""}
+                        </p>
+
+                        <div className="mt-auto pt-2 space-y-4">
+                          <div>
                             <Tag
                               color={
                                 information.type === "NEWS" ? "blue" : "purple"
@@ -292,29 +302,34 @@ const Information = () => {
                               {getTypeLabel(information.type)}
                             </Tag>
                           </div>
-                        </div>
 
-                        <div className="pt-2">
                           <Link
                             to={`/informations/${information.slug}`}
-                            className="block w-full text-center px-4 py-2 text-sm bg-[#2D60FF] text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="block w-full text-center px-4 py-2 text-sm font-medium rounded-md transition-colors bg-[#2D60FF] text-white hover:bg-blue-700"
                           >
                             Baca Selengkapnya
                           </Link>
                         </div>
                       </div>
-                    </Card>
+                    </article>
                   ))}
                 </div>
 
                 {hasMore && (
                   <div className="flex justify-center">
-                    <Button onClick={handleLoadMore}>Lihat Lebih Banyak</Button>
+                    <Button
+                      onClick={handleLoadMore}
+                      variant="secondary"
+                      size="lg"
+                    >
+                      Lihat Lebih Banyak
+                      {remainingItems > 0 && ` (${remainingItems} tersisa)`}
+                    </Button>
                   </div>
                 )}
 
                 {displayedInformations.length > itemsPerPage && (
-                  <div className="text-center mt-6 text-sm text-gray-500">
+                  <div className="text-center mt-6 text-sm text-slate-500">
                     Menampilkan {displayedInformations.length} dari{" "}
                     {filteredInformations.length} informasi
                   </div>

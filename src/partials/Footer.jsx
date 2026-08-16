@@ -6,7 +6,7 @@ const Footer = () => {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-gradient-to-r from-[#1e3a8a] to-[#2D60FF] text-white">
+    <footer className="bg-[#142a5c] text-white">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
@@ -97,7 +97,7 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 className="text-white hover:text-blue-200 font-semibold underline decoration-dotted underline-offset-4 transition-colors"
               >
-                KNM
+                Neo Telemetri
               </a>
             </p>
           </div>

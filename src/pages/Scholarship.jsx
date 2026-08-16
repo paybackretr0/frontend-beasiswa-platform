@@ -11,7 +11,6 @@ import {
   SortAscendingOutlined,
 } from "@ant-design/icons";
 import GuestLayout from "../layouts/GuestLayout";
-import Card from "../components/Card";
 import Button from "../components/Button";
 import { fetchActiveScholarships } from "../services/scholarshipService";
 import { Link } from "react-router-dom";
@@ -275,11 +274,11 @@ const Scholarship = () => {
     return (
       <GuestLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+          <h1 className="text-3xl font-bold text-slate-900 mb-4 text-center">
             Daftar Beasiswa
           </h1>
           <div className="text-center mb-10">
-            <div className="h-5 bg-gray-200 rounded w-64 mx-auto animate-pulse"></div>
+            <div className="h-5 bg-slate-200 rounded w-64 mx-auto animate-pulse"></div>
           </div>
           <SkeletonScholarshipCard items={9} />
         </div>
@@ -292,7 +291,7 @@ const Scholarship = () => {
       <GuestLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
           <div className="text-center py-12">
-            <div className="text-red-500 text-lg mb-4">⚠️ {error}</div>
+            <div className="text-red-600 text-lg mb-4">{error}</div>
             <Button onClick={loadScholarships}>Coba Lagi</Button>
           </div>
         </div>
@@ -304,7 +303,7 @@ const Scholarship = () => {
     return (
       <GuestLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-10 text-center">
+          <h1 className="text-3xl font-bold text-slate-900 mb-10 text-center">
             Daftar Beasiswa
           </h1>
           <div className="flex flex-col items-center justify-center">
@@ -315,18 +314,15 @@ const Scholarship = () => {
                 className="w-50 h-50 mx-auto opacity-80"
               />
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-gray-800">
+                <h3 className="text-2xl font-bold text-slate-900">
                   Belum Ada Beasiswa
                 </h3>
-                <p className="text-gray-600 text-lg leading-relaxed">
+                <p className="text-slate-600 text-lg leading-relaxed">
                   Saat ini belum ada beasiswa yang tersedia. Pantau terus
                   halaman ini untuk mendapatkan informasi beasiswa terbaru.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                  <Button
-                    onClick={loadScholarships}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
-                  >
+                  <Button onClick={loadScholarships} size="lg">
                     Muat Ulang
                   </Button>
                 </div>
@@ -341,14 +337,14 @@ const Scholarship = () => {
   return (
     <GuestLayout>
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+        <h1 className="text-3xl font-bold text-slate-900 mb-4 text-center">
           Daftar Beasiswa
         </h1>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8 shadow-sm">
+        <div className="bg-white rounded-lg border border-slate-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 <SearchOutlined className="mr-1" />
                 Cari Beasiswa
               </label>
@@ -362,7 +358,7 @@ const Scholarship = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 <FilterOutlined className="mr-1" />
                 Status
               </label>
@@ -379,7 +375,7 @@ const Scholarship = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 <SortAscendingOutlined className="mr-1" />
                 Urutkan
               </label>
@@ -397,15 +393,15 @@ const Scholarship = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
+            <div className="flex items-center space-x-4 text-sm text-slate-600">
               <span>
                 Menampilkan{" "}
-                <span className="font-semibold text-gray-800">
+                <span className="font-semibold text-slate-900">
                   {displayedScholarships.length}
                 </span>{" "}
                 dari{" "}
-                <span className="font-semibold text-gray-800">
+                <span className="font-semibold text-slate-900">
                   {filteredScholarships.length}
                 </span>{" "}
                 beasiswa
@@ -421,7 +417,8 @@ const Scholarship = () => {
               sortBy !== "closing_soon") && (
               <Button
                 onClick={clearFilters}
-                className="text-sm bg-red-500 text-white hover:bg-red-700 px-4 py-2"
+                variant="secondary"
+                className="px-4 py-2 text-sm"
               >
                 Reset Filter
               </Button>
@@ -434,27 +431,40 @@ const Scholarship = () => {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <div className="text-gray-500">
+                <div className="text-slate-500">
                   Tidak ada beasiswa yang sesuai dengan pencarian atau filter
                   Anda
                 </div>
               }
             >
-              <Button onClick={clearFilters}>Reset Filter</Button>
+              <Button onClick={clearFilters} variant="secondary">
+                Reset Filter
+              </Button>
             </Empty>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
               {displayedScholarships.map((scholarship) => (
-                <Card
+                <article
                   key={scholarship.id}
-                  image={getImageSource(scholarship.logo_path)}
-                  title={scholarship.name}
-                  subtitle={`${scholarship.organizer} • ${scholarship.year}`}
+                  className="bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col"
                 >
-                  <div className="mt-4 space-y-3">
-                    <div className="flex flex-wrap gap-2">
+                  <img
+                    src={getImageSource(scholarship.logo_path)}
+                    alt={scholarship.name}
+                    className="w-full h-48 object-cover"
+                    loading="lazy"
+                  />
+                  <div className="p-6 flex flex-col flex-1">
+                    <p className="text-xs text-slate-400 mb-2">
+                      {scholarship.organizer} • {scholarship.year}
+                    </p>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3 leading-snug">
+                      {scholarship.name}
+                    </h3>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
                       {getStatusTags(
                         scholarship.is_active,
                         scholarship.end_date,
@@ -462,12 +472,12 @@ const Scholarship = () => {
                     </div>
 
                     {scholarship.total_schemas > 0 && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <div className="text-xs text-blue-700 space-y-1">
+                      <div className="bg-slate-50 border border-slate-200 rounded-md p-3 mb-4">
+                        <div className="text-xs text-slate-600 space-y-1">
                           {scholarship.total_quota > 0 && (
                             <div className="flex justify-between">
                               <span>Total Kuota:</span>
-                              <span className="font-medium">
+                              <span className="font-medium text-slate-900">
                                 {scholarship.total_quota} orang
                               </span>
                             </div>
@@ -475,7 +485,7 @@ const Scholarship = () => {
                           {scholarship.min_gpa && (
                             <div className="flex justify-between">
                               <span>Min. IPK:</span>
-                              <span className="font-medium">
+                              <span className="font-medium text-slate-900">
                                 {scholarship.min_gpa}
                               </span>
                             </div>
@@ -483,7 +493,7 @@ const Scholarship = () => {
                           {scholarship.min_semester && (
                             <div className="flex justify-between">
                               <span>Min. Semester:</span>
-                              <span className="font-medium">
+                              <span className="font-medium text-slate-900">
                                 {scholarship.min_semester}
                               </span>
                             </div>
@@ -492,16 +502,16 @@ const Scholarship = () => {
                       </div>
                     )}
 
-                    <div className="text-sm text-gray-600 space-y-1">
+                    <div className="text-sm text-slate-600 space-y-1 mb-4">
                       <div className="flex justify-between">
                         <span>Nilai:</span>
-                        <span className="font-medium text-green-600">
+                        <span className="font-medium text-emerald-600">
                           {formatCurrency(scholarship.scholarship_value)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Durasi:</span>
-                        <span className="font-medium">
+                        <span className="font-medium text-slate-900">
                           {scholarship.duration_semesters} semester
                         </span>
                       </div>
@@ -515,46 +525,45 @@ const Scholarship = () => {
                       )}
                     </div>
 
-                    {scholarship.benefits &&
-                      scholarship.benefits.length > 0 && (
-                        <Tooltip
-                          title={
-                            <div>
-                              <strong>Benefit:</strong>
-                              <ul className="list-disc pl-4 mt-1">
-                                {scholarship.benefits
-                                  .slice(0, 3)
-                                  .map((benefit, idx) => (
-                                    <li key={idx}>{benefit}</li>
-                                  ))}
-                                {scholarship.benefits.length > 3 && (
-                                  <li>
-                                    + {scholarship.benefits.length - 3} lainnya
-                                  </li>
-                                )}
-                              </ul>
-                            </div>
-                          }
-                        >
-                          <div className="text-xs text-blue-600 cursor-help">
-                            {scholarship.benefits.length} benefit tersedia
+                    {scholarship.benefits && scholarship.benefits.length > 0 && (
+                      <Tooltip
+                        title={
+                          <div>
+                            <strong>Benefit:</strong>
+                            <ul className="list-disc pl-4 mt-1">
+                              {scholarship.benefits
+                                .slice(0, 3)
+                                .map((benefit, idx) => (
+                                  <li key={idx}>{benefit}</li>
+                                ))}
+                              {scholarship.benefits.length > 3 && (
+                                <li>
+                                  + {scholarship.benefits.length - 3} lainnya
+                                </li>
+                              )}
+                            </ul>
                           </div>
-                        </Tooltip>
-                      )}
+                        }
+                      >
+                        <div className="text-xs text-blue-600 cursor-help mb-2">
+                          {scholarship.benefits.length} benefit tersedia
+                        </div>
+                      </Tooltip>
+                    )}
 
                     {(() => {
                       const info = getRegistrationInfo(scholarship);
                       if (info.canRegister) {
                         return (
-                          <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5 mt-2">
-                            <CheckCircleOutlined className="text-green-600" />
+                          <div className="flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-1.5 mb-3">
+                            <CheckCircleOutlined className="text-emerald-600" />
                             <span>Kamu bisa mendaftar di beasiswa ini</span>
                           </div>
                         );
                       }
                       if (info.reason === "not_eligible") {
                         return (
-                          <div className="flex items-center gap-1 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5 mt-2">
+                          <div className="flex items-center gap-1 text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-1.5 mb-3">
                             <CloseCircleOutlined className="text-red-600" />
                             <span>Tidak sesuai fakultas/prodi kamu</span>
                           </div>
@@ -562,7 +571,7 @@ const Scholarship = () => {
                       }
                       if (info.reason === "not_logged_in") {
                         return (
-                          <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 mt-2">
+                          <div className="flex items-center gap-1 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-3 py-1.5 mb-3">
                             <InfoCircleOutlined className="text-blue-600" />
                             <span>Login untuk cek eligibility kamu</span>
                           </div>
@@ -571,16 +580,16 @@ const Scholarship = () => {
                       return null;
                     })()}
 
-                    <div className="pt-2">
+                    <div className="pt-2 mt-auto">
                       <Link
                         to={`/scholarship/${scholarship.id}`}
-                        className="block w-full text-center px-4 py-2 text-sm rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700"
+                        className="block w-full text-center px-4 py-2 text-sm font-medium rounded-md transition-colors bg-[#2D60FF] text-white hover:bg-blue-700"
                       >
                         Lihat Detail & Skema
                       </Link>
                     </div>
                   </div>
-                </Card>
+                </article>
               ))}
             </div>
 
@@ -588,7 +597,9 @@ const Scholarship = () => {
               <div className="flex flex-col items-center gap-4">
                 <Button
                   onClick={handleLoadMore}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base"
+                  size="lg"
+                  variant="secondary"
+                  className="px-8"
                 >
                   Lihat Lebih Banyak
                   {remainingCount > 0 && ` (${remainingCount} tersisa)`}
@@ -598,7 +609,7 @@ const Scholarship = () => {
 
             {!hasMore && filteredScholarships.length > itemsPerLoad && (
               <div className="text-center py-6">
-                <p className="text-gray-600 font-medium">
+                <p className="text-slate-600 font-medium">
                   Semua beasiswa telah ditampilkan
                 </p>
               </div>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthImg from "../../assets/auth.webp";
 import Button from "../../components/Button";
 import { login } from "../../services/authService";
 
@@ -50,24 +49,45 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex">
-      <div className="hidden md:block w-0 md:w-[70%] relative">
-        <img
-          src={AuthImg}
-          alt="Auth Illustration"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#2D60FF]/70 via-[#eaf0ff]/60 to-transparent" />
+      <div className="hidden md:flex md:w-[70%] bg-[#142a5c] flex-col justify-between p-10 lg:p-16">
+        <div className="flex items-center gap-3">
+          <img
+            src="/unand.png"
+            alt="Logo Universitas Andalas"
+            className="h-10 w-10 object-contain"
+          />
+          <div>
+            <p className="font-bold text-white text-lg leading-tight">
+              BeasiswaApp
+            </p>
+            <p className="text-blue-200 text-xs">Universitas Andalas</p>
+          </div>
+        </div>
+
+        <div className="max-w-md">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Sistem Informasi Beasiswa
+          </h2>
+          <p className="text-blue-200 leading-relaxed">
+            Platform resmi untuk pendaftaran, verifikasi, dan pemantauan
+            beasiswa Non-APBN di lingkungan Universitas Andalas.
+          </p>
+        </div>
+
+        <p className="text-blue-200 text-sm">
+          © {new Date().getFullYear()} Universitas Andalas
+        </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-gray-600 mb-6 text-center">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">
             Masuk Sistem Beasiswa
           </h2>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Email Unand
               </label>
               <input
@@ -75,13 +95,13 @@ const Login = () => {
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Masukkan email unand Anda"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Kata Sandi
               </label>
               <input
@@ -89,27 +109,27 @@ const Login = () => {
                 name="password"
                 value={form.password}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
-                placeholder="******"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Masukkan kata sandi"
                 required
               />
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
+              <div className="text-red-600 text-sm text-center">{error}</div>
             )}
 
             <div className="flex justify-between items-center text-sm">
               <button
                 type="button"
-                className="text-[#2D60FF] hover:cursor-pointer"
+                className="text-[#2D60FF] hover:text-blue-800 hover:cursor-pointer"
                 onClick={() => navigate("/forgot-password")}
               >
                 Lupa Password?
               </button>
               <button
                 type="button"
-                className="text-gray-500 hover:cursor-pointer"
+                className="text-slate-500 hover:text-slate-700 hover:cursor-pointer"
                 onClick={() => navigate("/")}
               >
                 Beranda
@@ -121,11 +141,11 @@ const Login = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-center text-sm text-slate-600">
             Belum punya akun?{" "}
             <button
               type="button"
-              className="text-[#2D60FF] font-semibold hover:cursor-pointer"
+              className="text-[#2D60FF] font-semibold hover:text-blue-800 hover:cursor-pointer"
               onClick={() => navigate("/register")}
             >
               Buat akun disini

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
-import AuthImg from "../../assets/auth.webp";
 import Button from "../../components/Button";
 import useAlert from "../../hooks/useAlert";
 import { register } from "../../services/authService";
@@ -44,7 +43,7 @@ const SignUp = () => {
     try {
       const data = await getPublicFaculties();
       setFaculties(data);
-    } catch (err) {
+    } catch {
       error("Error", "Gagal memuat data fakultas");
     } finally {
       setLoadingData(false);
@@ -66,7 +65,7 @@ const SignUp = () => {
       try {
         const data = await getDepartmentsByFaculty(facultyId);
         setDepartments(data);
-      } catch (err) {
+      } catch {
         error("Error", "Gagal memuat data departemen");
       }
     }
@@ -85,7 +84,7 @@ const SignUp = () => {
       try {
         const data = await getStudyProgramsByDepartment(departmentId);
         setStudyPrograms(data);
-      } catch (err) {
+      } catch {
         error("Error", "Gagal memuat data program studi");
       }
     }
@@ -238,7 +237,7 @@ const SignUp = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D60FF] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data...</p>
+          <p className="mt-4 text-slate-600">Memuat data...</p>
         </div>
       </div>
     );
@@ -246,26 +245,45 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen flex">
+      <div className="hidden lg:flex lg:w-[60%] bg-[#142a5c] flex-col justify-between p-10 lg:p-16">
+        <div className="flex items-center gap-3">
+          <img
+            src="/unand.png"
+            alt="Logo Universitas Andalas"
+            className="h-10 w-10 object-contain"
+          />
+          <div>
+            <p className="font-bold text-white text-lg leading-tight">
+              BeasiswaApp
+            </p>
+            <p className="text-blue-200 text-xs">Universitas Andalas</p>
+          </div>
+        </div>
 
+        <div className="max-w-md">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Sistem Informasi Beasiswa
+          </h2>
+          <p className="text-blue-200 leading-relaxed">
+            Platform resmi untuk pendaftaran, verifikasi, dan pemantauan
+            beasiswa Non-APBN di lingkungan Universitas Andalas.
+          </p>
+        </div>
 
-      <div className="hidden lg:block w-0 lg:w-[60%] relative">
-        <img
-          src={AuthImg}
-          alt="Auth Illustration"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#2D60FF]/70 via-[#eaf0ff]/60 to-transparent" />
+        <p className="text-blue-200 text-sm">
+          © {new Date().getFullYear()} Universitas Andalas
+        </p>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-lg bg-white rounded-2xl p-8 max-h-[95vh] overflow-y-auto">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+        <div className="w-full max-w-lg">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">
             Buat Akun Baru
           </h2>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Nama Lengkap <span className="text-red-500">*</span>
               </label>
               <input
@@ -273,14 +291,14 @@ const SignUp = () => {
                 name="full_name"
                 value={form.full_name}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Masukkan nama lengkap"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Email Student Unand <span className="text-red-500">*</span>
               </label>
               <input
@@ -288,21 +306,21 @@ const SignUp = () => {
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Masukkan Email Unand"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Fakultas <span className="text-red-500">*</span>
               </label>
               <select
                 name="faculty_id"
                 value={form.faculty_id}
                 onChange={handleFacultyChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF] bg-white"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 required
               >
                 <option value="">Pilih Fakultas</option>
@@ -315,14 +333,14 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Departemen <span className="text-red-500">*</span>
               </label>
               <select
                 name="department_id"
                 value={form.department_id}
                 onChange={handleDepartmentChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF] bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
                 required
                 disabled={!form.faculty_id || departments.length === 0}
               >
@@ -342,14 +360,14 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Program Studi <span className="text-red-500">*</span>
               </label>
               <select
                 name="study_program_id"
                 value={form.study_program_id}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF] bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
                 required
                 disabled={!form.department_id || studyPrograms.length === 0}
               >
@@ -370,7 +388,7 @@ const SignUp = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">
+                <label className="block text-sm font-medium mb-1 text-slate-700">
                   Tempat Lahir <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -378,14 +396,14 @@ const SignUp = () => {
                   name="birth_place"
                   value={form.birth_place}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Kota kelahiran"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">
+                <label className="block text-sm font-medium mb-1 text-slate-700">
                   Tanggal Lahir <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -393,7 +411,7 @@ const SignUp = () => {
                   name="birth_date"
                   value={form.birth_date}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -401,14 +419,14 @@ const SignUp = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">
+                <label className="block text-sm font-medium mb-1 text-slate-700">
                   Jenis Kelamin <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="gender"
                   value={form.gender}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF] bg-white"
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   required
                 >
                   <option value="">Pilih jenis kelamin</option>
@@ -418,7 +436,7 @@ const SignUp = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">
+                <label className="block text-sm font-medium mb-1 text-slate-700">
                   Nomor Telepon <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -426,7 +444,7 @@ const SignUp = () => {
                   name="phone_number"
                   value={form.phone_number}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#2D60FF]"
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="08123456789"
                   required
                 />
@@ -434,7 +452,7 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Kata Sandi <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -443,7 +461,7 @@ const SignUp = () => {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-12 focus:outline-none focus:border-[#2D60FF]"
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Minimal 6 karakter"
                   required
                   minLength="6"
@@ -451,7 +469,7 @@ const SignUp = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 focus:outline-none"
                   tabIndex="-1"
                 >
                   {showPassword ? (
@@ -464,7 +482,7 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 text-slate-700">
                 Konfirmasi Kata Sandi <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -473,14 +491,14 @@ const SignUp = () => {
                   name="password_confirmation"
                   value={form.password_confirmation}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-12 focus:outline-none focus:border-[#2D60FF]"
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Ulangi kata sandi"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 focus:outline-none"
                   tabIndex="-1"
                 >
                   {showConfirmPassword ? (
@@ -499,11 +517,11 @@ const SignUp = () => {
             </div>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-center text-sm text-slate-600">
             Sudah punya akun?{" "}
             <button
               type="button"
-              className="text-[#2D60FF] font-semibold hover:cursor-pointer hover:underline"
+              className="text-[#2D60FF] font-semibold hover:text-blue-800 hover:cursor-pointer"
               onClick={() => navigate("/login")}
             >
               Masuk disini

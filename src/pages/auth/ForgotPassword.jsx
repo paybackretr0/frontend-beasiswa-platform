@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowLeftOutlined,
-  MailOutlined,
-  KeyOutlined,
-  LockOutlined,
-} from "@ant-design/icons";
-import Card from "../../components/Card";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import Button from "../../components/Button";
 import {
   forgotPassword,
@@ -78,6 +72,7 @@ const ForgotPassword = () => {
     } catch (err) {
       console.error("Error sending reset email:", err);
       error("Gagal!", err.message || "Gagal mengirim kode reset.");
+    } finally {
       setLoading(false);
     }
   };
@@ -140,9 +135,38 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex">
+      <div className="hidden md:flex md:w-[70%] bg-[#142a5c] flex-col justify-between p-10 lg:p-16">
+        <div className="flex items-center gap-3">
+          <img
+            src="/unand.png"
+            alt="Logo Universitas Andalas"
+            className="h-10 w-10 object-contain"
+          />
+          <div>
+            <p className="font-bold text-white text-lg leading-tight">
+              BeasiswaApp
+            </p>
+            <p className="text-blue-200 text-xs">Universitas Andalas</p>
+          </div>
+        </div>
 
-      <div className="flex items-center justify-center px-6 py-12">
+        <div className="max-w-md">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Sistem Informasi Beasiswa
+          </h2>
+          <p className="text-blue-200 leading-relaxed">
+            Platform resmi untuk pendaftaran, verifikasi, dan pemantauan
+            beasiswa Non-APBN di lingkungan Universitas Andalas.
+          </p>
+        </div>
+
+        <p className="text-blue-200 text-sm">
+          © {new Date().getFullYear()} Universitas Andalas
+        </p>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           <div className="mb-8">
             <div className="flex items-center justify-center space-x-2">
@@ -152,7 +176,7 @@ const ForgotPassword = () => {
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                       step >= stepNumber
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-500"
+                        : "bg-slate-200 text-slate-500"
                     }`}
                   >
                     {stepNumber}
@@ -160,37 +184,34 @@ const ForgotPassword = () => {
                   {stepNumber < 3 && (
                     <div
                       className={`w-8 h-0.5 ${
-                        step > stepNumber ? "bg-blue-600" : "bg-gray-200"
+                        step > stepNumber ? "bg-blue-600" : "bg-slate-200"
                       }`}
                     />
                   )}
                 </React.Fragment>
               ))}
             </div>
-            <div className="flex justify-between mt-2 text-xs text-gray-500">
+            <div className="flex justify-between mt-2 text-xs text-slate-500">
               <span>Email</span>
               <span>Kode</span>
               <span>Password</span>
             </div>
           </div>
 
-          <Card className="w-full">
+          <div className="bg-white border border-slate-200 rounded-lg p-8">
             {step === 1 && (
               <form onSubmit={handleSubmitEmail}>
                 <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MailOutlined className="text-2xl text-blue-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
                     Lupa Password?
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-slate-600">
                     Masukkan email Anda untuk menerima kode reset password
                   </p>
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Email Unand
                   </label>
                   <input
@@ -198,7 +219,7 @@ const ForgotPassword = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Masukkan email Unand Anda"
                     required
                   />
@@ -215,7 +236,7 @@ const ForgotPassword = () => {
                 <div className="text-center">
                   <Link
                     to="/login"
-                    className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                    className="text-sm text-slate-600 hover:text-blue-600 transition-colors"
                   >
                     Sudah ingat password?{" "}
                     <span className="font-medium">Login</span>
@@ -227,20 +248,17 @@ const ForgotPassword = () => {
             {step === 2 && (
               <form onSubmit={handleSubmitCode}>
                 <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <KeyOutlined className="text-2xl text-green-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
                     Verifikasi Kode
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-slate-600">
                     Kami telah mengirim kode 6 digit ke
                   </p>
                   <p className="text-blue-600 font-medium">{formData.email}</p>
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Kode Reset (6 digit)
                   </label>
                   <input
@@ -248,7 +266,7 @@ const ForgotPassword = () => {
                     name="code"
                     value={formData.code}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg tracking-widest"
+                    className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg tracking-widest"
                     placeholder="123456"
                     maxLength={6}
                     required
@@ -259,7 +277,7 @@ const ForgotPassword = () => {
                   <button
                     type="button"
                     onClick={handleBackStep}
-                    className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer"
                   >
                     <ArrowLeftOutlined />
                     Kembali
@@ -270,13 +288,13 @@ const ForgotPassword = () => {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     Tidak menerima kode?{" "}
                     <button
                       type="button"
                       onClick={handleResendCode}
                       disabled={resendLoading || cooldown > 0}
-                      className="font-medium transition-colors text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
+                      className="font-medium transition-colors text-blue-600 hover:text-blue-700 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {resendLoading
                         ? "Mengirim..."
@@ -292,20 +310,17 @@ const ForgotPassword = () => {
             {step === 3 && (
               <form onSubmit={handleSubmitPassword}>
                 <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <LockOutlined className="text-2xl text-purple-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
                     Password Baru
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-slate-600">
                     Buat password baru yang aman dan mudah diingat
                   </p>
                 </div>
 
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Password Baru
                     </label>
                     <input
@@ -313,14 +328,14 @@ const ForgotPassword = () => {
                       name="new_password"
                       value={formData.new_password}
                       onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Minimal 6 karakter"
                       minLength={6}
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Konfirmasi Password Baru
                     </label>
                     <input
@@ -328,7 +343,7 @@ const ForgotPassword = () => {
                       name="confirm_password"
                       value={formData.confirm_password}
                       onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Ulangi password baru"
                       required
                     />
@@ -339,7 +354,7 @@ const ForgotPassword = () => {
                   <button
                     type="button"
                     onClick={handleBackStep}
-                    className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer"
                   >
                     <ArrowLeftOutlined />
                     Kembali
@@ -350,7 +365,7 @@ const ForgotPassword = () => {
                 </div>
               </form>
             )}
-          </Card>
+          </div>
         </div>
       </div>
     </div>

@@ -18,7 +18,6 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
-import Card from "../../components/Card";
 import GuestLayout from "../../layouts/GuestLayout";
 import {
   getScholarshipForm,
@@ -91,7 +90,6 @@ const FormApplication = () => {
   const [submitting, setSubmitting] = useState(false);
   const [scholarship, setScholarship] = useState(null);
   const [selectedSchema, setSelectedSchema] = useState(null);
-  const [availableSchemas, setAvailableSchemas] = useState([]);
   const [formFields, setFormFields] = useState([]);
   const [answers, setAnswers] = useState({});
   const [hasExistingApplication, setHasExistingApplication] = useState(false);
@@ -131,7 +129,6 @@ const FormApplication = () => {
 
         setScholarship(formData.scholarship);
         setSelectedSchema(formData.selected_schema);
-        setAvailableSchemas(formData.available_schemas);
         setFormFields(formData.form_fields);
 
         const existingAnswers = {};
@@ -195,7 +192,6 @@ const FormApplication = () => {
 
         setScholarship(data.scholarship);
         setSelectedSchema(data.selected_schema);
-        setAvailableSchemas(data.available_schemas);
         setFormFields(data.form_fields);
         setHasExistingApplication(data.has_existing_application);
         setExistingStatus(data.existing_application_status);
@@ -494,7 +490,7 @@ const FormApplication = () => {
               {field.options.map((option, index) => (
                 <div
                   key={getOptionValue(option) || index}
-                  className="flex items-center rounded-lg border border-gray-200 px-3 py-2"
+                  className="flex items-center rounded-md border border-slate-200 px-3 py-2"
                 >
                   <Checkbox value={getOptionValue(option)}>
                     {getOptionLabel(option)}
@@ -553,25 +549,25 @@ const FormApplication = () => {
               </Button>
             </Upload>
             {value && (
-              <div className="mt-2 text-sm text-gray-600">
+              <div className="mt-2 text-sm text-slate-600">
                 File terpilih: {value.name || getCleanFileName(value.path)}{" "}
                 {value.size && ` (${(value.size / 1024 / 1024).toFixed(2)} MB)`}
               </div>
             )}
 
             {fieldPrevFiles.length > 0 && !value && !selectedPrevId && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-xs font-medium text-gray-500 mb-2">
+              <div className="mt-3 pt-3 border-t border-slate-200">
+                <p className="text-xs font-medium text-slate-500 mb-2">
                   ── Atau gunakan dari pendaftaran sebelumnya ──
                 </p>
                 <div className="space-y-1.5">
                   {fieldPrevFiles.map((file) => (
                     <label
                       key={file.id}
-                      className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer border transition-colors ${
+                      className={`flex items-start gap-2 p-2 rounded-md cursor-pointer border transition-colors ${
                         selectedPrevId === file.id
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
                       <input
@@ -594,10 +590,10 @@ const FormApplication = () => {
                         className="mt-0.5"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">
+                        <p className="text-sm font-medium text-slate-900 truncate">
                           {file.original_filename}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {file.scholarship_name}
                           {file.schema_name ? ` - ${file.schema_name}` : ""}
                         </p>
@@ -609,7 +605,7 @@ const FormApplication = () => {
             )}
 
             {fieldPrevFiles.length === 0 && !value && !selectedPrevId && previousFiles.length > 0 && (
-              <div className="mt-2 text-xs text-gray-400 italic">
+              <div className="mt-2 text-xs text-slate-400 italic">
                 Tidak ada file "{field.label}" dari pendaftaran sebelumnya
               </div>
             )}
@@ -649,8 +645,8 @@ const FormApplication = () => {
     >
       <div className="space-y-4">
         <div>
-          <h4 className="font-semibold text-gray-800 mb-2">Petunjuk Umum:</h4>
-          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+          <h4 className="font-semibold text-slate-900 mb-2">Petunjuk Umum:</h4>
+          <ul className="list-disc list-inside space-y-1 text-sm text-slate-600">
             <li>Pastikan semua informasi yang diisi sudah benar dan sesuai</li>
             <li>
               Field yang bertanda <span className="text-red-500">*</span> wajib
@@ -664,10 +660,10 @@ const FormApplication = () => {
         </div>
 
         <div>
-          <h4 className="font-semibold text-gray-800 mb-2">
+          <h4 className="font-semibold text-slate-900 mb-2">
             Petunjuk Upload File:
           </h4>
-          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+          <ul className="list-disc list-inside space-y-1 text-sm text-slate-600">
             <li>Format yang didukung: PDF</li>
             <li>Ukuran maksimal file: 5MB</li>
             <li>File yang diunggah harus jelas dan dapat dibaca</li>
@@ -679,8 +675,8 @@ const FormApplication = () => {
         </div>
 
         <div>
-          <h4 className="font-semibold text-gray-800 mb-2">Tips:</h4>
-          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+          <h4 className="font-semibold text-slate-900 mb-2">Tips:</h4>
+          <ul className="list-disc list-inside space-y-1 text-sm text-slate-600">
             <li>Siapkan semua dokumen yang diperlukan sebelum mengisi form</li>
             <li>Periksa kembali semua data sebelum submit</li>
             <li>Simpan salinan digital dari semua dokumen yang diupload</li>
@@ -688,8 +684,8 @@ const FormApplication = () => {
           </ul>
         </div>
 
-        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
+        <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <p className="text-sm text-slate-700">
             <strong>Penting:</strong> Pastikan koneksi internet stabil saat
             mengupload file dan submit pendaftaran untuk menghindari kegagalan
             pengiriman.
@@ -714,7 +710,7 @@ const FormApplication = () => {
     return (
       <GuestLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
-          <Card>
+          <div className="bg-white border border-slate-200 rounded-lg p-6">
             <div className="text-center py-8">
               <Alert
                 message="Pendaftaran Sudah Dilakukan"
@@ -749,7 +745,7 @@ const FormApplication = () => {
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </GuestLayout>
     );
@@ -761,14 +757,14 @@ const FormApplication = () => {
       <GuestLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
           {isRevisionMode && (
-            <div className="mb-6 p-4 bg-orange-50 border border-orange-300 rounded-lg">
+            <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="flex items-center">
-                <InfoCircleOutlined className="text-orange-600 mr-2 text-xl" />
+                <InfoCircleOutlined className="text-amber-600 mr-2 text-xl" />
                 <div>
-                  <h4 className="font-semibold text-orange-800 mb-1">
+                  <h4 className="font-semibold text-slate-900 mb-1">
                     Revisi Pendaftaran
                   </h4>
-                  <p className="text-orange-700 text-sm">
+                  <p className="text-slate-600 text-sm">
                     Anda sedang merevisi pendaftaran beasiswa. Pastikan semua
                     data yang diminta sudah diperbaiki sesuai catatan revisi.
                   </p>
@@ -786,18 +782,18 @@ const FormApplication = () => {
             </Button>
           </div>
 
-          <Card>
-            <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="bg-white border border-slate-200 rounded-lg p-6">
+            <div className="mb-8 p-6 bg-slate-50 rounded-lg border border-slate-200">
               <div className="flex items-start gap-4">
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                  <h1 className="text-2xl font-bold text-slate-900 mb-2">
                     Formulir Pendaftaran Beasiswa
                   </h1>
-                  <div className="text-gray-700">
+                  <div className="text-slate-700">
                     <div className="font-semibold text-lg text-blue-700 mb-1">
                       {scholarship?.name}
                     </div>
-                    <div className="text-sm text-gray-600 mb-2">
+                    <div className="text-sm text-slate-600 mb-2">
                       Penyelenggara: {scholarship?.organizer}
                     </div>
                     {scholarship?.end_date && (
@@ -816,7 +812,7 @@ const FormApplication = () => {
                     )}
 
                     {selectedSchema && (
-                      <div className="bg-white border border-blue-300 rounded-lg p-4 mt-3">
+                      <div className="bg-white border border-slate-200 rounded-lg p-4 mt-3">
                         <div className="flex items-center mb-2">
                           <h3 className="font-semibold text-blue-900 flex items-center">
                             Skema yang Dipilih
@@ -826,7 +822,7 @@ const FormApplication = () => {
                           {selectedSchema.name}
                         </div>
                         {selectedSchema.description && (
-                          <p className="text-sm text-gray-600 mb-3">
+                          <p className="text-sm text-slate-600 mb-3">
                             {selectedSchema.description}
                           </p>
                         )}
@@ -845,9 +841,9 @@ const FormApplication = () => {
             </div>
 
             <form className="space-y-6">
-              {formFields.map((field, index) => (
+              {formFields.map((field) => (
                 <div key={field.id} className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-700">
+                  <label className="flex items-center text-sm font-medium text-slate-700">
                     <span>{field.label}</span>
                     {field.is_required && (
                       <span className="text-red-500 ml-1 text-base">*</span>
@@ -869,7 +865,7 @@ const FormApplication = () => {
                   )}
 
                   {field.type === "FILE" && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-slate-500">
                       Format: PDF (Max: 5MB)
                     </div>
                   )}
@@ -877,8 +873,8 @@ const FormApplication = () => {
               ))}
             </form>
 
-            <div className="flex items-center mt-8 pt-6 border-t border-gray-200 gap-4">
-              <div className="text-sm text-gray-500">
+            <div className="flex items-center mt-8 pt-6 border-t border-slate-200 gap-4">
+              <div className="text-sm text-slate-500">
                 <span className="text-red-500">*</span> Field wajib diisi
               </div>
 
@@ -909,7 +905,7 @@ const FormApplication = () => {
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
 
           <HelpModal />
         </div>
